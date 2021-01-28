@@ -1,40 +1,13 @@
 /*
- *    Project Flasher created by makepico
+ *    Project i2c created by makepico
  */
 
-#include <stdio.h>
-#include <string.h>
-#include "pico/stdlib.h"
-#include "hardware/i2c.h"
-#include "pico/binary_info.h"
+#include "i2c.h"
+
 
 /*
-   Connections on Raspberry Pi Pico board, other boards may vary.
-   GPIO 8 (pin 11)-> SDA on LED Matrix
-   GPIO 9 (pin 12)-> SCL on LED Matrix
-   3.3v (pin 36) -> VCC on LED Matrix
-   GND (pin 38)  -> GND on LED Matrix
-*/
-
-#define I2C_PORT i2c0
-#define I2C_FREQUENCY 400000
-#define ON 1
-#define OFF 0
-#define SDA_GPIO 8
-#define SCL_GPIO 9
-
-
-void i2c_write_byte(uint8_t);
-void i2c_write_block(uint8_t*);
-void ht16k33_power(uint8_t);
-void ht16k33_init(void);
-void ht16k33_draw(uint8_t*);
-void ht16k33_clear(uint8_t*);
-void clear(uint8_t*);
-void ht16k33_bright(uint8_t);
-
-
-// Commands
+ * HT16K33 LED Matrix Commands
+ */
 const int HT16K33_GENERIC_DISPLAY_ON = 0x81;
 const int HT16K33_GENERIC_DISPLAY_OFF = 0x80;
 const int HT16K33_GENERIC_SYSTEM_ON = 0x21;
@@ -45,13 +18,27 @@ const int HT16K33_GENERIC_CMD_BLINK = 0x81;
 const int HT16K33_ADDRESS = 0x70;
 
 
+/*
+ * I2C Functions
+ */
 
-void i2c_write_byte(uint8_t val) {
-    i2c_write_blocking(I2C_PORT, HT16K33_ADDRESS, &val, 1, false);
+void i2c_write_byte(uint8_t byte) {
+    // Convenience function to write a single byte to the matrix
+    i2c_write_blocking(I2C_PORT, HT16K33_ADDRESS, &byte, 1, false);
 }
 
-void i2c_write_block(uint8_t *val) {
-    i2c_write_blocking(I2C_PORT, HT16K33_ADDRESS, val, 17, false);
+void i2c_write_block(uint8_t *data, uint8_t count) {
+    // Convenience function to write a 'count' bytes to the matrix
+    i2c_write_blocking(I2C_PORT, HT16K33_ADDRESS, data, count, false);
+}
+
+
+/*
+ * HT16K33 LED Matrix Functions
+ */
+
+void ht16k33_init() {
+    ht16k33_power(ON);
 }
 
 void ht16k33_power(uint8_t on) {
@@ -59,11 +46,19 @@ void ht16k33_power(uint8_t on) {
     i2c_write_byte(on == ON ? HT16K33_GENERIC_DISPLAY_ON : HT16K33_GENERIC_SYSTEM_OFF);
 }
 
-void ht16k33_init() {
-    ht16k33_power(ON);
+void ht16k33_bright(uint8_t brightness) {
+    // Set the LED brightness
+    if (brightness < 0 || brightness > 15) brightness = 15;
+    i2c_write_byte(HT16K33_GENERIC_CMD_BRIGHTNESS | brightness);
 }
 
-void ht16k33_draw(uint8_t *b) {
+void ht16k33_clear(uint8_t *source_buffer) {
+    // Clear the display buffer and then write it out
+    for (uint8_t i = 0 ; i < 8 ; i++) source_buffer[i] = 0;
+    ht16k33_draw(source_buffer);
+}
+
+void ht16k33_draw(uint8_t *source_buffer) {
     // Set up the buffer holding the data to be
     // transmitted to the LED
     uint8_t buffer[17];
@@ -72,32 +67,29 @@ void ht16k33_draw(uint8_t *b) {
     // Span the 8 bytes of the graphics buffer
     // across the 16 bytes of the LED's buffer
     for (uint8_t i = 0 ; i < 8 ; i++) {
-        uint8_t a = b[i];
+        uint8_t a = source_buffer[i];
         buffer[i * 2 + 1] = (a >> 1) + ((a << 7) & 0xFF);
     }
 
     // Write out the transmit buffer
-    i2c_write_block(buffer);
+    i2c_write_block(buffer, sizeof(buffer));
 }
 
-void ht16k33_clear(uint8_t *b) {
-    // Clear the display buffer and then write it out
-    for (uint8_t i = 0 ; i < 8 ; i++) b[i] = 0;
-    ht16k33_draw(b);
-}
 
-void ht16k33_bright(uint8_t b) {
-    // Set the LED brightness
-    if (b < 0 || b > 15) b = 15;
-    i2c_write_byte(HT16K33_GENERIC_CMD_BRIGHTNESS | b);
-}
 
-void clear(uint8_t *b) {
+/*
+ * Main Functions
+ */
+
+void clear(uint8_t *display_buffer) {
     // Clear the display buffer
-    for (uint8_t i = 0 ; i < 8 ; i++) b[i] = 0;
+    for (uint8_t i = 0 ; i < 8 ; i++) display_buffer[i] = 0;
 }
 
 
+/*
+ * Runtime start
+ */
 
 int main() {
 
@@ -117,9 +109,10 @@ int main() {
     ht16k33_bright(2);
     ht16k33_clear(buffer);
 
-    // First line
+    // Initialize the first column
     buffer[0] = 1;
 
+    // Loop
     while (1) {
         // Draw the current buffer
         ht16k33_draw(buffer);
@@ -142,5 +135,6 @@ int main() {
         sleep_ms(50);
     }
 
+    // Just in case...
     return 0;
 }
