@@ -51,10 +51,10 @@ void i2c_write_block(uint8_t *data, uint8_t count);
 void ht16k33_init();
 void ht16k33_power(uint8_t on);
 void ht16k33_set_brightness(uint8_t brightness);
-void ht16k33_draw_sprite(unsigned char *sprite);
-void ht16k33_draw_sprite2(unsigned char *sprite);
+void ht16k33_draw_sprite(const char *sprite);
+void ht16k33_draw_sprite2(const char *sprite);
 void ht16k33_plot(uint8_t x, uint8_t y, bool set);
-void ht16k33_print(char *text);
+void ht16k33_print(const char *text);
 void ht16k33_clear();
 void ht16k33_draw();
 

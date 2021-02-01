@@ -76,7 +76,6 @@ void ht16k33_draw(uint8_t *source_buffer) {
 }
 
 
-
 /*
  * Main Functions
  */
@@ -116,63 +115,46 @@ int main() {
 
     // Initialize the PRNG
     srand(time(NULL));
+    uint8_t r = rand() % 4 + 1;
 
     // Loop
     while (1) {
-        uint8_t r = rand() % 4 + 1;
+        // Draw the current buffer
+        ht16k33_draw(buffer);
+
+        // Update the buffer to bit shift each column
         if (down == 0) {
-            while (1) {
-                // Draw the current buffer
-                ht16k33_draw(buffer);
-
-                // Update the buffer to bit shift each column
-                for (uint8_t i = 0 ; i < 8 ; i++) {
-                    if (buffer[i] < 128) {
-                        buffer[i] = buffer[i] << 1;
-                    } else {
-                        buffer[i] = 1;
-                        if (i == 0) cycle_count++;
-                    }
-                }
-
-                // Move the next start column on one
-                column_count += 1;
-                if (column_count > 7) column_count = 0;
-                if (buffer[column_count] == 0) buffer[column_count] = 1;
-
-                // Sleep a bit
-                sleep_ms(25);
-
-                if (cycle_count > r) {
-                    cycle_count = 0;
-                    down = down == 1 ? 0 : 1;
-                    break;
+            for (uint8_t i = 0 ; i < 8 ; i++) {
+                if (buffer[i] < 128) {
+                    buffer[i] = buffer[i] << 1;
+                } else {
+                    buffer[i] = 1;
+                    if (i == 0) cycle_count++;
                 }
             }
         } else {
-            while (1) {
-                // Draw the current buffer
-                ht16k33_draw(buffer);
-
-                // Update the buffer to bit shift each column
-                for (uint8_t i = 0 ; i < 8 ; i++) {
-                    if (buffer[i] > 1) {
-                        buffer[i] = buffer[i] >> 1;
-                    } else {
-                        buffer[i] = 128;
-                        if (i == 0) cycle_count++;
-                    }
-                }
-
-                // Sleep a bit
-                sleep_ms(25);
-
-                if (cycle_count > r) {
-                    cycle_count = 0;
-                    down = down == 1 ? 0 : 1;
-                    break;
+            for (uint8_t i = 0 ; i < 8 ; i++) {
+                if (buffer[i] > 1) {
+                    buffer[i] = buffer[i] >> 1;
+                } else {
+                    buffer[i] = 128;
+                    if (i == 0) cycle_count++;
                 }
             }
+        }
+
+        // Move the next start column on one
+        column_count += 1;
+        if (column_count > 7) column_count = 0;
+        if (buffer[column_count] == 0) buffer[column_count] = 1;
+
+        // Sleep a bit
+        sleep_ms(25);
+
+        if (cycle_count > r) {
+            cycle_count = 0;
+            down = down == 1 ? 0 : 1;
+            r = rand() % 4 + 1;
         }
     }
 

@@ -43,8 +43,8 @@ uint8_t player_x = 0;
 uint8_t player_y = 0;
 uint8_t last_move = 0;
 bool in_play = true;
-char text_win[] = "YOU WIN!";
-char text_lose[] = "YOU DIED!";
+const char text_win[] = "YOU WIN!      ";
+const char text_lose[] = "YOU DIED!      ";
 
 // Graphics buffer
 uint8_t buffer[8];
@@ -91,7 +91,7 @@ void ht16k33_clear() {
     for (uint8_t i = 0 ; i < 8 ; i++) buffer[i] = 0;
 }
 
-void ht16k33_draw_sprite(unsigned char *sprite) {
+void ht16k33_draw_sprite(const char *sprite) {
     // Write the sprite at the location
     for (uint8_t i = 0 ; i < 8 ; i++) {
         buffer[i] = sprite[i];
@@ -100,7 +100,7 @@ void ht16k33_draw_sprite(unsigned char *sprite) {
     ht16k33_draw();
 }
 
-void ht16k33_draw_sprite2(unsigned char *sprite) {
+void ht16k33_draw_sprite2(const char *sprite) {
     // Write the sprite at the location
     for (uint8_t i = 0 ; i < strlen(sprite) ; i++) {
         buffer[i] = sprite[i];
@@ -140,24 +140,32 @@ void ht16k33_draw() {
     i2c_write_block(output_buffer, sizeof(output_buffer));
 }
 
-void ht16k33_print(char *text) {
+void ht16k33_print(const char *text) {
     uint length = 0;
-    for (uint i = 0 ; i < strlen(text) ; i++) {
+    for (size_t i = 0 ; i < strlen(text) ; ++i) {
         uint8_t asc_val = text[i] - 32;
-        length += strlen(CHARSET[asc_val]);
-        if (asc_val > 32) length++;
+        length += (asc_val == 0 ? 2: strlen(CHARSET[asc_val]));
+        if (asc_val > 0) length++;
     }
 
+    // Make the output buffer
     uint8_t src_buffer[length];
+    for (uint i = 0 ; i < length ; ++i) src_buffer[i] = 0x00;
 
     uint row = 0;
-    for (uint i = 0 ; i < strlen(text) ; i++) {
+    for (size_t i = 0 ; i < strlen(text) ; ++i) {
         uint8_t asc_val = text[i] - 32;
-        uint8_t glyph_len = strlen(CHARSET[asc_val]);
-        for (uint j = 0 ; j < glyph_len ; j++) {
-            src_buffer[row] = CHARSET[asc_val][j];
-            row++;
-            if (asc_val > 32) row++;
+        if (asc_val == 0) {
+            row += 2;
+        } else {
+            uint8_t glyph_len = strlen(CHARSET[asc_val]);
+
+            for (uint j = 0 ; j < glyph_len ; j++) {
+                src_buffer[row] = CHARSET[asc_val][j];
+                ++row;
+            }
+
+            ++row;
         }
     }
 
@@ -497,8 +505,7 @@ void draw_world() {
     test_count++;
     if (test_count == 8) {
         test_count == 0;
-        ht16k33_clear();
-        ht16k33_print("ABCDEF");
+        game_over();
     }
 }
 
@@ -775,9 +782,8 @@ void game_win() {
     delay(1000);
 
     for(uint8_t i = 0 ; i < 5 ; i++) {
+        ht16k33_print(text_win);
         delay(100);
-        //m.shiftLeft(false,true);
-        //printStringWithShift(textWin, 100);
     }
 
     reset_func();
@@ -836,7 +842,7 @@ void game_over(){
     ht16k33_draw();
 
     for (uint8_t i = 0 ; i < 5 ; i++) {
-        ht16k33_print("ABCDEFG");
+        ht16k33_print(text_lose);
         delay(100);
     }
 
@@ -947,6 +953,11 @@ void play_intro_theme(){
  */
 
 int main() {
+#ifdef TSDEBUG
+    // DEBUG control
+    stdio_init_all();
+#endif
+
     // Setup the hardware
     setup();
 
