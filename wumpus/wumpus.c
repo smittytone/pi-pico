@@ -9,8 +9,8 @@
  *      Hardware
  */
 // LEDs
-const uint8_t pin_green = 9;
-const uint8_t pin_blue = 8;
+const uint8_t pin_green = 19;
+const uint8_t pin_blue  = 18;
 
 // Piezo Speaker
 const uint8_t pin_speaker = 4;
@@ -86,32 +86,32 @@ void ht16k33_set_brightness(uint8_t brightness) {
 }
 
 void ht16k33_clear() {
-
     // Clear the display buffer
-    for (uint8_t i = 0 ; i < 8 ; i++) buffer[i] = 0;
+    for (uint8_t i = 0 ; i < 8 ; ++i) buffer[i] = 0;
 }
 
 void ht16k33_draw_sprite(const char *sprite) {
-    // Write the sprite at the location
-    for (uint8_t i = 0 ; i < 8 ; i++) {
-        buffer[i] = sprite[i];
-    }
+    // Write the sprite across the matrix
+    // NOTE Assumes the sprite is 8 pixels wide
+    for (uint8_t i = 0 ; i < 8 ; ++i) buffer[i] = sprite[i];
 
+    // Send the buffer to the LED matrix
     ht16k33_draw();
 }
 
-void ht16k33_draw_sprite2(const char *sprite) {
-    // Write the sprite at the location
-    for (uint8_t i = 0 ; i < strlen(sprite) ; i++) {
-        buffer[i] = sprite[i];
-    }
+void ht16k33_draw_sprite_center(const char *sprite) {
+    // Write the sprite centred on the screen
+    uint8_t width = strlen(sprite);
+    uint8_t col = 8 - width;
+    col = col >> 1;
+    for (uint8_t i = col ; i < width ; ++i) buffer[i] = sprite[i];
 
+    // Send the buffer to the LED matrix
     ht16k33_draw();
 }
 
 void ht16k33_plot(uint8_t x, uint8_t y, bool is_set) {
     // Set or unset the specified pixel
-
     uint8_t col = buffer[x];
 
     if (is_set) {
@@ -127,11 +127,11 @@ void ht16k33_draw() {
     // Set up the buffer holding the data to be
     // transmitted to the LED
     uint8_t output_buffer[17];
-    for (uint8_t i = 0 ; i < 17 ; i++) output_buffer[i] = 0;
+    for (uint8_t i = 0 ; i < 17 ; ++i) output_buffer[i] = 0;
 
     // Span the 8 bytes of the graphics buffer
     // across the 16 bytes of the LED's buffer
-    for (uint8_t i = 0 ; i < 8 ; i++) {
+    for (uint8_t i = 0 ; i < 8 ; ++i) {
         uint8_t a = buffer[i];
         output_buffer[i * 2 + 1] = (a >> 1) + ((a << 7) & 0xFF);
     }
@@ -141,6 +141,9 @@ void ht16k33_draw() {
 }
 
 void ht16k33_print(const char *text) {
+    // Scroll the supplied text horizontally across the 8x8 matrix
+
+    // Get the length of the text: the number of columns it encompasses
     uint length = 0;
     for (size_t i = 0 ; i < strlen(text) ; ++i) {
         uint8_t asc_val = text[i] - 32;
@@ -148,32 +151,36 @@ void ht16k33_print(const char *text) {
         if (asc_val > 0) length++;
     }
 
-    // Make the output buffer
+    // Make the output buffer to match the required number of columns
     uint8_t src_buffer[length];
     for (uint i = 0 ; i < length ; ++i) src_buffer[i] = 0x00;
 
-    uint row = 0;
+    // Write each character's glyph columns into the output buffer
+    uint col = 0;
     for (size_t i = 0 ; i < strlen(text) ; ++i) {
         uint8_t asc_val = text[i] - 32;
         if (asc_val == 0) {
-            row += 2;
+            // It's a space, so just add two blank columns
+            col += 2;
         } else {
+            // Get the character glyph and write it to the buffer
             uint8_t glyph_len = strlen(CHARSET[asc_val]);
 
-            for (uint j = 0 ; j < glyph_len ; j++) {
-                src_buffer[row] = CHARSET[asc_val][j];
-                ++row;
+            for (uint j = 0 ; j < glyph_len ; ++j) {
+                src_buffer[col] = CHARSET[asc_val][j];
+                ++col;
             }
 
-            ++row;
+            ++col;
         }
     }
 
-    // Finally, animate the line
+    // Finally, animate the line by repeatedly sending 8 columns
+    // of the output buffer to the matrix
     uint cursor = 0;
     while (1) {
         uint a = cursor;
-        for (uint i = 0 ; i < 8 ; i++) {
+        for (uint8_t i = 0 ; i < 8 ; ++i) {
             buffer[i] = src_buffer[a];
             a += 1;
         }
@@ -181,16 +188,13 @@ void ht16k33_print(const char *text) {
         ht16k33_draw();
         cursor++;
         if (cursor > length - 8) break;
-        delay(100);
+        sleep_ms(100);
     };
 }
 
 
-void delay(int time_in_ms) {
-    sleep_ms(time_in_ms);
-}
-
 int irandom(int start, int max) {
+    // Generate a PRG between start and max
     return rand() % max + start;
 }
 
@@ -222,9 +226,13 @@ void setup() {
     ht16k33_clear();
     ht16k33_draw();
 
-    // Set up pins
-    //pinMode(pin_green, OUTPUT);
-    //pinMode(pin_blue, OUTPUT);
+    // Set up output pins
+    gpio_init(pin_green);
+    gpio_set_dir(pin_green, GPIO_OUT);
+
+    gpio_init(pin_blue);
+    gpio_set_dir(pin_blue, GPIO_OUT);
+
     //pinMode(pin_x, INPUT_PULLUP);
     //pinMode(pin_y, INPUT_PULLUP);
     //pinMode(pin_button, INPUT_PULLUP);
@@ -240,8 +248,8 @@ void create_world() {
     // Generate the Wumpus' cave.
 
     // Initialize world
-    for (uint8_t i = 0 ; i < 8 ; i++) {
-        for (uint8_t j = 0 ; j < 8 ; j++) {
+    for (uint8_t i = 0 ; i < 8 ; ++i) {
+        for (uint8_t j = 0 ; j < 8 ; ++j) {
             hazards[i][j] = '#';    // No hazard here
         }
     }
@@ -249,7 +257,7 @@ void create_world() {
     uint8_t bat_x = 0;
     uint8_t bat_y = 0;
     uint8_t number_bats = irandom(1, 4);
-    for (uint8_t i = 0; i < number_bats ; i++) {
+    for (uint8_t i = 0; i < number_bats ; ++i) {
         bat_x = irandom(0, 8);
         bat_y = irandom(0, 8);
         hazards[bat_x][bat_y] = 'b';
@@ -259,13 +267,10 @@ void create_world() {
     uint8_t pit_x = 0;
     uint8_t pit_y = 0;
     uint8_t number_pits = irandom(4, 9);
-    //ht16k33_print("Number of pits: ");
-    delay(10);
-    for (uint8_t i = 0; i < number_pits; i++) {
+
+    for (uint8_t i = 0; i < number_pits; ++i) {
         pit_x = irandom(0, 8);
-        delay(10);
         pit_y = irandom(0, 8);
-        delay(10);
         hazards[pit_x][pit_y] = 'p';
     }
 
@@ -276,58 +281,32 @@ void create_world() {
     uint8_t wumpus_y = 0;
     while (wumpus_x == 0 && wumpus_y == 0) {
         wumpus_x = irandom(0, 8);
-        delay(10);
         wumpus_y = irandom(0, 8);
-        delay(10);
     }
 
     hazards[wumpus_x][wumpus_y] = 'w';
 
-    // Make sure the start tile is safe to spawn on.
+    // Make sure the start tile is safe to spawn on
     hazards[0][0] = '#';
 
-    //Generate senses for sounds and LED reactions
-    for (uint8_t i = 0; i < 8; i++) {
-        for (uint8_t j = 0 ; j < 8 ; j++) {
+    // Generate sense data for sounds and LED reactions
+    for (uint8_t i = 0; i < 8; ++i) {
+        for (uint8_t j = 0 ; j < 8 ; ++j) {
             if (hazards[i][j] == 'w') {
-                if (i < 7) {
-                    stink_layer[i + 1][j] = 1;
-                }
-                if (i > 0) {
-                    stink_layer[i - 1][j] = 1;
-                }
-                if (j < 7){
-                    stink_layer[i][j + 1] = 1;
-                }
-                if (j > 0){
-                    stink_layer[i][j - 1] = 1;
-                }
+                if (i < 7) stink_layer[i + 1][j] = 1;
+                if (i > 0) stink_layer[i - 1][j] = 1;
+                if (j < 7) stink_layer[i][j + 1] = 1;
+                if (j > 0) stink_layer[i][j - 1] = 1;
             } else if (hazards[i][j] == 'p') {
-                if (i < 7) {
-                    draft_layer[i + 1][j] = 1;
-                }
-                if  (i>0) {
-                    draft_layer[i - 1][j] = 1;
-                }
-                if (j < 7) {
-                    draft_layer[i][j + 1] = 1;
-                }
-                if (j > 0) {
-                    draft_layer[i][j - 1] = 1;
-                }
+                if (i < 7) draft_layer[i + 1][j] = 1;
+                if (i > 0) draft_layer[i - 1][j] = 1;
+                if (j < 7) draft_layer[i][j + 1] = 1;
+                if (j > 0) draft_layer[i][j - 1] = 1;
             } else if (hazards[i][j] == 'b') {
-                if (i < 7) {
-                    sound_layer[i + 1][j] = 1;
-                }
-                if (i > 0) {
-                    sound_layer[i - 1][j] = 1;
-                }
-                if (j < 7) {
-                    sound_layer[i][j + 1] = 1;
-                }
-                if (j > 0) {
-                    sound_layer[i][j - 1] = 1;
-                }
+                if (i < 7) sound_layer[i + 1][j] = 1;
+                if (i > 0) sound_layer[i - 1][j] = 1;
+                if (j < 7) sound_layer[i][j + 1] = 1;
+                if (j > 0) sound_layer[i][j - 1] = 1;
             }
         }
     }
@@ -450,14 +429,14 @@ void check_hazard() {
         // Player fell down a pit -- death!
         plunged_into_pit();
 
-        for (uint i = 0 ; i < 1000 ; i++) {
+        for (uint i = 0 ; i < 1000 ; ++i) {
             tone(pin_speaker, irandom(200, 1500), 1);
         }
 
         game_over();
     } else if (hazards[player_x][player_y] == 'w') {
         // Player ran into the Wumpus!
-        for (uint8_t j = 0 ; j < 3 ; j++) {
+        for (uint8_t j = 0 ; j < 3 ; ++j) {
             wumpus_end();
         }
     }
@@ -467,15 +446,15 @@ void sense() {
     // Present the environment to the player
 
     // Set the smell and draft LEDs
-    //digitalWrite(pin_blue, draft_layer[player_x][player_y]);
-    //digitalWrite(pin_green, stink_layer[player_x][player_y]);
+    gpio_put(pin_blue, draft_layer[player_x][player_y]);
+    gpio_put(pin_green, stink_layer[player_x][player_y]);
 
     // Play a sound
     if (sound_layer[player_x][player_y]) {
         tone(pin_speaker, 6000, 50);
-        delay(50);
+        sleep_ms(50);
         tone(pin_speaker, 5000, 50);
-        delay(50);
+        sleep_ms(50);
         tone(pin_speaker, 4000, 50);
     }
 }
@@ -487,8 +466,8 @@ void draw_world() {
     ht16k33_clear();
 
     // Draw out the world
-    for(uint8_t i = 0 ; i < 8 ; i++) {
-        for (uint8_t j = 0 ; j < 8 ; j++) {
+    for(uint8_t i = 0 ; i < 8 ; ++i) {
+        for (uint8_t j = 0 ; j < 8 ; ++j) {
             ht16k33_plot(i, j, visited[i][7 - j]);
         }
     }
@@ -496,11 +475,11 @@ void draw_world() {
     // Flash the player's location
     ht16k33_plot(player_x, 7 - player_y, true);
     ht16k33_draw();
-    delay(500);
+    sleep_ms(500);
 
     ht16k33_plot(player_x, 7 - player_y, false);
     ht16k33_draw();
-    delay(500);
+    sleep_ms(500);
 
     test_count++;
     if (test_count == 8) {
@@ -516,86 +495,86 @@ void draw_world() {
 void grabbed_by_bat() {
     // Show the bat then the carried animations
 
-    for (uint8_t i = 0 ; i < 6 ; i++) {
+    for (uint8_t i = 0 ; i < 6 ; ++i) {
         ht16k33_draw_sprite(bat_1);
-        delay(100);
+        sleep_ms(100);
         ht16k33_draw_sprite(bat_2);
-        delay(100);
+        sleep_ms(100);
     }
 
     // Play carry animation
     ht16k33_draw_sprite(carry_1);
-    delay(100);
+    sleep_ms(100);
     ht16k33_draw_sprite(carry_2);
-    delay(100);
+    sleep_ms(100);
     ht16k33_draw_sprite(carry_3);
-    delay(100);
+    sleep_ms(100);
     ht16k33_draw_sprite(carry_4);
-    delay(100);
+    sleep_ms(100);
     ht16k33_draw_sprite(carry_5);
-    delay(100);
+    sleep_ms(100);
     ht16k33_draw_sprite(carry_6);
-    delay(100);
+    sleep_ms(100);
     ht16k33_draw_sprite(carry_7);
-    delay(100);
+    sleep_ms(100);
     ht16k33_draw_sprite(carry_8);
-    delay(100);
+    sleep_ms(100);
     ht16k33_draw_sprite(carry_9);
-    delay(100);
+    sleep_ms(100);
 }
 
 void plunged_into_pit() {
     ht16k33_draw_sprite(fall_1);
     tone(pin_speaker, 3000, 100);
-    delay(100);
+    sleep_ms(100);
     ht16k33_draw_sprite(fall_2);
     tone(pin_speaker, 2900, 100);
-    delay(100);
+    sleep_ms(100);
     ht16k33_draw_sprite(fall_3);
     tone(pin_speaker, 2800, 100);
-    delay(100);
+    sleep_ms(100);
     ht16k33_draw_sprite(fall_4);
     tone(pin_speaker, 2700, 100);
-    delay(100);
+    sleep_ms(100);
     ht16k33_draw_sprite(fall_5);
     tone(pin_speaker, 2600, 100);
-    delay(100);
+    sleep_ms(100);
     ht16k33_draw_sprite(fall_6);
     tone(pin_speaker, 2500, 100);
-    delay(100);
+    sleep_ms(100);
     ht16k33_draw_sprite(fall_7);
     tone(pin_speaker, 2400, 100);
-    delay(100);
+    sleep_ms(100);
     ht16k33_draw_sprite(fall_8);
     tone(pin_speaker, 2300, 100);
-    delay(100);
+    sleep_ms(100);
     ht16k33_draw_sprite(fall_9);
     tone(pin_speaker, 2200, 100);
-    delay(100);
+    sleep_ms(100);
     ht16k33_draw_sprite(fall_10);
     tone(pin_speaker, 2100, 100);
-    delay(100);
+    sleep_ms(100);
     ht16k33_draw_sprite(fall_11);
     tone(pin_speaker, 2000, 100);
-    delay(100);
+    sleep_ms(100);
     ht16k33_draw_sprite(fall_12);
     tone(pin_speaker, 1900, 100);
-    delay(100);
+    sleep_ms(100);
     ht16k33_draw_sprite(fall_13);
     tone(pin_speaker, 1800, 100);
-    delay(100);
+    sleep_ms(100);
     ht16k33_draw_sprite(fall_14);
     tone(pin_speaker, 1700, 100);
-    delay(100);
+    sleep_ms(100);
     ht16k33_draw_sprite(fall_15);
     tone(pin_speaker, 1600, 100);
-    delay(100);
+    sleep_ms(100);
     ht16k33_draw_sprite(fall_16);
     tone(pin_speaker, 1500, 100);
-    delay(100);
+    sleep_ms(100);
     ht16k33_draw_sprite(fall_17);
     tone(pin_speaker, 1400, 100);
-    delay(100);
+    sleep_ms(100);
 }
 
 /*
@@ -641,34 +620,34 @@ void fire_arrow(){
     // Attempt to kill the Wumpus
 
     // Show arrow firing animation
-    delay(500);
+    sleep_ms(500);
     ht16k33_draw_sprite(bow_1);
     tone(pin_speaker, 100, 100);
-    delay(100);
+    sleep_ms(100);
     ht16k33_draw_sprite(bow_2);
     tone(pin_speaker, 200, 100);
-    delay(100);
+    sleep_ms(100);
     ht16k33_draw_sprite(bow_3);
     tone(pin_speaker, 300, 100);
-    delay(1000);
+    sleep_ms(1000);
     ht16k33_draw_sprite(bow_2);
 
-    for (uint8_t i = 0 ; i < 50 ; i++) {
+    for (uint8_t i = 0 ; i < 50 ; ++i) {
         tone(pin_speaker, irandom(200, 1500), 1);
-        delay(1);
+        sleep_ms(1);
     }
 
     ht16k33_draw_sprite(bow_1);
 
-    for (uint8_t i = 0 ; i < 25 ; i++) {
+    for (uint8_t i = 0 ; i < 25 ; ++i) {
         tone(pin_speaker, irandom(200, 1500), 1);
-        delay(1);
+        sleep_ms(1);
     }
 
     ht16k33_draw_sprite(bow_4);
-    delay(50);
+    sleep_ms(50);
     ht16k33_draw_sprite(bow_5);
-    delay(100);
+    sleep_ms(100);
 }
 
 void miss() {
@@ -676,21 +655,21 @@ void miss() {
     // the wumpus finds them.
 
     ht16k33_clear();
-    delay(1000);
+    sleep_ms(1000);
     ht16k33_plot(1, 6, true);
     ht16k33_draw();
     tone(pin_speaker, 80, 100);
-    delay(1000);
+    sleep_ms(1000);
     ht16k33_plot(1, 6, false);
     ht16k33_plot(3, 6, true);
     ht16k33_draw();
     tone(pin_speaker, 80, 100);
-    delay(1000);
+    sleep_ms(1000);
     ht16k33_plot(3, 6, false);
     ht16k33_plot(5, 6, true);
     ht16k33_draw();
     tone(pin_speaker, 80, 100);
-    delay(1000);
+    sleep_ms(1000);
 
     // The End
     wumpus_end();
@@ -700,35 +679,35 @@ void miss() {
 void kill_wumpus(){
     // The player successfully kills the Wumpus!
 
-    delay(500);
+    sleep_ms(500);
     ht16k33_draw_sprite(wumpus_1);
-    delay(500);
+    sleep_ms(500);
     ht16k33_draw_sprite(wumpus_3);
     tone(pin_speaker, 900, 100);
-    delay(100);
+    sleep_ms(100);
     ht16k33_draw_sprite(wumpus_4);
     tone(pin_speaker, 850, 100);
-    delay(100);
+    sleep_ms(100);
     ht16k33_draw_sprite(wumpus_5);
     tone(pin_speaker, 800, 100);
-    delay(100);
+    sleep_ms(100);
     ht16k33_draw_sprite(wumpus_6);
     tone(pin_speaker, 750, 100);
-    delay(100);
+    sleep_ms(100);
     ht16k33_draw_sprite(wumpus_7);
     tone(pin_speaker, 700, 100);
-    delay(100);
+    sleep_ms(100);
     ht16k33_draw_sprite(wumpus_8);
     tone(pin_speaker, 650, 100);
-    delay(100);
+    sleep_ms(100);
     ht16k33_draw_sprite(wumpus_9);
     tone(pin_speaker, 600, 100);
-    delay(100);
+    sleep_ms(100);
     ht16k33_draw_sprite(wumpus_10);
     tone(pin_speaker, 550, 100);
-    delay(100);
+    sleep_ms(100);
     ht16k33_clear();
-    delay(1000);
+    sleep_ms(1000);
 
     // Success!
     game_win();
@@ -745,45 +724,45 @@ void game_win() {
     ht16k33_draw_sprite(trophy);
     tone(pin_speaker, 1397, 100); //F6
     ht16k33_set_brightness(8);
-    delay(200);
+    sleep_ms(200);
     tone(pin_speaker, 1397, 100); //F6
     ht16k33_set_brightness(1);
-    delay(200);
+    sleep_ms(200);
     tone(pin_speaker, 1397, 100); //F6
     ht16k33_set_brightness(8);
-    delay(200);
+    sleep_ms(200);
     tone(pin_speaker, 1397, 200); //F6
     ht16k33_set_brightness(1);
-    delay(300);
+    sleep_ms(300);
     tone(pin_speaker, 1175, 200); //D6
     ht16k33_set_brightness(8);
-    delay(300);
+    sleep_ms(300);
     tone(pin_speaker, 1319, 200); //E6
     ht16k33_set_brightness(1);
-    delay(300);
+    sleep_ms(300);
     tone(pin_speaker, 1397, 200); //F6
     ht16k33_set_brightness(8);
-    delay(300);
+    sleep_ms(300);
     tone(pin_speaker, 1319, 150); //E6
     ht16k33_set_brightness(1);
-    delay(150);
+    sleep_ms(150);
     tone(pin_speaker, 1397, 400); //F6
     ht16k33_set_brightness(8);
-    delay(300);
+    sleep_ms(300);
     ht16k33_set_brightness(1);
-    delay(300);
+    sleep_ms(300);
     ht16k33_set_brightness(8);
-    delay(300);
+    sleep_ms(300);
     ht16k33_set_brightness(1);
-    delay(300);
+    sleep_ms(300);
     ht16k33_set_brightness(8);
-    delay(300);
+    sleep_ms(300);
     ht16k33_set_brightness(1);
-    delay(1000);
+    sleep_ms(1000);
 
-    for(uint8_t i = 0 ; i < 5 ; i++) {
+    for(uint8_t i = 0 ; i < 5 ; ++i) {
         ht16k33_print(text_win);
-        delay(100);
+        sleep_ms(100);
     }
 
     reset_func();
@@ -792,21 +771,21 @@ void game_win() {
 void wumpus_end() {
     // Player gets attacked from the vicious Wumpus!
     // Complete with nightmare-inducing sound
-    for (uint8_t j = 0 ; j < 3 ; j++) {
+    for (uint8_t j = 0 ; j < 3 ; ++j) {
         ht16k33_draw_sprite(wumpus_1);
         for (uint i = 2000 ; i > 800 ; i -= 2) {
             tone(pin_speaker, i, 1);
-            delay(1);
+            sleep_ms(1);
         }
 
         ht16k33_draw_sprite(wumpus_2);
         for (uint i = 800 ; i < 2000 ; i += 2) {
             tone(pin_speaker, i, 1);
-            delay(1);
+            sleep_ms(1);
         }
     }
 
-    delay(500);
+    sleep_ms(500);
     game_over();
 }
 
@@ -815,35 +794,35 @@ void game_over(){
 
     ht16k33_clear();
     ht16k33_draw_sprite(grave);
-    delay(500);
+    sleep_ms(500);
     tone(pin_speaker, 294, 400);
-    delay(500);
+    sleep_ms(500);
     tone(pin_speaker, 294, 400);
-    delay(500);
+    sleep_ms(500);
     tone(pin_speaker, 294, 100);
-    delay(200);
+    sleep_ms(200);
     tone(pin_speaker, 294, 400);
-    delay(500);
+    sleep_ms(500);
     tone(pin_speaker, 349, 400);
-    delay(500);
+    sleep_ms(500);
     tone(pin_speaker, 330, 100);
-    delay(200);
+    sleep_ms(200);
     tone(pin_speaker, 330, 400);
-    delay(500);
+    sleep_ms(500);
     tone(pin_speaker, 294, 100);
-    delay(200);
+    sleep_ms(200);
     tone(pin_speaker, 294, 400);
-    delay(500);
+    sleep_ms(500);
     tone(pin_speaker, 294, 100);
-    delay(200);
+    sleep_ms(200);
     tone(pin_speaker, 294, 800);
-    delay(3000);
+    sleep_ms(3000);
     ht16k33_clear();
     ht16k33_draw();
 
-    for (uint8_t i = 0 ; i < 5 ; i++) {
+    for (uint8_t i = 0 ; i < 5 ; ++i) {
         ht16k33_print(text_lose);
-        delay(100);
+        sleep_ms(100);
     }
 
     reset_func();
@@ -861,90 +840,90 @@ void play_intro_theme(){
     //D3
     tone(pin_speaker, 147, 200);
     ht16k33_draw_sprite(begin_1);
-    delay(200);
+    sleep_ms(200);
     //E3
     tone(pin_speaker, 165, 200);
     ht16k33_draw_sprite(begin_2);
-    delay(200);
+    sleep_ms(200);
     //F3
     tone(pin_speaker, 175, 200);
     ht16k33_draw_sprite(begin_3);
-    delay(200);
+    sleep_ms(200);
     //G3
     tone(pin_speaker, 196, 200);
     ht16k33_draw_sprite(begin_4);
-    delay(200);
+    sleep_ms(200);
     //A4
     tone(pin_speaker, 220, 200);
     ht16k33_draw_sprite(begin_5);
-    delay(200);
+    sleep_ms(200);
     //F3
     tone(pin_speaker, 175, 200);
     ht16k33_draw_sprite(begin_6);
-    delay(200);
+    sleep_ms(200);
     //A4
     tone(pin_speaker, 220, 400);
     ht16k33_draw_sprite(begin_7);
-    delay(400);
+    sleep_ms(400);
     //G#3
     tone(pin_speaker, 208, 200);
     ht16k33_draw_sprite(begin_4);
-    delay(200);
+    sleep_ms(200);
     //E#3
     tone(pin_speaker, 175, 200);
-    delay(200);
+    sleep_ms(200);
     //G#3
     tone(pin_speaker, 208, 400);
-    delay(400);
+    sleep_ms(400);
     //G3
     tone(pin_speaker, 196, 200);
-    delay(200);
+    sleep_ms(200);
     //E3
     tone(pin_speaker, 165, 200);
-    delay(200);
+    sleep_ms(200);
     //G3
     tone(pin_speaker, 196, 400);
-    delay(400);
+    sleep_ms(400);
 
     //D3
     tone(pin_speaker, 147, 200);
-    delay(200);
+    sleep_ms(200);
     //E3
     tone(pin_speaker, 165, 200);
-    delay(200);
+    sleep_ms(200);
     //F3
     tone(pin_speaker, 175, 200);
-    delay(200);
+    sleep_ms(200);
     //G3
     tone(pin_speaker, 196, 200);
-    delay(200);
+    sleep_ms(200);
     //A3
     tone(pin_speaker, 220, 200);
-    delay(200);
+    sleep_ms(200);
     //F3
     tone(pin_speaker, 175, 200);
-    delay(200);
+    sleep_ms(200);
     //A3
     tone(pin_speaker, 220, 200);
-    delay(200);
+    sleep_ms(200);
     //D4
     tone(pin_speaker, 294, 200);
-    delay(200);
+    sleep_ms(200);
     //C4
     tone(pin_speaker, 262, 200);
-    delay(200);
+    sleep_ms(200);
     //A3
     tone(pin_speaker, 220, 200);
-    delay(200);
+    sleep_ms(200);
     //F3
     tone(pin_speaker, 175, 200);
-    delay(200);
+    sleep_ms(200);
     //A3
     tone(pin_speaker, 220, 200);
-    delay(200);
+    sleep_ms(200);
     //C4
     tone(pin_speaker, 262, 400);
-    delay(400);
+    sleep_ms(400);
 }
 
 

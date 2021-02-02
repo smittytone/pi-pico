@@ -10,6 +10,7 @@
 #include <string.h>
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
+#include "hardware/gpio.h"
 #include "pico/binary_info.h"
 
 
@@ -59,7 +60,6 @@ void ht16k33_clear();
 void ht16k33_draw();
 
 // Misc.
-void delay(int time_in_ms);
 int irandom(int start, int max);
 
 // Stubs
