@@ -13,7 +13,8 @@ const uint8_t pin_green = 19;
 const uint8_t pin_blue  = 18;
 
 // Piezo Speaker
-const uint8_t pin_speaker = 4;
+const uint8_t pin_speaker = 16;
+uint slice_num = 0;
 
 // Joystick
 const uint8_t pin_y = 9;
@@ -203,7 +204,29 @@ bool digitalRead(uint8_t pin) {
 }
 
 void tone(uint8_t pin, unsigned int frequency, unsigned long duration) {
+
+    unsigned long start = time_us_64();
+    while (time_us_64() < start + duration) {
+        gpio_put(pin_speaker, true);
+        sleep_us(100);
+        gpio_put(pin_speaker, false);
+        sleep_us(900);
+    };
+
     return;
+
+    uint c = frequency;
+    pwm_config config = pwm_get_default_config();
+    pwm_config_set_wrap(&config, c);
+
+    // Start the PWM
+    pwm_init(slice_num, &config, true);
+
+    // Hold for specified duration
+    sleep_ms(duration);
+
+    // Stop PWM
+    pwm_set_enabled(slice_num, false);
 }
 
 
@@ -226,18 +249,29 @@ void setup() {
     ht16k33_clear();
     ht16k33_draw();
 
-    // Set up output pins
+    // Set up sense indicator output pins
     gpio_init(pin_green);
     gpio_set_dir(pin_green, GPIO_OUT);
+    gpio_put(pin_green, false);
 
     gpio_init(pin_blue);
     gpio_set_dir(pin_blue, GPIO_OUT);
+    gpio_put(pin_blue, false);
+
+    gpio_init(pin_speaker);
+    gpio_set_dir(pin_speaker, GPIO_OUT);
+    gpio_put(pin_speaker, false);
+
+    // Set up the speaker pin for PWM
+    /*
+    gpio_set_function(pin_speaker, GPIO_FUNC_PWM);
+    slice_num = pwm_gpio_to_slice_num(pin_speaker);
+    pwm_set_chan_level(slice_num, PWM_CHAN_A, 128);
+    */
 
     //pinMode(pin_x, INPUT_PULLUP);
     //pinMode(pin_y, INPUT_PULLUP);
     //pinMode(pin_button, INPUT_PULLUP);
-    //digitalWrite(pin_blue, LOW);
-    //digitalWrite(pin_green, LOW);
 
     // Use unused analog pin for a floating signal
     // to seed random
