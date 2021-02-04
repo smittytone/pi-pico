@@ -53,3 +53,4 @@ dkms.conf
 
 # Pi Pico
 */build/*
+*/.vscode/cortex-debug*
