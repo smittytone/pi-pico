@@ -41,7 +41,6 @@ const int SGP30_ADDRESS = 0x58;
 /*
  * I2C Functions
  */
-
 void i2c_write_byte(uint8_t address, uint8_t byte) {
     // Convenience function to write a single byte to the matrix
     i2c_write_blocking(I2C_PORT, address, &byte, 1, false);
@@ -122,18 +121,10 @@ void ht16k33_draw() {
  * SGP30 Sensor Functions
  */
 void sgp30_init() {
-    // Convenience function
-    sgp30_start_measurement();
-}
-
-void sgp30_start_measurement() {
     // Send the initialization command
     uint8_t buffer[2];
     sgp30_set_data(buffer, SGP30_INIT_AIR_QUALITY, 0);
     i2c_write_block(SGP30_ADDRESS, buffer, sizeof(buffer));
-
-    // Sleep for 15s as per Datasheet p8
-    //sleep_ms(15000);
 }
 
 bool sgp30_get_measurement(uint8_t *reading_buffer) {
@@ -150,6 +141,7 @@ bool sgp30_get_measurement(uint8_t *reading_buffer) {
     i2c_read_block(SGP30_ADDRESS, read_buffer, sizeof(read_buffer));
 
     // Check the values
+    // NOTE Buggy - hence we don't return false
     uint8_t crc = read_buffer[2];
     uint16_t co2 = (read_buffer[0] << 8) | read_buffer[1];
     if (crc != sgp30_get_crc(co2)) {
@@ -201,9 +193,8 @@ uint8_t sub_crc(uint8_t crc, uint8_t byte) {
 }
 
 /*
- * Main Functions
+ * Misc Functions
  */
-
 void bcd(uint16_t value, unsigned char* output_buffer) {
     // Convert the 16-bit 'value' to a Binary Coded Decimal
     // version, stored in 'output_buffer'
@@ -259,10 +250,10 @@ void bcd(uint16_t value, unsigned char* output_buffer) {
     *output_buffer = (unsigned char)value;
 }
 
+
 /*
  * Runtime start
  */
-
 int main() {
 
     // Allocate storage for the sensor readings
@@ -293,7 +284,6 @@ int main() {
 
     // Loop
     while (1) {
-
         // Get a measurement and convert the CO2 value
         // to a 16-bit number -- range is 400-60,000 ppm
         if (sgp30_get_measurement(reading_buffer)) {

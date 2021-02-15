@@ -33,7 +33,6 @@ void ht16k33_clear();
 void ht16k33_draw();
 
 void sgp30_init();
-void sgp30_start_measurement();
 bool sgp30_get_measurement(uint8_t *reading_buffer);
 void sgp30_set_data(uint8_t *buffer, const char *data, uint8_t start);
 uint8_t sgp30_get_crc(uint16_t data);
