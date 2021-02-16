@@ -1,50 +1,21 @@
 #include "wumpus.h"
 
-// Sprite Data
-#include "sprites.h"
-
-// Character data for scrolling text
-
 /*
- *      Hardware
+ *  Globals
  */
-// LEDs
-const uint8_t pin_green = 20;
-const uint8_t pin_red  = 21;
-
-// Piezo Speaker
-const uint8_t pin_speaker = 16;
-
-// Joystick
-const uint8_t pin_y = 27;
-const uint8_t pin_x = 26;
-const uint8_t pin_button = 19;
-const int deadzone = 400;
-const int upper_limit = 2048 + deadzone; // 2048 == centre
-const int lower_limit = 2048 - deadzone;
-uint8_t debounceCount = 0;
-
-// HT16K33 LED Matrix Commands
-const int HT16K33_GENERIC_DISPLAY_ON = 0x81;
-const int HT16K33_GENERIC_DISPLAY_OFF = 0x80;
-const int HT16K33_GENERIC_SYSTEM_ON = 0x21;
-const int HT16K33_GENERIC_SYSTEM_OFF = 0x20;
-const int HT16K33_GENERIC_DISPLAY_ADDRESS = 0x00;
-const int HT16K33_GENERIC_CMD_BRIGHTNESS = 0xE0;
-const int HT16K33_GENERIC_CMD_BLINK = 0x81;
-const int HT16K33_ADDRESS = 0x70;
-
 // Wumpus World
 char hazards [8][8];
 bool visited [8][8];
 bool stink_layer[8][8];
 bool sound_layer[8][8];
 bool draft_layer[8][8];
+
 uint8_t player_x = 0;
 uint8_t player_y = 0;
 uint8_t last_move = 0;
 bool in_play = true;
 bool state = true;
+
 const char text_win[] = "    YOU WIN!    ";
 const char text_lose[] = "    YOU DIED!    ";
 
@@ -53,7 +24,7 @@ uint8_t buffer[8];
 
 
 /*
- * I2C Functions
+ *  I2C Functions
  */
 void i2c_write_byte(uint8_t byte) {
     // Convenience function to write a single byte to the matrix
@@ -67,7 +38,7 @@ void i2c_write_block(uint8_t *data, uint8_t count) {
 
 
 /*
- * HT16K33 LED Matrix Functions
+ *  HT16K33 LED Matrix Functions
  */
 void ht16k33_init() {
     ht16k33_power(ON);
@@ -82,11 +53,6 @@ void ht16k33_set_brightness(uint8_t brightness) {
     // Set the LED brightness
     if (brightness < 0 || brightness > 15) brightness = 15;
     i2c_write_byte(HT16K33_GENERIC_CMD_BRIGHTNESS | brightness);
-}
-
-void ht16k33_clear() {
-    // Clear the display buffer
-    for (uint8_t i = 0 ; i < 8 ; ++i) buffer[i] = 0;
 }
 
 void ht16k33_draw_sprite(const char *sprite) {
@@ -120,23 +86,6 @@ void ht16k33_plot(uint8_t x, uint8_t y, bool is_set) {
     }
 
     buffer[x] = col;
-}
-
-void ht16k33_draw() {
-    // Set up the buffer holding the data to be
-    // transmitted to the LED
-    uint8_t output_buffer[17];
-    for (uint8_t i = 0 ; i < 17 ; ++i) output_buffer[i] = 0;
-
-    // Span the 8 bytes of the graphics buffer
-    // across the 16 bytes of the LED's buffer
-    for (uint8_t i = 0 ; i < 8 ; ++i) {
-        uint8_t a = buffer[i];
-        output_buffer[i * 2 + 1] = (a >> 1) + ((a << 7) & 0xFF);
-    }
-
-    // Write out the transmit buffer
-    i2c_write_block(output_buffer, sizeof(output_buffer));
 }
 
 void ht16k33_print(const char *text) {
@@ -191,34 +140,58 @@ void ht16k33_print(const char *text) {
     };
 }
 
+void ht16k33_clear() {
+    // Clear the display buffer
+    for (uint8_t i = 0 ; i < 8 ; ++i) buffer[i] = 0;
+}
 
+void ht16k33_draw() {
+    // Set up the buffer holding the data to be
+    // transmitted to the LED
+    uint8_t output_buffer[17];
+    for (uint8_t i = 0 ; i < 17 ; ++i) output_buffer[i] = 0;
+
+    // Span the 8 bytes of the graphics buffer
+    // across the 16 bytes of the LED's buffer
+    for (uint8_t i = 0 ; i < 8 ; ++i) {
+        uint8_t a = buffer[i];
+        output_buffer[i * 2 + 1] = (a >> 1) + ((a << 7) & 0xFF);
+    }
+
+    // Write out the transmit buffer
+    i2c_write_block(output_buffer, sizeof(output_buffer));
+}
+
+
+/*
+ *  Misc Functions
+ */
 int irandom(int start, int max) {
     // Generate a PRG between start and max
     return rand() % max + start;
 }
 
-bool digitalRead(uint8_t pin) {
-    return true;
-}
-
 void tone(unsigned int frequency, unsigned long duration, unsigned long post) {
-
+    // Get the microsecond timer now
     unsigned long start = time_us_64();
 
+    float period = 1000000 / (float)frequency;
+
+    // Loop until duration (ms) in microseconds has elapsed
     while (time_us_64() < start + duration * 1000) {
-            // 1 ms pulse
-            gpio_put(pin_speaker, true);
-            sleep_us(10000 / frequency);
-            gpio_put(pin_speaker, false);
-            sleep_us(90000 / frequency);
+        gpio_put(PIN_SPEAKER, true);
+        sleep_us(0.5 * period);
+        gpio_put(PIN_SPEAKER, false);
+        sleep_us(0.5 * period);
     };
 
+    // Apply a post-tone delay
     sleep_ms(post);
 }
 
 
 /*
- *      Initiazation Functions
+ *  Initialisation Functions
  */
 void setup() {
     // Set up the game hardware
@@ -238,29 +211,29 @@ void setup() {
 
     // Set up sense indicator output pins:
     // Green is the Wumpus nearby indicator
-    gpio_init(pin_green);
-    gpio_set_dir(pin_green, GPIO_OUT);
-    gpio_put(pin_green, false);
+    gpio_init(PIN_GREEN);
+    gpio_set_dir(PIN_GREEN, GPIO_OUT);
+    gpio_put(PIN_GREEN, false);
 
     // Red is the Pit nearby indicator
-    gpio_init(pin_red);
-    gpio_set_dir(pin_red, GPIO_OUT);
-    gpio_put(pin_red, false);
+    gpio_init(PIN_RED);
+    gpio_set_dir(PIN_RED, GPIO_OUT);
+    gpio_put(PIN_RED, false);
 
     // Set up the speaker
-    gpio_init(pin_speaker);
-    gpio_set_dir(pin_speaker, GPIO_OUT);
-    gpio_put(pin_speaker, false);
+    gpio_init(PIN_SPEAKER);
+    gpio_set_dir(PIN_SPEAKER, GPIO_OUT);
+    gpio_put(PIN_SPEAKER, false);
 
     // Set up the Fire button
-    gpio_init(pin_button);
-    gpio_set_dir(pin_button, GPIO_IN);
-    gpio_pull_down(pin_button);
+    gpio_init(PIN_BUTTON);
+    gpio_set_dir(PIN_BUTTON, GPIO_IN);
+    gpio_pull_down(PIN_BUTTON);
 
     // Set up the X- and Y-axis joystick input
     adc_init();
-    adc_gpio_init(pin_x);
-    adc_gpio_init(pin_y);
+    adc_gpio_init(PIN_X);
+    adc_gpio_init(PIN_Y);
 
     // Use one of the Pico's other analog inputs
     // to seed the random number generator
@@ -351,7 +324,7 @@ void create_world() {
 
 
 /*
- *      Main Game Loop
+ *  Main Game Loop
  */
 void game_loop() {
     // Read the current joystick position.
@@ -366,14 +339,14 @@ void game_loop() {
         uint16_t x = adc_read();
         adc_select_input(1);
         uint16_t y = adc_read();
-        last_move = 99;
 
         if (check_joystick(x, y)) {
-            // Joystick is pointing in a direction
+            // Joystick is pointing in a direction, so
+            // get the direction the player has chosen
             uint8_t dir = get_direction(x, y);
 
             // Record the player's steps before the move
-            visited[player_x][player_y] = 1;
+            visited[player_x][player_y] = true;
 
             if (dir == 0) {
                 // Move player up
@@ -381,11 +354,11 @@ void game_loop() {
                     player_y++;
                     last_move = 0;
                 }
-            } else if (dir == 1) {
+            } else if (dir == 3) {
                 // Move player right
                 if (player_x < 7) {
                     player_x++;
-                    last_move = 1;
+                    last_move = 3;
                 }
             } else if (dir == 2) {
                 // Move player down
@@ -397,49 +370,59 @@ void game_loop() {
                 // Move player left
                 if (player_x > 0) {
                     player_x--;
-                    last_move = 3;
+                    last_move = 1;
                 }
             }
-            
-            sense();
-            check_hazard();
+
+            // Check the new location for sense
+            // information and hazards
+            check_senses();
+            check_hazards();
         } else {
             // Joystick is in deadzone
-            if (gpio_get(pin_button)) {
+            if (gpio_get(PIN_BUTTON)) {
                 // Shoot arrow
                 fire_arrow_animation();
 
                 if (last_move == 0) {
                     if (player_y < 7) {
                         if (hazards[player_x][player_y + 1] == 'w') {
-                            kill_wumpus_animation();
+                            dead_wumpus_animation();
                         } else {
                             arrow_miss_animation();
                         }
+
+                        break;
                     }
-                } else if (last_move == 1) {
+                } else if (last_move == 3) {
                     if (player_x < 7) {
                         if (hazards[player_x + 1][player_y] == 'w') {
-                            kill_wumpus_animation();
+                            dead_wumpus_animation();
                         } else {
                             arrow_miss_animation();
                         }
+
+                        break;
                     }
                 } else if (last_move == 2) {
                     if (player_y > 0) {
                         if (hazards[player_x][player_y - 1] == 'w') {
-                            kill_wumpus_animation();
+                            dead_wumpus_animation();
                         } else {
                             arrow_miss_animation();
                         }
+
+                        break;
                     }
                 } else {
                     if (player_x > 0) {
                         if (hazards[player_x - 1][player_y] == 'w') {
-                            kill_wumpus_animation();
+                            dead_wumpus_animation();
                         } else {
                             arrow_miss_animation();
                         }
+
+                        break;
                     }
                 }
             }
@@ -447,7 +430,7 @@ void game_loop() {
 
         // Draw the world then check for smells and hazards
         draw_world();
-        
+
         // Pause between cycles
         sleep_ms(250);
     }
@@ -457,13 +440,42 @@ void game_loop() {
 
 
 /*
- *      Environment Functions
+ *  Movement control functions
+ */
+bool check_joystick(uint16_t x, uint16_t y) {
+    // Check to see if joystick is outside of the deadzone
+
+    if (x > UPPER_LIMIT || x < LOWER_LIMIT || y > UPPER_LIMIT || y < LOWER_LIMIT) {
+        return true;
+    }
+
+    return false;
+}
+
+uint8_t get_direction(uint16_t x, uint16_t y) {
+    // Get player direction from the analog input
+    if (x < y) {
+        if (x > (4096 - y)) {
+            return 0;   // up
+        } else {
+            return 3;   // right
+        }
+    } else {
+        if (x > (4096 - y)) {
+            return 1;   // left
+        } else {
+            return 2;   // down
+        }
+    }
+}
+
+
+/*
+ *  Environment Functions
  */
 void draw_world() {
     // Draw the world on the 8x8 LED matrix
     // and blink the player's location.
-
-    // Draw out the world
     ht16k33_clear();
     for(uint8_t i = 0 ; i < 8 ; ++i) {
         for (uint8_t j = 0 ; j < 8 ; ++j) {
@@ -477,23 +489,22 @@ void draw_world() {
     state = !state;
 }
 
-void sense() {
+void check_senses() {
     // Present the environment to the player
-
     // Set the smell and draft LEDs
     // Draft = pit, Stench = Wumpus
-    gpio_put(pin_green, stink_layer[player_x][player_y]);
-    gpio_put(pin_red, draft_layer[player_x][player_y]);
+    gpio_put(PIN_GREEN, stink_layer[player_x][player_y]);
+    gpio_put(PIN_RED, draft_layer[player_x][player_y]);
 
-    // Play a sound
-    if (sound_layer[player_x][player_y] && last_move != 99) {
+    // Play a sound to signal a nearby bat
+    if (sound_layer[player_x][player_y]) {
         tone(600, 50, 50);
         tone(500, 50, 50);
         tone(400, 50, 50);
     }
 }
 
-void check_hazard() {
+void check_hazards() {
     // Check to see if player has run into a bat, a pit or the Wumpus
     if (hazards[player_x][player_y] == 'b') {
         // Player encountered a bat: play the animation...
@@ -516,14 +527,14 @@ void check_hazard() {
         game_lost();
     } else if (hazards[player_x][player_y] == 'w') {
         // Player ran into the Wumpus!
-        wumpus_end_animation();
+        wumpus_win_animation();
         game_lost();
     }
 }
 
 
 /*
- *      Actions
+ *  Player events
  */
 void grabbed_by_bat() {
     // Show the bat flapping its wings
@@ -595,43 +606,7 @@ void plunged_into_pit() {
 
 
 /*
- *  Movement control functions
- */
-bool check_joystick(uint16_t x, uint16_t y) {
-    // Check to see if joystick is outside of the deadzone
-
-    if (x > upper_limit || x < lower_limit || y > upper_limit || y < lower_limit) {
-        return true;
-    }
-
-    return false;
-}
-
-uint8_t get_direction(uint16_t x, uint16_t y) {
-    // Get player direction from the analog input
-    //   0 is up
-    //   1 is left
-    //   2 is down
-    //   3 is right
-
-    if (x < y) {
-        if (x > (4096 - y)) {
-            return 0;
-        } else {
-            return 1;
-        }
-    } else {
-        if (x > (4096 - y)) {
-            return 3;
-        } else {
-            return 2;
-        }
-    }
-}
-
-
-/*
- *      Wumpus Attack Animations
+ *  Wumpus Attack Animations
  */
 void fire_arrow_animation() {
     // Attempt to kill the Wumpus
@@ -661,7 +636,7 @@ void fire_arrow_animation() {
     sleep_ms(100);
 }
 
-void kill_wumpus_animation() {
+void dead_wumpus_animation() {
     // The player successfully kills the Wumpus!
     sleep_ms(500);
     ht16k33_draw_sprite(wumpus_1);
@@ -691,7 +666,7 @@ void kill_wumpus_animation() {
 
 void arrow_miss_animation() {
     // If the player misses the Wumpus
-    
+
     // Show the arrow flying past...
     ht16k33_clear();
     sleep_ms(1000);
@@ -708,32 +683,30 @@ void arrow_miss_animation() {
     tone(80, 100, 500);
 
     // ...and then the Wumpus gets the player
-    wumpus_end_animation();
+    wumpus_win_animation();
     game_lost();
 }
 
-void wumpus_end_animation() {
+void wumpus_win_animation() {
     // Player gets attacked from the vicious Wumpus!
     // Complete with nightmare-inducing sound
-    for (uint8_t j = 0 ; j < 4 ; ++j) {
-        ht16k33_draw_sprite(wumpus_1);
-        for (uint i = 2000 ; i > 800 ; i -= 2) {
-            tone(i, 1, 10);
-        }
+    ht16k33_draw_sprite(wumpus_1);
 
-        ht16k33_draw_sprite(wumpus_2);
-        for (uint i = 800 ; i < 2000 ; i += 2) {
-            tone(i, 1, 10);
-        }
+    for (uint i = 2000 ; i > 800 ; i -= 2) {
+        tone(i, 10, 1);
     }
-    
-    // And that's the end of the game
-    sleep_ms(500);
+
+    for (uint8_t j = 0 ; j < 5 ; ++j) {
+        ht16k33_draw_sprite(wumpus_2);
+        sleep_ms(500);
+        ht16k33_draw_sprite(wumpus_1);
+        sleep_ms(500);
+    }
 }
 
 
 /*
- *      Game Outcomes
+ *  Game Outcomes
  */
 void game_won() {
     // Give the player a trophy!
@@ -768,16 +741,11 @@ void game_won() {
     sleep_ms(1000);
 
     // Show the success message
-    for (uint8_t i = 0 ; i < 5 ; ++i) ht16k33_print(text_win);
-    in_play = false;
+    game_over(text_win);
 }
 
 void game_lost() {
     // Give the player a funeral
-    ht16k33_clear();
-    in_play = false;
-    return;
-
     ht16k33_draw_sprite(grave);
     tone(294, 400, 200);
     tone(294, 400, 200);
@@ -790,17 +758,23 @@ void game_lost() {
     tone(294, 400, 200);
     tone(294, 100, 200);
     tone(294, 800, 3000);
-    ht16k33_clear();
-    ht16k33_draw();
 
     // Show the failure message
-    for (uint8_t i = 0 ; i < 3 ; ++i) ht16k33_print(text_lose);
+    game_over(text_lose);
+}
+
+void game_over(const char *text) {
+    // Show final message and
+    // clear the screen for the next game
+    for (uint8_t i = 0 ; i < 3 ; ++i) ht16k33_print(text);
     in_play = false;
+    ht16k33_clear();
+    ht16k33_draw();
 }
 
 
 /*
- *      The Game's Introduction
+ *  The Game's Introduction
  */
 void play_intro() {
     // Callback to the theme played in the
@@ -844,7 +818,7 @@ void play_intro() {
 
 
 /*
- * Runtime start
+ *  Runtime start
  */
 int main() {
 #ifdef TSDEBUG
@@ -859,12 +833,12 @@ int main() {
     while (1) {
         // Set up a new round...
         // Play Wumpus tune
-        //play_intro();
+        play_intro();
 
         // Set up the environment
         create_world();
         draw_world();
-        sense();
+        check_senses();
 
         // ...and start play
         game_loop();

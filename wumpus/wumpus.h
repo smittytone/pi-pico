@@ -16,37 +16,42 @@
 #include "hardware/adc.h"
 #include "pico/binary_info.h"
 
+// Sprite Data
+#include "sprites.h"
+
 
 /*
- *  Prototypes
+ *  Function Prototypes
  */
+// Game init
 void setup();
-void game_loop();
+void create_world();
+void play_intro();
 
+// Game run
+void game_loop();
 bool check_joystick(uint16_t x, uint16_t y);
 uint8_t get_direction(uint16_t x, uint16_t y);
 
-void setup();
-void play_intro_theme();
-void create_world();
-
-void check_hazard();
-void sense();
+// Enviroment
 void draw_world();
+void check_senses();
+void check_hazards();
 
+// Player events
 void grabbed_by_bat();
 void plunged_into_pit();
 
+// Wumpus attack animations
 void fire_arrow_animation();
 void arrow_miss_animation();
-void kill_wumpus_animation();
-void wumpus_end_animation();
+void dead_wumpus_animation();
+void wumpus_win_animation();
 
-void game_lost();
+// Game outcomes
 void game_won();
-
-void print_char(char c, int shift_speed);
-void print_string(char *s, int shift_speed);
+void game_lost();
+void game_over(const char *text);
 
 // I2C
 void i2c_write_byte(uint8_t byte);
@@ -57,7 +62,7 @@ void ht16k33_init();
 void ht16k33_power(uint8_t on);
 void ht16k33_set_brightness(uint8_t brightness);
 void ht16k33_draw_sprite(const char *sprite);
-void ht16k33_draw_sprite2(const char *sprite);
+void ht16k33_draw_sprite_center(const char *sprite);
 void ht16k33_plot(uint8_t x, uint8_t y, bool set);
 void ht16k33_print(const char *text);
 void ht16k33_clear();
@@ -71,21 +76,38 @@ void tone(unsigned int frequency, unsigned long duration, unsigned long post) ;
 bool digitalRead(uint8_t pin);
 
 /*
- *      Constants
+ *  Constants
  */
 #define I2C_PORT i2c0
-#define I2C_FREQUENCY 400000
-#define ON 1
-#define OFF 0
-#define SDA_GPIO 8
-#define SCL_GPIO 9
+#define I2C_FREQUENCY   400000
+
+#define ON              1
+#define OFF             0
+
+#define SDA_GPIO        8
+#define SCL_GPIO        9
+
+#define PIN_GREEN       20
+#define PIN_RED         21
+#define PIN_SPEAKER     16
+#define PIN_Y           27
+#define PIN_X           26
+#define PIN_BUTTON      19
+
+#define DEADZONE        400
+#define UPPER_LIMIT     2448
+#define LOWER_LIMIT     1648
+
+// HT16K33 LED Matrix Commands
+#define HT16K33_GENERIC_DISPLAY_ON      0x81
+#define HT16K33_GENERIC_DISPLAY_OFF     0x80
+#define HT16K33_GENERIC_SYSTEM_ON       0x21
+#define HT16K33_GENERIC_SYSTEM_OFF      0x20
+#define HT16K33_GENERIC_DISPLAY_ADDRESS 0x00
+#define HT16K33_GENERIC_CMD_BRIGHTNESS  0xE0
+#define HT16K33_GENERIC_CMD_BLINK       0x81
+#define HT16K33_ADDRESS                 0x70
 
 
-/*
- *  Macros
- */
-// Call this to reset the game.
-void(* reset_func) (void) = 0;
-
-
-#endif  // _WUMPUS_HEADER_
+// _WUMPUS_HEADER_
+#endif
