@@ -18,7 +18,7 @@ A sample C project to build a fun game.
 
 ### Build ###
 
-<a href="images/wumpus.png" target="_blank"><img src="images/wumpus.png" width="600" /></a>
+<img src="images/wumpus.png" />
 
 * Make sure you wire the LEDs correctly: longer leg to the Pico pin, shorter leg to GND.
 * The joystick shown is not the one used, but it gives you the idea. Connect white to the X pin, blue to the Y pin.
@@ -45,7 +45,7 @@ A sample C project. Requires an HT16K33-based 8x8 LED matrix. I used [this displ
 
 A sample C project. Requires an HT16K33-based 4-digit, 7-segment LED and an SGP30 TVOC sensor. I used [this sensor](https://shop.pimoroni.com/products/sgp30-air-quality-sensor-breakout) and [this display](https://www.adafruit.com/product/878):
 
-<img src="images/sensor.jpg" width="600" />
+<img src="images/sensor.png" />
 
 ## micropython ##
 
