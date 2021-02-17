@@ -33,7 +33,7 @@ void game_loop();
 bool check_joystick(uint16_t x, uint16_t y);
 uint8_t get_direction(uint16_t x, uint16_t y);
 
-// Enviroment
+// Environment
 void draw_world();
 void check_senses();
 void check_hazards();
@@ -84,8 +84,8 @@ bool digitalRead(uint8_t pin);
 #define ON              1
 #define OFF             0
 
-#define SDA_GPIO        8
-#define SCL_GPIO        9
+#define PIN_SDA         8
+#define PIN_SCL         9
 
 #define PIN_GREEN       20
 #define PIN_RED         21

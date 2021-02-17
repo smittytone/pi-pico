@@ -198,10 +198,10 @@ void setup() {
 
     // Set up I2C
     i2c_init(I2C_PORT, I2C_FREQUENCY);
-    gpio_set_function(SDA_GPIO, GPIO_FUNC_I2C);
-    gpio_set_function(SCL_GPIO, GPIO_FUNC_I2C);
-    gpio_pull_up(SDA_GPIO);
-    gpio_pull_up(SCL_GPIO);
+    gpio_set_function(PIN_SDA, GPIO_FUNC_I2C);
+    gpio_set_function(PIN_SCL, GPIO_FUNC_I2C);
+    gpio_pull_up(PIN_SDA);
+    gpio_pull_up(PIN_SCL);
 
     // Set up the LED matrix
     ht16k33_init();
