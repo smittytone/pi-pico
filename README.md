@@ -60,6 +60,9 @@ Pico project set up script for Z Shell. Requires Pico C SDK pre-installed.
 
 - *Unreleased*
     - Add *wumpus* example.
+    - Update *makepico* script:
+        - Add VSCode config creation.
+        - Add `-d`/`--debug` switch to add VSCode SWD debugging support.
 - *5 February 2021*
     - Add *sensor* example.
 - *4 February 2021*
