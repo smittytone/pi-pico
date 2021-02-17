@@ -11,8 +11,8 @@
       "servertype": "openocd",
       "device": "RP2040",
       "configFiles": [
-        "tcl/interface/picoprobe.cfg",
-        "tcl/target/rp2040.cfg"
+        "interface/picoprobe.cfg",
+        "target/rp2040.cfg"
         ],
       "svdFile": "/Users/smittytone/GitHub/pico-sdk/src/rp2040/hardware_regs/rp2040.svd",
       "runToMain": true,
