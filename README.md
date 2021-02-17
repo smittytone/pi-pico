@@ -11,7 +11,7 @@ A sample C project to build a fun game.
 * An HT16K33-based 8x8 LED matrix; I used [this display](https://www.adafruit.com/product/1049)
 * A piezo speaker
 * One small button
-* A two-way, self-centring analog joystick; there are lots of options available on eBay
+* A two-way, self-centring analog joystick; there are [lots available on eBay](https://www.ebay.co.uk/itm/New-PSP-2-Axis-Analog-Thumb-GAME-Joystick-Module-3V-5V-For-arduino-PSP/401104248437?hash=item5d63ad1e75:g:HcEAAOSwjqVZNSzw)
 * A red LED
 * A green LED
 * Wires
@@ -35,7 +35,7 @@ A green light indicates the Wumpus is close. Enter its square and it will eat yo
 
 ### Credit ###
 
-This version was based on an [Ardiuno version]() created by xxx. This is very much his game, but I have taken liberties with a couple of the animations and rewritten the code.
+This version was based on an [Ardiuno version](https://github.com/coreyfaure/HuntTheWumpus-Arduino) created by Corey Faure. This is very much his game, but I have taken a few liberties with a couple of the animations and rewritten the code.
 
 ## i2c ##
 
