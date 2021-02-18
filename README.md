@@ -37,26 +37,28 @@ A green light indicates the Wumpus is close. Enter its square and it will eat yo
 
 This version was based on an [Ardiuno version](https://github.com/coreyfaure/HuntTheWumpus-Arduino) created by Corey Faure. This is very much his game, but I have taken a few liberties with a couple of the animations and rewritten the code.
 
-## i2c ##
-
-A sample C project. Requires an HT16K33-based 8x8 LED matrix. I used [this display](https://www.adafruit.com/product/1049).
-
-## sensor ##
+## sensor
 
 A sample C project. Requires an HT16K33-based 4-digit, 7-segment LED and an SGP30 TVOC sensor. I used [this sensor](https://shop.pimoroni.com/products/sgp30-air-quality-sensor-breakout) and [this display](https://www.adafruit.com/product/878):
 
 <img src="images/sensor.png" />
 
-## micropython ##
+## i2c
+
+A sample C project. Requires an HT16K33-based 8x8 LED matrix. I used [this display](https://www.adafruit.com/product/1049).
+
+<img src="images/i2c.png" />
+
+## micropython
 
 A sample MicroPython project. Requires an HT16K33-based 8x8 LED matrix.
 
-## makepico ##
+## makepico
 
 Pico project set up script for Z Shell. Requires Pico C SDK pre-installed.
 
 
-## Updates ##
+## Updates
 
 - *Unreleased*
     - Add *wumpus* example.
