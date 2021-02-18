@@ -35,7 +35,7 @@ uint8_t get_direction(uint16_t x, uint16_t y);
 // Environment
 void draw_world();
 void check_senses();
-void check_hazards();
+bool check_hazards();
 
 // Player events
 void grabbed_by_bat();
@@ -107,6 +107,7 @@ bool digitalRead(uint8_t pin);
 #define HT16K33_GENERIC_CMD_BLINK       0x81
 #define HT16K33_ADDRESS                 0x70
 
+#define DEBOUNCE_TIME_US                5000
 
 // _WUMPUS_HEADER_
 #endif

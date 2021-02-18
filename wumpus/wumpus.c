@@ -22,6 +22,9 @@ const char text_lose[] = "    YOU DIED!    ";
 // Graphics buffer
 uint8_t buffer[8];
 
+uint32_t debounceButton = 0;
+uint32_t debounceJoystick = 0;
+
 
 /*
  *  I2C Functions
@@ -339,6 +342,7 @@ void game_loop() {
         uint16_t x = adc_read();
         adc_select_input(1);
         uint16_t y = adc_read();
+        bool is_dead = false;
 
         if (check_joystick(x, y)) {
             // Joystick is pointing in a direction, so
@@ -377,62 +381,73 @@ void game_loop() {
             // Check the new location for sense
             // information and hazards
             check_senses();
-            check_hazards();
+            is_dead = check_hazards();
         } else {
             // Joystick is in deadzone
             if (gpio_get(PIN_BUTTON)) {
-                // Shoot arrow
-                fire_arrow_animation();
+                uint32_t now = time_us_32();
+                if (debounceButton == 0) {
+                    // Set debounce timer
+                    debounceButton = now;
+                } else if (now - debounceButton > DEBOUNCE_TIME_US) {
+                    // Clear debounce timer
+                    debounceButton == 0;
 
-                if (last_move == 0) {
-                    if (player_y < 7) {
-                        if (hazards[player_x][player_y + 1] == 'w') {
-                            dead_wumpus_animation();
-                        } else {
-                            arrow_miss_animation();
+                    // Shoot arrow
+                    fire_arrow_animation();
+
+                    if (last_move == 0) {
+                        if (player_y < 7) {
+                            if (hazards[player_x][player_y + 1] == 'w') {
+                                dead_wumpus_animation();
+                            } else {
+                                arrow_miss_animation();
+                                is_dead = true;
+                            }
+                            break;
                         }
-
-                        break;
-                    }
-                } else if (last_move == 3) {
-                    if (player_x < 7) {
-                        if (hazards[player_x + 1][player_y] == 'w') {
-                            dead_wumpus_animation();
-                        } else {
-                            arrow_miss_animation();
+                    } else if (last_move == 3) {
+                        if (player_x < 7) {
+                            if (hazards[player_x + 1][player_y] == 'w') {
+                                dead_wumpus_animation();
+                            } else {
+                                arrow_miss_animation();
+                                is_dead = true;
+                            }
+                            break;
                         }
-
-                        break;
-                    }
-                } else if (last_move == 2) {
-                    if (player_y > 0) {
-                        if (hazards[player_x][player_y - 1] == 'w') {
-                            dead_wumpus_animation();
-                        } else {
-                            arrow_miss_animation();
+                    } else if (last_move == 2) {
+                        if (player_y > 0) {
+                            if (hazards[player_x][player_y - 1] == 'w') {
+                                dead_wumpus_animation();
+                            } else {
+                                arrow_miss_animation();
+                                is_dead = true;
+                            }
+                            break;
                         }
-
-                        break;
-                    }
-                } else {
-                    if (player_x > 0) {
-                        if (hazards[player_x - 1][player_y] == 'w') {
-                            dead_wumpus_animation();
-                        } else {
-                            arrow_miss_animation();
+                    } else {
+                        if (player_x > 0) {
+                            if (hazards[player_x - 1][player_y] == 'w') {
+                                dead_wumpus_animation();
+                            } else {
+                                arrow_miss_animation();
+                                is_dead = true;
+                            }
+                            break;
                         }
-
-                        break;
                     }
                 }
             }
         }
 
-        // Draw the world then check for smells and hazards
-        draw_world();
+        if (!is_dead) {
+            // Draw the world then check for smells and hazards
+            draw_world();
 
-        // Pause between cycles
-        sleep_ms(250);
+            // Pause between cycles
+            sleep_ms(250);
+        }
     }
 
     sleep_ms(1000);
@@ -444,11 +459,16 @@ void game_loop() {
  */
 bool check_joystick(uint16_t x, uint16_t y) {
     // Check to see if joystick is outside of the deadzone
-
     if (x > UPPER_LIMIT || x < LOWER_LIMIT || y > UPPER_LIMIT || y < LOWER_LIMIT) {
-        return true;
+        if (debounceJoystick == 0) {
+            debounceJoystick = 0xFF;
+            return true;
+        } else {
+            return false;
+        }
     }
 
+    debounceJoystick = 0;
     return false;
 }
 
@@ -504,8 +524,10 @@ void check_senses() {
     }
 }
 
-void check_hazards() {
+bool check_hazards() {
     // Check to see if player has run into a bat, a pit or the Wumpus
+    // If the player steps on a fatal square, 'check_hazards()'
+    // returns true, otherwise false
     if (hazards[player_x][player_y] == 'b') {
         // Player encountered a bat: play the animation...
         grabbed_by_bat();
@@ -525,11 +547,15 @@ void check_hazards() {
         // Player fell down a pit -- death!
         plunged_into_pit();
         game_lost();
+        return true;
     } else if (hazards[player_x][player_y] == 'w') {
         // Player ran into the Wumpus!
         wumpus_win_animation();
         game_lost();
+        return true;
     }
+
+    return false;
 }
 
 
@@ -690,17 +716,23 @@ void arrow_miss_animation() {
 void wumpus_win_animation() {
     // Player gets attacked from the vicious Wumpus!
     // Complete with nightmare-inducing sound
-    ht16k33_draw_sprite(wumpus_1);
+    for (uint8_t j = 0 ; j < 3 ; ++j) {
+        ht16k33_draw_sprite(wumpus_2);
+        sleep_ms(250);
+        ht16k33_draw_sprite(wumpus_1);
+        sleep_ms(250);
+    }
 
+    // Play the scream
     for (uint i = 2000 ; i > 800 ; i -= 2) {
         tone(i, 10, 1);
     }
 
     for (uint8_t j = 0 ; j < 5 ; ++j) {
         ht16k33_draw_sprite(wumpus_2);
-        sleep_ms(500);
+        sleep_ms(250);
         ht16k33_draw_sprite(wumpus_1);
-        sleep_ms(500);
+        sleep_ms(250);
     }
 }
 
@@ -711,33 +743,33 @@ void wumpus_win_animation() {
 void game_won() {
     // Give the player a trophy!
     ht16k33_draw_sprite(trophy);
-    ht16k33_set_brightness(8);
+    ht16k33_set_brightness(irandom(1, 10));
     tone(1397, 100, 200);
-    ht16k33_set_brightness(1);
+    ht16k33_set_brightness(irandom(1, 10));
     tone(1397, 100, 200);
-    ht16k33_set_brightness(8);
+    ht16k33_set_brightness(irandom(1, 10));
     tone(1397, 100, 200);
-    ht16k33_set_brightness(1);
+    ht16k33_set_brightness(irandom(1, 10));
     tone(1397, 200, 300);
-    ht16k33_set_brightness(8);
+    ht16k33_set_brightness(irandom(1, 10));
     tone(1175, 200, 300);
-    ht16k33_set_brightness(1);
+    ht16k33_set_brightness(irandom(1, 10));
     tone(1319, 200, 300);
-    ht16k33_set_brightness(8);
+    ht16k33_set_brightness(irandom(1, 10));
     tone(1397, 200, 300);
-    ht16k33_set_brightness(1);
+    ht16k33_set_brightness(irandom(1, 10));
     tone(1319, 150, 150);
-    ht16k33_set_brightness(8);
+    ht16k33_set_brightness(irandom(1, 10));
     tone(1397, 400, 300);
-    ht16k33_set_brightness(1);
+    ht16k33_set_brightness(irandom(1, 10));
     sleep_ms(300);
-    ht16k33_set_brightness(8);
+    ht16k33_set_brightness(irandom(1, 10));
     sleep_ms(300);
-    ht16k33_set_brightness(1);
+    ht16k33_set_brightness(irandom(1, 10));
     sleep_ms(300);
-    ht16k33_set_brightness(8);
+    ht16k33_set_brightness(irandom(1, 10));
     sleep_ms(300);
-    ht16k33_set_brightness(1);
+    ht16k33_set_brightness(2);
     sleep_ms(1000);
 
     // Show the success message
