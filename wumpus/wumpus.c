@@ -451,7 +451,7 @@ void game_loop() {
             draw_world();
 
             // Pause between cycles
-            //sleep_ms(50);
+            sleep_ms(50);
         }
     }
 
@@ -816,6 +816,8 @@ void game_over(const char *text) {
     in_play = false;
     ht16k33_clear();
     ht16k33_draw();
+    gpio_put(PIN_GREEN, false);
+    gpio_put(PIN_RED, false);
 }
 
 
