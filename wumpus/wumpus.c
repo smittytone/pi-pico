@@ -22,9 +22,10 @@ const char text_lose[] = "    YOU DIED!    ";
 // Graphics buffer
 uint8_t buffer[8];
 
+// Debouncing controls
 uint32_t debounceButton = 0;
-uint32_t debounceJoystick = 0;
-
+bool debounceJoystick = true;
+uint32_t lastFlash = 0;
 
 /*
  *  I2C Functions
@@ -44,10 +45,15 @@ void i2c_write_block(uint8_t *data, uint8_t count) {
  *  HT16K33 LED Matrix Functions
  */
 void ht16k33_init() {
-    ht16k33_power(ON);
+    // Initialize the matrix by powering up
+    ht16k33_power_on_or_off(ON);
+    ht16k33_set_brightness(2);
+    ht16k33_clear();
+    ht16k33_draw();
 }
 
-void ht16k33_power(uint8_t on) {
+void ht16k33_power_on_or_off(uint8_t on) {
+    // Power the LED on or off
     i2c_write_byte(on == ON ? HT16K33_GENERIC_SYSTEM_ON : HT16K33_GENERIC_DISPLAY_OFF);
     i2c_write_byte(on == ON ? HT16K33_GENERIC_DISPLAY_ON : HT16K33_GENERIC_SYSTEM_OFF);
 }
@@ -175,10 +181,12 @@ int irandom(int start, int max) {
 }
 
 void tone(unsigned int frequency, unsigned long duration, unsigned long post) {
+    // Get the cycle period in microseconds
+    // NOTE Input is in Hz
+    float period = 1000000 / (float)frequency;
+
     // Get the microsecond timer now
     unsigned long start = time_us_64();
-
-    float period = 1000000 / (float)frequency;
 
     // Loop until duration (ms) in microseconds has elapsed
     while (time_us_64() < start + duration * 1000) {
@@ -208,9 +216,6 @@ void setup() {
 
     // Set up the LED matrix
     ht16k33_init();
-    ht16k33_set_brightness(2);
-    ht16k33_clear();
-    ht16k33_draw();
 
     // Set up sense indicator output pins:
     // Green is the Wumpus nearby indicator
@@ -446,7 +451,7 @@ void game_loop() {
             draw_world();
 
             // Pause between cycles
-            sleep_ms(250);
+            //sleep_ms(50);
         }
     }
 
@@ -458,17 +463,21 @@ void game_loop() {
  *  Movement control functions
  */
 bool check_joystick(uint16_t x, uint16_t y) {
-    // Check to see if joystick is outside of the deadzone
+    // Check to see if the joystick is currently
+    // outside of the central deadzone, and that it
+    // has returned to the centre before re-reading
     if (x > UPPER_LIMIT || x < LOWER_LIMIT || y > UPPER_LIMIT || y < LOWER_LIMIT) {
-        if (debounceJoystick == 0) {
-            debounceJoystick = 0xFF;
+        if (debounceJoystick) {
+            // We're good to use the reading, but not
+            debounceJoystick = false;
             return true;
         } else {
             return false;
         }
     }
 
-    debounceJoystick = 0;
+    // Joystick is centred
+    debounceJoystick = true;
     return false;
 }
 
@@ -506,7 +515,12 @@ void draw_world() {
     // Flash the player's location
     ht16k33_plot(player_x, player_y, state);
     ht16k33_draw();
-    state = !state;
+
+    uint32_t now = time_us_32();
+    if (now - lastFlash > 250000) {
+        state = !state;
+        lastFlash = now;
+    }
 }
 
 void check_senses() {
@@ -696,17 +710,17 @@ void arrow_miss_animation() {
     // Show the arrow flying past...
     ht16k33_clear();
     sleep_ms(1000);
-    ht16k33_plot(1, 6, true);
+
+    for (uint8_t i = 0 ; i < 7 ; i += 2) {
+        if (i > 0) ht16k33_plot(i - 2, 4, false);
+        ht16k33_plot(i, 4, true);
+        ht16k33_draw();
+        tone(80, 100, 500);
+    }
+
+    // Clear the last arrow point
+    ht16k33_clear();
     ht16k33_draw();
-    tone(80, 100, 500);
-    ht16k33_plot(1, 6, false);
-    ht16k33_plot(3, 6, true);
-    ht16k33_draw();
-    tone(80, 100, 500);
-    ht16k33_plot(3, 6, false);
-    ht16k33_plot(5, 6, true);
-    ht16k33_draw();
-    tone(80, 100, 500);
 
     // ...and then the Wumpus gets the player
     wumpus_win_animation();

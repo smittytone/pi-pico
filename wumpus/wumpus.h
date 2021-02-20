@@ -58,7 +58,7 @@ void i2c_write_block(uint8_t *data, uint8_t count);
 
 // HT16K33
 void ht16k33_init();
-void ht16k33_power(uint8_t on);
+void ht16k33_power_on_or_off(uint8_t on);
 void ht16k33_set_brightness(uint8_t brightness);
 void ht16k33_draw_sprite(const char *sprite);
 void ht16k33_draw_sprite_center(const char *sprite);
@@ -107,7 +107,7 @@ bool digitalRead(uint8_t pin);
 #define HT16K33_GENERIC_CMD_BLINK       0x81
 #define HT16K33_ADDRESS                 0x70
 
-#define DEBOUNCE_TIME_US                5000
+#define DEBOUNCE_TIME_US                10000
 
 // _WUMPUS_HEADER_
 #endif
