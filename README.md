@@ -60,7 +60,7 @@ Pico project set up script for Z Shell. Requires Pico C SDK pre-installed.
 
 ## Updates
 
-- *Unreleased*
+- *20 February 2021*
     - Add *wumpus* example.
     - Update *makepico* script:
         - Add VSCode config creation.
