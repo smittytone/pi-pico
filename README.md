@@ -60,6 +60,8 @@ Pico project set up script for Z Shell. Requires Pico C SDK pre-installed.
 
 ## Updates
 
+- *23 February 2021*
+    - Tweak Wumpus sprite.
 - *20 February 2021*
     - Add *wumpus* example.
     - Update *makepico* script:
