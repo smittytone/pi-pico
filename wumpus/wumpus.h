@@ -1,3 +1,12 @@
+/*
+ * 'Hunt the Wumpus' for Raspberry Pi Pico
+ *
+ * By Tony Smith
+ * Original version by Corey Faure
+ *
+ * Version 1.0.1
+ *
+ */
 #ifndef _WUMPUS_HEADER_
 #define _WUMPUS_HEADER_
 

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 include(pico_sdk_import.cmake)
-project(Wumpus VERSION 1.0.0)
+project(Wumpus VERSION 1.0.1)
 add_executable(Wumpus wumpus.c)
 pico_sdk_init()
 pico_enable_stdio_usb(Wumpus 1)

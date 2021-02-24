@@ -1,3 +1,12 @@
+/*
+ * 'Hunt the Wumpus' for Raspberry Pi Pico
+ *
+ * By Tony Smith
+ * Original version by Corey Faure
+ *
+ * Version 1.0.1
+ *
+ */
 #include "wumpus.h"
 
 /*
@@ -385,8 +394,9 @@ void game_loop() {
 
             // Check the new location for sense
             // information and hazards
-            check_senses();
             is_dead = check_hazards();
+            if (!is_dead) check_senses();
+
         } else {
             // Joystick is in deadzone
             if (gpio_get(PIN_BUTTON)) {
