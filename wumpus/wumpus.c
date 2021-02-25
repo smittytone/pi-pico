@@ -508,6 +508,12 @@ uint8_t get_direction(uint16_t x, uint16_t y) {
     }
 }
 
+void clear_pins() {
+    // Turn off the sense pins no matter what
+    gpio_put(PIN_GREEN, false);
+    gpio_put(PIN_RED, false);
+}
+
 
 /*
  *  Environment Functions
@@ -766,35 +772,37 @@ void wumpus_win_animation() {
  */
 void game_won() {
     // Give the player a trophy!
+    clear_pins();
     ht16k33_draw_sprite(trophy);
-    ht16k33_set_brightness(irandom(1, 10));
+    ht16k33_set_brightness(irandom(1, 15));
     tone(1397, 100, 200);
-    ht16k33_set_brightness(irandom(1, 10));
+    ht16k33_set_brightness(irandom(7, 14));
     tone(1397, 100, 200);
-    ht16k33_set_brightness(irandom(1, 10));
+    ht16k33_set_brightness(irandom(1, 8));
     tone(1397, 100, 200);
-    ht16k33_set_brightness(irandom(1, 10));
+    ht16k33_set_brightness(irandom(7, 14));
     tone(1397, 200, 300);
-    ht16k33_set_brightness(irandom(1, 10));
+    ht16k33_set_brightness(irandom(1, 8));
     tone(1175, 200, 300);
-    ht16k33_set_brightness(irandom(1, 10));
+    ht16k33_set_brightness(irandom(7, 14));
     tone(1319, 200, 300);
-    ht16k33_set_brightness(irandom(1, 10));
+    ht16k33_set_brightness(irandom(1, 80));
     tone(1397, 200, 300);
-    ht16k33_set_brightness(irandom(1, 10));
+    ht16k33_set_brightness(irandom(7, 14));
     tone(1319, 150, 150);
-    ht16k33_set_brightness(irandom(1, 10));
+    ht16k33_set_brightness(irandom(1, 8));
     tone(1397, 400, 300);
-    ht16k33_set_brightness(irandom(1, 10));
+    ht16k33_set_brightness(irandom(7, 14));
     sleep_ms(300);
-    ht16k33_set_brightness(irandom(1, 10));
+    ht16k33_set_brightness(irandom(1, 8));
     sleep_ms(300);
-    ht16k33_set_brightness(irandom(1, 10));
+    ht16k33_set_brightness(irandom(7, 14));
     sleep_ms(300);
-    ht16k33_set_brightness(irandom(1, 10));
+    ht16k33_set_brightness(irandom(1, 8));
     sleep_ms(300);
-    ht16k33_set_brightness(2);
+    ht16k33_set_brightness(12);
     sleep_ms(1000);
+    ht16k33_set_brightness(2);
 
     // Show the success message
     game_over(text_win);
@@ -802,6 +810,7 @@ void game_won() {
 
 void game_lost() {
     // Give the player a funeral
+    clear_pins();
     ht16k33_draw_sprite(grave);
     tone(294, 400, 200);
     tone(294, 400, 200);
@@ -826,8 +835,6 @@ void game_over(const char *text) {
     in_play = false;
     ht16k33_clear();
     ht16k33_draw();
-    gpio_put(PIN_GREEN, false);
-    gpio_put(PIN_RED, false);
 }
 
 

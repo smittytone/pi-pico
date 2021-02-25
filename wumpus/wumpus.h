@@ -45,6 +45,7 @@ uint8_t get_direction(uint16_t x, uint16_t y);
 void draw_world();
 void check_senses();
 bool check_hazards();
+void clear_pins();
 
 // Player events
 void grabbed_by_bat();
