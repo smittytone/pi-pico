@@ -4,7 +4,7 @@
  * By Tony Smith
  * Original version by Corey Faure
  *
- * Version 1.0.1
+ * Version 1.0.2
  *
  */
 #include "wumpus.h"
@@ -21,9 +21,10 @@ bool draft_layer[8][8];
 
 uint8_t player_x = 0;
 uint8_t player_y = 0;
-uint8_t last_move = 0;
-bool in_play = true;
-bool state = true;
+uint8_t last_move_dir = 0;
+
+bool is_in_play = true;
+bool is_player_pixel_on = true;
 
 const char text_win[] = "    YOU WIN!    ";
 const char text_lose[] = "    YOU DIED!    ";
@@ -32,9 +33,9 @@ const char text_lose[] = "    YOU DIED!    ";
 uint8_t buffer[8];
 
 // Debouncing controls
-uint32_t debounceButton = 0;
-bool debounceJoystick = true;
-uint32_t lastFlash = 0;
+uint32_t debounce_count_button = 0;
+bool is_joystick_centred = true;
+uint32_t last_player_pixel_flash = 0;
 
 /*
  *  I2C Functions
@@ -265,7 +266,7 @@ void create_world() {
     // The player starts at (0,0)
     player_x = 0;
     player_y = 0;
-    in_play = true;
+    is_in_play = true;
 
     // Zero the world arrays
     for (uint8_t i = 0 ; i < 8 ; ++i) {
@@ -305,7 +306,7 @@ void create_world() {
     //      corner
     uint8_t wumpus_x = 0;
     uint8_t wumpus_y = 0;
-    while (wumpus_x < 2 && wumpus_y < 2) {
+    while (wumpus_x < 1 && wumpus_y < 1) {
         wumpus_x = irandom(0, 8);
         wumpus_y = irandom(0, 8);
     }
@@ -350,7 +351,7 @@ void game_loop() {
     // If it's in the deadzone, check if the player is trying
     // to fire an arrow.
 
-    while (in_play) {
+    while (is_in_play) {
         // Read joystick analog output
         adc_select_input(0);
         uint16_t x = adc_read();
@@ -370,25 +371,25 @@ void game_loop() {
                 // Move player up
                 if (player_y < 7) {
                     player_y++;
-                    last_move = 0;
+                    last_move_dir = 0;
                 }
             } else if (dir == 3) {
                 // Move player right
                 if (player_x < 7) {
                     player_x++;
-                    last_move = 3;
+                    last_move_dir = 3;
                 }
             } else if (dir == 2) {
                 // Move player down
                 if (player_y > 0) {
                     player_y--;
-                    last_move = 2;
+                    last_move_dir = 2;
                 }
             } else {
                 // Move player left
                 if (player_x > 0) {
                     player_x--;
-                    last_move = 1;
+                    last_move_dir = 1;
                 }
             }
 
@@ -401,43 +402,41 @@ void game_loop() {
             // Joystick is in deadzone
             if (gpio_get(PIN_BUTTON)) {
                 uint32_t now = time_us_32();
-                if (debounceButton == 0) {
+                if (debounce_count_button == 0) {
                     // Set debounce timer
-                    debounceButton = now;
-                } else if (now - debounceButton > DEBOUNCE_TIME_US) {
+                    debounce_count_button = now;
+                } else if (now - debounce_count_button > DEBOUNCE_TIME_US) {
                     // Clear debounce timer
-                    debounceButton == 0;
+                    debounce_count_button == 0;
 
                     // Shoot arrow
                     fire_arrow_animation();
-
-                    if (last_move == 0) {
+                    
+                    // Did the arrow hit or miss?
+                    if (last_move_dir == 0) {
                         if (player_y < 7) {
                             if (hazards[player_x][player_y + 1] == 'w') {
                                 dead_wumpus_animation();
                             } else {
                                 arrow_miss_animation();
-                                is_dead = true;
                             }
                             break;
                         }
-                    } else if (last_move == 3) {
+                    } else if (last_move_dir == 3) {
                         if (player_x < 7) {
                             if (hazards[player_x + 1][player_y] == 'w') {
                                 dead_wumpus_animation();
                             } else {
                                 arrow_miss_animation();
-                                is_dead = true;
                             }
                             break;
                         }
-                    } else if (last_move == 2) {
+                    } else if (last_move_dir == 2) {
                         if (player_y > 0) {
                             if (hazards[player_x][player_y - 1] == 'w') {
                                 dead_wumpus_animation();
                             } else {
                                 arrow_miss_animation();
-                                is_dead = true;
                             }
                             break;
                         }
@@ -447,7 +446,6 @@ void game_loop() {
                                 dead_wumpus_animation();
                             } else {
                                 arrow_miss_animation();
-                                is_dead = true;
                             }
                             break;
                         }
@@ -464,8 +462,6 @@ void game_loop() {
             sleep_ms(50);
         }
     }
-
-    sleep_ms(1000);
 }
 
 
@@ -477,9 +473,9 @@ bool check_joystick(uint16_t x, uint16_t y) {
     // outside of the central deadzone, and that it
     // has returned to the centre before re-reading
     if (x > UPPER_LIMIT || x < LOWER_LIMIT || y > UPPER_LIMIT || y < LOWER_LIMIT) {
-        if (debounceJoystick) {
+        if (is_joystick_centred) {
             // We're good to use the reading, but not
-            debounceJoystick = false;
+            is_joystick_centred = false;
             return true;
         } else {
             return false;
@@ -487,7 +483,7 @@ bool check_joystick(uint16_t x, uint16_t y) {
     }
 
     // Joystick is centred
-    debounceJoystick = true;
+    is_joystick_centred = true;
     return false;
 }
 
@@ -529,13 +525,13 @@ void draw_world() {
     }
 
     // Flash the player's location
-    ht16k33_plot(player_x, player_y, state);
+    ht16k33_plot(player_x, player_y, is_player_pixel_on);
     ht16k33_draw();
 
     uint32_t now = time_us_32();
-    if (now - lastFlash > 250000) {
-        state = !state;
-        lastFlash = now;
+    if (now - last_player_pixel_flash > 250000) {
+        is_player_pixel_on = !is_player_pixel_on;
+        last_player_pixel_flash = now;
     }
 }
 
@@ -854,7 +850,7 @@ void game_over(const char *text) {
     // Show final message and
     // clear the screen for the next game
     for (uint8_t i = 0 ; i < 3 ; ++i) ht16k33_print(text);
-    in_play = false;
+    is_in_play = false;
     ht16k33_clear();
     ht16k33_draw();
 }

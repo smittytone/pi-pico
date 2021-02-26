@@ -4,7 +4,7 @@
  * By Tony Smith
  * Original version by Corey Faure
  *
- * Version 1.0.1
+ * Version 1.0.2
  *
  */
 #ifndef _WUMPUS_SPRITES_
