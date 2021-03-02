@@ -7,7 +7,7 @@
 #
 # @author    Tony Smith
 # @copyright 2021, Tony Smith
-# @version   1.0.2
+# @version   1.1.0
 # @license   MIT
 #
 
@@ -26,6 +26,15 @@ else
     fi
 fi
 
+
+show_help() {
+    echo -e "\nMake a Pi Pico Project\n"
+    echo -e "Usage:\n  makepick [path/name] [-d] [-h]\n"
+    echo    "Options:"
+    echo    "  -d / --debug   Set up the project for SWD. Default: false"
+    echo    "  -h / --help    This help screen"
+    echo
+}
 
 make_project() {
     # Create and copy the project files
@@ -173,6 +182,9 @@ for arg in "$@"; do
     uarg=${arg:u}
     if [[ "$uarg" == "-D" || "$uarg" == "--DEBUG"  ]]; then
         do_swd=1
+    elif [[ "$uarg" == "-H" || "$uarg" == "--HELP"  ]]; then
+        show_help
+        exit 0
     else
         projects+=("$arg")
     fi
@@ -182,4 +194,7 @@ if [[ ${#projects[@]} -gt 0 ]]; then
     for project in "${projects[@]}"; do
         make_project "$project"
     done
+else
+    show_help
+    exit 0
 fi
