@@ -67,7 +67,7 @@ void show_map(uint8_t y_delta) {
         char *line = current_map[i];
         for (uint8_t j = 0 ; j < 20 ; ++j) {
             uint8_t pixel = line[j];
-            if (pixel == 0xFF) {
+            if (pixel == MAP_TILE_CLEAR) {
                 ssd1306_plot(x + j * 2, y + i * 2, 1);
                 ssd1306_plot(x + j * 2 + 1, y + i * 2, 1);
                 ssd1306_plot(x + j * 2, y + i * 2 + 1, 1);
@@ -88,14 +88,14 @@ uint8_t get_square_contents(uint8_t x, uint8_t y) {
 
 uint8_t get_view_distance(uint8_t x, uint8_t y, uint8_t direction) {
     // Return the number of square the player can see
-    // ahead of them in the directio they are facing
+    // ahead of them in the direction they are facing
     uint8_t count = 0;
     if (x > 19 || y > 19 || direction > 3) return count;
 
     switch(direction) {
         case DIRECTION_NORTH:
             for (uint8_t i = y ; i > 0 ; --i) {
-                if (get_square_contents(x, i) != 0 ) {
+                if (get_square_contents(x, i) != MAP_TILE_WALL) {
                     count++;
                 } else {
                     break;
@@ -104,7 +104,7 @@ uint8_t get_view_distance(uint8_t x, uint8_t y, uint8_t direction) {
             break;
         case DIRECTION_EAST:
             for (uint8_t i = x ; i < 19 ; ++i) {
-                if (get_square_contents(i, y) != 0) {
+                if (get_square_contents(i, y) != MAP_TILE_WALL) {
                     count++;
                 } else {
                     break;
@@ -113,7 +113,7 @@ uint8_t get_view_distance(uint8_t x, uint8_t y, uint8_t direction) {
             break;
         case DIRECTION_SOUTH:
             for (uint8_t i = y ; i < 19 ; ++i) {
-                if (get_square_contents(x, i) != 0) {
+                if (get_square_contents(x, i) != MAP_TILE_WALL) {
                     count++;
                 } else {
                     break;
@@ -122,7 +122,7 @@ uint8_t get_view_distance(uint8_t x, uint8_t y, uint8_t direction) {
             break;
         default:
             for (uint8_t i = x ; i > 0 ; --i) {
-                if (get_square_contents(i, y) != 0) {
+                if (get_square_contents(i, y) != MAP_TILE_WALL) {
                     count++;
                 } else {
                     break;

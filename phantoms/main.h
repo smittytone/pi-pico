@@ -71,8 +71,8 @@ void death();
 void draw_screen();
 void draw_floor_line(uint8_t inset);
 void draw_rect(Rect *the_rect, Rect *outer_rect, bool is_open);
-void draw_left(uint8_t steps, bool left_open);
-void draw_right(uint8_t steps, bool right_open);
+void draw_left_wall(uint8_t steps, bool left_open);
+void draw_right_wall(uint8_t steps, bool right_open);
 void draw_end(uint8_t steps);
 
 int irandom(int start, int max);
@@ -110,6 +110,11 @@ void tone(unsigned int frequency, unsigned long duration, unsigned long post);
 #define JOY_MAX                                         4096
 
 #define DEBOUNCE_TIME_US                                10000
+
+// Map square types
+#define MAP_TILE_CLEAR                                  0xFF
+#define MAP_TILE_WALL                                   0x00
+#define MAP_TILE_TELEPORTER                             0xAA
 
 
 /*

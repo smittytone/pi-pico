@@ -2,6 +2,15 @@
 
 
 /*
+ *  Corner triangles
+ */
+const char angles[2][10] = {
+    "\x0F\x0E\x0E\x0E\x0C\x0C\x0C\x08\x08\x08",
+    "\xF0\x70\x70\x70\x30\x30\x30\x10\x10\x10"
+};
+
+
+/*
  *  Initialisation Functions
  */
 void setup() {
@@ -48,12 +57,7 @@ void setup() {
     gpio_put(PIN_LED, false);
 
     // Make the graphic frame rects
-    /*
-    uint8_t coords[] = {0,0,0,0,0,5,11,54,12,10,12,44,25,15,11,34,37,20,10,25,
-                        48,23,7,19,56,25,4,14,61,26,6,12,68,25,4,14,73,23,7,19,
-                        81,20,10,25,92,15,11,34,104,10,12,44,117,5,11,54,127,0,0,0};
-    */
-
+    // NOTE These are pixel values
     uint8_t coords[] = {0,0,127,63,
                         11,4,106,54,
                         24,9,80,43,
@@ -385,8 +389,8 @@ void draw_screen() {
                 bool right_open = (get_view_distance(player_x, i, DIRECTION_EAST) > 0);
 
                 // Draw in the current walls
-                draw_left(steps, left_open);
-                draw_right(steps, right_open);
+                draw_left_wall(steps, left_open);
+                draw_right_wall(steps, right_open);
 
                 // Got to the end?
                 if (steps == max_steps) {
@@ -407,8 +411,8 @@ void draw_screen() {
                 bool left_open = (get_view_distance(i, player_y, DIRECTION_NORTH) > 0);
                 bool right_open = (get_view_distance(i, player_y, DIRECTION_SOUTH) > 0);
 
-                draw_left(steps, left_open);
-                draw_right(steps, right_open);
+                draw_left_wall(steps, left_open);
+                draw_right_wall(steps, right_open);
 
                 if (steps == max_steps) {
                     draw_end(steps);
@@ -426,8 +430,8 @@ void draw_screen() {
                 bool left_open = (get_view_distance(player_x, i, DIRECTION_EAST) > 0);
                 bool right_open = (get_view_distance(player_x, i, DIRECTION_WEST) > 0);
 
-                draw_left(steps, left_open);
-                draw_right(steps, right_open);
+                draw_left_wall(steps, left_open);
+                draw_right_wall(steps, right_open);
 
                 if (steps == max_steps) {
                     draw_end(steps);
@@ -445,8 +449,8 @@ void draw_screen() {
                 bool left_open = (get_view_distance(player_x, i, DIRECTION_SOUTH) > 0);
                 bool right_open = (get_view_distance(player_x, i, DIRECTION_NORTH) > 0);
 
-                draw_left(steps, left_open);
-                draw_right(steps, right_open);
+                draw_left_wall(steps, left_open);
+                draw_right_wall(steps, right_open);
 
                 if (steps == max_steps) {
                     draw_end(steps);
@@ -466,22 +470,51 @@ void draw_floor_line(uint8_t inset) {
     ssd1306_draw();
 }
 
-void draw_left(uint8_t inset, bool is_open) {
+void draw_left_wall(uint8_t inset, bool is_open) {
     // Draw main left-side rect
     Rect i = rects[inset + 1];
     Rect o = rects[inset];
-    ssd1306_rect(o.origin_x, i.origin_y, i.origin_x - o.origin_x - 2, i.height, 1, true);
+    ssd1306_rect(o.origin_x, i.origin_y, i.origin_x - o.origin_x - 1, i.height, 1, true);
+    if (is_open) return;
+
+    // Add upper and lower triangles for a closed wall
+    for (uint8_t i = 0 ; i < 10 ; ++i) {
+        uint8_t byte =  angles[0][i];
+        for (uint8_t j = 0 ; j < 8 ; ++j) {
+            if ((byte & (1 << j)) > 0) ssd1306_plot(o.origin_x + i, o.origin_x + j, 1);
+        }
+
+        byte = angles[1][i];
+        for (uint8_t j = 0 ; j < 8 ; ++j) {
+            if ((byte & (1 << j)) > 0) ssd1306_plot(o.origin_x + i, o.origin_x + o.height + j, 1);
+        }
+    }
     ssd1306_draw();
 }
 
-void draw_right(uint8_t inset, bool is_open) {
+void draw_right_wall(uint8_t inset, bool is_open) {
     // Draw main right-side rect
     Rect i = rects[inset + 1];
     Rect o = rects[inset];
-    uint8_t x = i.origin_x + i.width;
-    ssd1306_rect(x + 2, i.origin_y, o.origin_x + o.width - x - 2, i.height, 1, true);
+    uint8_t x = i.origin_x + i.width + 1;
+    ssd1306_rect(x, i.origin_y, o.origin_x + o.width - x + 2, i.height, 1, true);
+    if (is_open) return;
+
+    // Add upper and lower triangles for a closed wall
+    for (uint8_t i = 0 ; i < 10 ; ++i) {
+        uint8_t byte =  angles[0][i];
+        for (uint8_t j = 0 ; j < 8 ; ++j) {
+            if ((byte & (1 << j)) > 0) ssd1306_plot(o.width - o.origin_x - i, o.origin_x + j, 1);
+        }
+
+        byte = angles[1][i];
+        for (uint8_t j = 0 ; j < 8 ; ++j) {
+            if ((byte & (1 << j)) > 0) ssd1306_plot(o.width - o.origin_x - i, o.origin_x + o.height + j, 1);
+        }
+    }
     ssd1306_draw();
 }
+
 
 void draw_rect(Rect *inner_rect, Rect *outer_rect, bool is_open) {
     // Draw a generic left or right wall rect, open or closed
@@ -616,7 +649,7 @@ int main() {
         //check_senses();
 
         // ...and start play
-        game_loop();
+        //game_loop();
     }
 
     return 0;

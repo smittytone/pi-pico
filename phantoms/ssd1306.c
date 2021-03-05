@@ -303,16 +303,16 @@ void ssd1306_line(uint8_t x, uint8_t y, uint8_t tox, uint8_t toy, uint8_t colour
 }
 
 void ssd1306_rect(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t colour, bool fill) {
-
+    // Draw a rectangle with top left at (x,y) and of the specified width and height
+    // (including the 1px border if 'fill' is false
     if (x + width > oled_width) width = oled_width - x;
     if (y + height > oled_height) height = oled_height - y;
-
     if (colour != 0 && colour != 1) colour = 1;
 
-    for (uint8_t i = y ; i <= y + height ; ++i) {
-        for (uint8_t j = x ; j <= x + width ; ++j) {
+    for (uint8_t i = y ; i < y + height ; ++i) {
+        for (uint8_t j = x ; j < x + width ; ++j) {
+            if (!fill && j > x && j < x + width - 1 && i > y && i < y + height - 1) continue;
             ssd1306_plot(j, i, colour);
-            if (!fill && j > x && j < x + width && i > y && i < y + height) ssd1306_plot(j, i, (colour == 1 ? 0 : 1));
         }
     }
 }
