@@ -14,8 +14,8 @@
                 "/target/rp2040.cfg"
             ],
             "svdFile": "${env:PICO_SDK_PATH}/src/rp2040/hardware_regs/rp2040.svd",
-            "runToEntryPoint": true,
-            "postRestartCommands": [,
+            "runToMain": true,
+            "postRestartCommands": [
                 "break main",
                 "continue"
             ]

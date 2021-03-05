@@ -1,9 +1,27 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.13)
+
 include(pico_sdk_import.cmake)
-project(phantoms)
-add_executable(phantoms phantoms.c)
+
+project(phantoms VERSION 1.0.0)
+
+add_executable(phantoms
+    main.c
+    ssd1306.c
+    map.c
+)
+
 pico_sdk_init()
+
 pico_enable_stdio_usb(phantoms 1)
+
 pico_enable_stdio_uart(phantoms 1)
+
 pico_add_extra_outputs(phantoms)
-target_link_libraries(phantoms pico_stdlib hardware_gpio)
+
+target_link_libraries(
+    phantoms
+    pico_stdlib
+    hardware_gpio
+    hardware_i2c
+    hardware_adc
+)
