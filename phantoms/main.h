@@ -1,7 +1,6 @@
 #ifndef _PHANTOMS_MAIN_HEADER_
 #define _PHANTOMS_MAIN_HEADER_
 
-
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -70,6 +69,7 @@ void draw_world();
 void death();
 
 void draw_screen();
+void draw_floor_line(uint8_t inset);
 void draw_rect(Rect *the_rect, Rect *outer_rect, bool is_open);
 void draw_left(uint8_t steps, bool left_open);
 void draw_right(uint8_t steps, bool right_open);
@@ -132,7 +132,7 @@ uint8_t player_y;
 uint8_t player_direction;
 
 // Graphics structures
-Rect rects[15];
+Rect rects[7];
 
 // Game data
 Phantom phantoms[3];

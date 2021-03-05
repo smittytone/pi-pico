@@ -47,10 +47,20 @@ void setup() {
     gpio_set_dir(PIN_LED, GPIO_OUT);
     gpio_put(PIN_LED, false);
 
-    // Make the graphic wall rects
+    // Make the graphic frame rects
+    /*
     uint8_t coords[] = {0,0,0,0,0,5,11,54,12,10,12,44,25,15,11,34,37,20,10,25,
                         48,23,7,19,56,25,4,14,61,26,6,12,68,25,4,14,73,23,7,19,
                         81,20,10,25,92,15,11,34,104,10,12,44,117,5,11,54,127,0,0,0};
+    */
+
+    uint8_t coords[] = {0,0,127,63,
+                        11,4,106,54,
+                        24,9,80,43,
+                        36,15,56,33,
+                        47,20,34,24,
+                        55,22,18,18,
+                        61,25,6,12};
 
     for (uint8_t i = 0 ; i < sizeof(coords) ; i += 4) {
         Rect a_rect;
@@ -118,6 +128,7 @@ void create_world() {
         if (get_square_contents(x, y) == 0xFF) {
             player_x = x;
             player_y = y;
+            player_direction = irandom(0,4);
             break;
         }
     }
@@ -334,6 +345,7 @@ void draw_world() {
 
     ssd1306_clear();
     draw_screen();
+    ssd1306_draw();
 }
 
 
@@ -343,7 +355,7 @@ void death() {
     ssd1306_text(0, 0, "Score: ", false, false);
     // TODO
     // Show the score
-    char score_string = "00000";
+    char score_string[] = "00000";
     ssd1306_text(64, 0, score_string, false, false);
     show_map(15);
 
@@ -366,6 +378,8 @@ void draw_screen() {
             // Facing north, so left = W, right = E
             // Run through squares from current to map limit
             for (uint8_t i = player_y ; i >= 0 ; --i) {
+                draw_floor_line(steps);
+
                 // Are the walls to the left and right open or closed
                 bool left_open = (get_view_distance(player_x, i, DIRECTION_WEST) > 0);
                 bool right_open = (get_view_distance(player_x, i, DIRECTION_EAST) > 0);
@@ -388,6 +402,8 @@ void draw_screen() {
         case DIRECTION_EAST:
             // Facing E, so left = N, right = S
             for (uint8_t i = player_x ; i < 20 ; ++i) {
+                draw_floor_line(steps);
+
                 bool left_open = (get_view_distance(i, player_y, DIRECTION_NORTH) > 0);
                 bool right_open = (get_view_distance(i, player_y, DIRECTION_SOUTH) > 0);
 
@@ -405,6 +421,8 @@ void draw_screen() {
         case DIRECTION_SOUTH:
             // Facing S, so left = E, right = W
             for (uint8_t i = player_y ; i < 20 ; ++i) {
+                draw_floor_line(steps);
+
                 bool left_open = (get_view_distance(player_x, i, DIRECTION_EAST) > 0);
                 bool right_open = (get_view_distance(player_x, i, DIRECTION_WEST) > 0);
 
@@ -422,6 +440,8 @@ void draw_screen() {
         default:
             // Facing W, so left = S, right = N
             for (uint8_t i = player_y ; i < 20 ; ++i) {
+                draw_floor_line(steps);
+
                 bool left_open = (get_view_distance(player_x, i, DIRECTION_SOUTH) > 0);
                 bool right_open = (get_view_distance(player_x, i, DIRECTION_NORTH) > 0);
 
@@ -439,25 +459,35 @@ void draw_screen() {
     }
 }
 
+void draw_floor_line(uint8_t inset) {
+    // Draw a grid line on the floor
+    Rect r = rects[inset + 1];
+    ssd1306_line(r.origin_x, r.origin_y + r.height, r.origin_x + r.width, r.origin_y + r.height, 1, 1);
+    ssd1306_draw();
+}
+
 void draw_left(uint8_t inset, bool is_open) {
     // Draw main left-side rect
-    Rect left_rect = rects[inset + 1];
-    Rect outer_rect = rects[inset];
-    draw_rect(&left_rect, &outer_rect, is_open);
+    Rect i = rects[inset + 1];
+    Rect o = rects[inset];
+    ssd1306_rect(o.origin_x, i.origin_y, i.origin_x - o.origin_x - 2, i.height, 1, true);
+    ssd1306_draw();
 }
 
 void draw_right(uint8_t inset, bool is_open) {
     // Draw main right-side rect
-    Rect right_rect = rects[sizeof(rects) - inset - 1];
-    Rect outer_rect = rects[sizeof(rects) - inset];
-    draw_rect(&right_rect, &outer_rect, is_open);
+    Rect i = rects[inset + 1];
+    Rect o = rects[inset];
+    uint8_t x = i.origin_x + i.width;
+    ssd1306_rect(x + 2, i.origin_y, o.origin_x + o.width - x - 2, i.height, 1, true);
+    ssd1306_draw();
 }
 
-void draw_rect(Rect *the_rect, Rect *outer_rect, bool is_open) {
+void draw_rect(Rect *inner_rect, Rect *outer_rect, bool is_open) {
     // Draw a generic left or right wall rect, open or closed
 
     // Draw an open-wall rect
-    ssd1306_rect(the_rect->origin_x, the_rect->origin_y, the_rect->width, the_rect->height, 0, true);
+    ssd1306_rect(outer_rect->origin_x, inner_rect->origin_y, inner_rect->origin_x - outer_rect->origin_x, inner_rect->height, 0, true);
 
     // If the wall is open, we're done
     if (is_open) return;
@@ -466,6 +496,28 @@ void draw_rect(Rect *the_rect, Rect *outer_rect, bool is_open) {
     // Draw the closed top and bottom triangles
 }
 
+void draw_end(uint8_t steps) {
+    if (steps == 6) return;
+    Rect i = rects[steps + 1];
+    ssd1306_rect(i.origin_x + 2, i.origin_y, i.width - 2, i.height, 1, true);
+    ssd1306_draw();
+}
+
+
+/*
+ *  Actions
+ */
+void check_senses() {
+    return;
+}
+
+void do_teleport() {
+    return;
+}
+
+void fire_laser() {
+    return;
+}
 
 /*
  *  Misc Functions
@@ -508,16 +560,11 @@ int main() {
 
     // Play the game
 
-
+    /*
     const char title[] = "\x02\x3E\x02\x00\x3E\x08\x3E\x00\x3E\x2A\x22\x00\x00\x3E\x0A\x0E\x00\x3E\x08\x3E\x00\x3C\x0A\x3C\x00\x3E\x02\x3E\x00\x02\x3E\x02\x00\x3E\x22\x3E\x00\x3E\x02\x1E\x02\x3E\x00\x00\x2E\x2A\x3A\x00\x3E\x20\x20\x00\x3C\x0A\x3C\x00\x0E\x38\x0E\x00\x3E\x2A\x22\x00\x3E\x1A\x2E";
 
     uint8_t x = 30;
     uint8_t y = 8;
-
-    for (uint8_t i = 0 ; i < sizeof(title) ; ++i) {
-        uint16_t byte_index = ssd1306_coords_to_index(x + i, y);
-        //oled_buffer[byte_index] = title[i];
-    }
 
     ssd1306_text(10, 10, "THE PHANTOM SLAYER", false, false);
     ssd1306_draw();
@@ -532,43 +579,44 @@ int main() {
     int8_t dy = 1;
 
     uint8_t d = 99;
-
+    */
     map_init();
     show_map(0);
     ssd1306_draw();
 
-    d = get_view_distance(0,0,0);
-    d = get_view_distance(0,0,1);
-    d = get_view_distance(0,0,2);
-    d = get_view_distance(0,0,3);
+    sleep_ms(5000);
+    ssd1306_clear();
+    ssd1306_draw();
+    ssd1306_inverse(true);
+
+    /*
+    for (uint8_t i = 0 ; i < 7 ; ++i) {
+        Rect r = rects[i];
+        ssd1306_rect(r.origin_x, r. origin_y, r.width, r.height, 1, false);
+    }
+
+    ssd1306_line(63,0,63,63,1,1);
+    ssd1306_draw();
+    sleep_ms(5000);
+    */
 
     while (1) {
         // Set up a new round...
         //play_intro();
 
         // Set up the environment
-        //create_world();
-        //draw_world();
+        init_game();
+        create_world();
+
+        player_x = 0;
+        player_y = 0;
+        player_direction = 1;
+
+        draw_world();
         //check_senses();
 
         // ...and start play
-        //game_loop();
-
-        ssd1306_plot(x, y, !oled_inverted);
-
-        if (x < 128 && y < 64) {
-            x += dx;
-            y += dy;
-        } else {
-            dy *= -1;
-            dx *= -1;
-            x += dx;
-            y += dy;
-            ssd1306_inverse(!oled_inverted);
-        }
-
-        ssd1306_draw();
-        sleep_ms(10);
+        game_loop();
     }
 
     return 0;

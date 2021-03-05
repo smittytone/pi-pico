@@ -1,6 +1,29 @@
 #include "main.h"
 
 
+// Define a basic map for testing
+char base_map_01[20] = "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF";
+char base_map_02[20] = "\xFF\x00\x00\xFF\x00\x00\xFF\x00\x00\x00\x00\xFF\x00\x00\xFF\x00\x00\xFF\x00\x00";
+char base_map_03[20] = "\xFF\x00\x00\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x00\xFF\xFF\xFF\xFF\xFF\xFF\x00";
+char base_map_04[20] = "\xFF\xFF\xFF\x00\xFF\x00\xFF\x00\xFF\x00\x00\xFF\xFF\x00\x00\x00\x00\xFF\x00\xFF";
+char base_map_05[20] = "\x00\x00\xFF\x00\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x00\x00\x00\x00\x00\xFF\xFF\xFF";
+char base_map_06[20] = "\xFF\xFF\xFF\xFF\xFF\x00\x00\xFF\x00\x00\xFF\x00\x00\x00\xFF\xFF\xFF\xFF\x00\x00";
+char base_map_07[20] = "\x00\x00\x00\x00\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x00\x00\xFF\xFF\xFF";
+char base_map_08[20] = "\xFF\xFF\xFF\x00\x00\x00\x00\xFF\x00\xAA\x00\xFF\x00\x00\xFF\xFF\xFF\xFF\x00\x00";
+char base_map_09[20] = "\xFF\x00\xFF\xFF\xFF\x00\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x00\x00\xFF\xFF\xFF";
+char base_map_10[20] = "\xFF\xFF\xFF\x00\x00\xFF\xFF\x00\x00\x00\xFF\x00\x00\x00\x00\x00\x00\x00\xFF\x00";
+char base_map_11[20] = "\x00\x00\xFF\xFF\x00\xFF\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xFF\xFF\xFF\xFF";
+char base_map_12[20] = "\xFF\xFF\xFF\x00\xFF\xFF\xFF\xFF\x00\xFF\x00\x00\xFF\xFF\xFF\xFF\x00\xFF\x00\x00";
+char base_map_13[20] = "\xFF\x00\xFF\xFF\xFF\x00\x00\xFF\xFF\xFF\xFF\x00\x00\x00\xFF\x00\x00\xFF\xFF\x00";
+char base_map_14[20] = "\x00\x00\x00\x00\x00\x00\xFF\xFF\x00\x00\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x00\xFF";
+char base_map_15[20] = "\x00\x00\x00\xFF\x00\x00\xFF\x00\x00\x00\xFF\x00\x00\x00\xFF\x00\x00\xFF\xFF\xFF";
+char base_map_16[20] = "\x00\x00\x00\xFF\xFF\x00\xFF\x00\x00\x00\xFF\x00\x00\x00\xFF\xFF\xFF\x00\x00\x00";
+char base_map_17[20] = "\xFF\x00\x00\xFF\x00\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x00\x00\xFF\x00\x00\x00\x00\x00";
+char base_map_18[20] = "\xFF\xFF\xFF\xFF\xFF\xFF\x00\x00\x00\x00\x00\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF";
+char base_map_19[20] = "\x00\xFF\x00\xFF\x00\xFF\x00\xFF\x00\x00\x00\xFF\x00\x00\xFF\x00\xFF\x00\xFF\x00";
+char base_map_20[20] = "\x00\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x00";
+
+
 /*
  * Map Functions
  */
@@ -27,11 +50,6 @@ void map_init() {
     current_map[17] = base_map_18;
     current_map[18] = base_map_19;
     current_map[19] = base_map_20;
-}
-
-
-void set_test_map() {
-
 }
 
 
@@ -76,8 +94,7 @@ uint8_t get_view_distance(uint8_t x, uint8_t y, uint8_t direction) {
 
     switch(direction) {
         case DIRECTION_NORTH:
-            for (uint8_t i = y ; i >= 0 ; --i) {
-                if (i == 0) break;
+            for (uint8_t i = y ; i > 0 ; --i) {
                 if (get_square_contents(x, i) != 0 ) {
                     count++;
                 } else {
@@ -86,8 +103,7 @@ uint8_t get_view_distance(uint8_t x, uint8_t y, uint8_t direction) {
             }
             break;
         case DIRECTION_EAST:
-            for (uint8_t i = x ; i < 20 ; ++i) {
-                if (i == 19) break;
+            for (uint8_t i = x ; i < 19 ; ++i) {
                 if (get_square_contents(i, y) != 0) {
                     count++;
                 } else {
@@ -96,8 +112,7 @@ uint8_t get_view_distance(uint8_t x, uint8_t y, uint8_t direction) {
             }
             break;
         case DIRECTION_SOUTH:
-            for (uint8_t i = y ; i < 20 ; ++i) {
-                if (i == 19) break;
+            for (uint8_t i = y ; i < 19 ; ++i) {
                 if (get_square_contents(x, i) != 0) {
                     count++;
                 } else {
@@ -106,8 +121,7 @@ uint8_t get_view_distance(uint8_t x, uint8_t y, uint8_t direction) {
             }
             break;
         default:
-            for (uint8_t i = x ; i >= 0 ; --i) {
-                if (i == 0) break;
+            for (uint8_t i = x ; i > 0 ; --i) {
                 if (get_square_contents(i, y) != 0) {
                     count++;
                 } else {
