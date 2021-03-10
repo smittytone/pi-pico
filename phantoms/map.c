@@ -95,6 +95,7 @@ uint8_t get_view_distance(uint8_t x, uint8_t y, uint8_t direction) {
     switch(direction) {
         case DIRECTION_NORTH:
             for (uint8_t i = y ; i > 0 ; --i) {
+                if (i == 0) break;
                 if (get_square_contents(x, i) != MAP_TILE_WALL) {
                     count++;
                 } else {
@@ -103,7 +104,7 @@ uint8_t get_view_distance(uint8_t x, uint8_t y, uint8_t direction) {
             }
             break;
         case DIRECTION_EAST:
-            for (uint8_t i = x ; i < 19 ; ++i) {
+            for (uint8_t i = x + 1; i < 19 ; ++i) {
                 if (get_square_contents(i, y) != MAP_TILE_WALL) {
                     count++;
                 } else {
@@ -112,7 +113,7 @@ uint8_t get_view_distance(uint8_t x, uint8_t y, uint8_t direction) {
             }
             break;
         case DIRECTION_SOUTH:
-            for (uint8_t i = y ; i < 19 ; ++i) {
+            for (uint8_t i = y + 1; i < 19 ; ++i) {
                 if (get_square_contents(x, i) != MAP_TILE_WALL) {
                     count++;
                 } else {
@@ -122,6 +123,7 @@ uint8_t get_view_distance(uint8_t x, uint8_t y, uint8_t direction) {
             break;
         default:
             for (uint8_t i = x ; i > 0 ; --i) {
+                if (i == 0) break;
                 if (get_square_contents(i, y) != MAP_TILE_WALL) {
                     count++;
                 } else {
@@ -130,6 +132,6 @@ uint8_t get_view_distance(uint8_t x, uint8_t y, uint8_t direction) {
             }
     }
 
-    if (count > 6) count = 6;
+    if (count > 5) count = 5;
     return count;
 }

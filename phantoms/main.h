@@ -104,9 +104,14 @@ void tone(unsigned int frequency, unsigned long duration, unsigned long post);
 #define DIRECTION_SOUTH                                 2
 #define DIRECTION_WEST                                  3
 
+#define MOVE_FORWARD                                    0
+#define TURN_RIGHT                                      1
+#define MOVE_BACKWARD                                   2
+#define TURN_LEFT                                       3
+
 #define DEADZONE                                        400
-#define UPPER_LIMIT                                     2448
-#define LOWER_LIMIT                                     1648
+#define UPPER_LIMIT                                     3500
+#define LOWER_LIMIT                                     512
 #define JOY_MAX                                         4096
 
 #define DEBOUNCE_TIME_US                                10000

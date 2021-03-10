@@ -4,9 +4,9 @@
 /*
  *  Corner triangles
  */
-const char angles[2][10] = {
-    "\x0F\x0E\x0E\x0E\x0C\x0C\x0C\x08\x08\x08",
-    "\xF0\x70\x70\x70\x30\x30\x30\x10\x10\x10"
+const char angles[2][13] = {
+    "\x3F\x3E\x3E\x3E\x3C\x3C\x3C\x38\x38\x38\x30\x30\x30",
+    "\xFE\x7E\x7E\x7E\x3E\x3E\x3E\x1E\x1E\x1E\x1C\x1C\x1C"
 };
 
 
@@ -58,13 +58,22 @@ void setup() {
 
     // Make the graphic frame rects
     // NOTE These are pixel values
-    uint8_t coords[] = {0,0,127,63,
-                        11,4,106,54,
+    /*
+    uint8_t coords[] = {0,0,128,64,
+                        11,5,106,54,
                         24,9,80,43,
                         36,15,56,33,
                         47,20,34,24,
                         55,22,18,18,
                         61,25,6,12};
+    */
+    uint8_t coords[] = {0,0,128,64,
+                        11,5,106,54,
+        24,10,80,44,
+        36,15,56,34,
+        47,20,34,24,
+        55,25,18,14,
+        61,27,6,10};
 
     for (uint8_t i = 0 ; i < sizeof(coords) ; i += 4) {
         Rect a_rect;
@@ -186,15 +195,14 @@ void game_loop() {
                 // get the direction the player has chosen
                 // 0 = forward
                 // 2 = backward
-                // 1 = rotate left
-                // 3 = rotate right
+                // 1 = rotate right
+                // 3 = rotate left
                 uint8_t dir = get_direction(x, y);
+                uint8_t nx = player_x;
+                uint8_t ny = player_x;
 
-                if (dir == 0) {
+                if (dir == MOVE_FORWARD) {
                     // Move player forward if we can
-                    uint8_t nx = player_x;
-                    uint8_t ny = player_x;
-
                     if (player_direction == DIRECTION_NORTH) --ny;
                     if (player_direction == DIRECTION_SOUTH) ++ny;
                     if (player_direction == DIRECTION_EAST) ++nx;
@@ -202,17 +210,11 @@ void game_loop() {
 
                     if (get_square_contents(nx, ny) != 0xFF) {
                         // Collision
-
-                    } else {
-                        player_x = nx;
-                        player_y = ny;
+                        printf("");
                     }
-                } else if (dir == 2) {
+                } else if (dir == MOVE_BACKWARD) {
                     // Move player down
                     // Move player backward if we can
-                    uint8_t nx = player_x;
-                    uint8_t ny = player_x;
-
                     if (player_direction == DIRECTION_NORTH) ++ny;
                     if (player_direction == DIRECTION_SOUTH) --ny;
                     if (player_direction == DIRECTION_EAST) --nx;
@@ -220,14 +222,11 @@ void game_loop() {
 
                     if (get_square_contents(nx, ny) != 0xFF) {
                         // Collision
-
-                    } else {
-                        player_x = nx;
-                        player_y = ny;
+                        printf("");
                     }
-                } else if (dir == 3) {
+                } else if (dir == TURN_RIGHT) {
                     // Turn player right
-                    player_direction++;
+                    ++player_direction;
                     if (player_direction > DIRECTION_WEST) player_direction = DIRECTION_NORTH;
                 } else {
                     // Turn player left
@@ -235,8 +234,14 @@ void game_loop() {
                     if (player_direction > DIRECTION_WEST) player_direction = DIRECTION_WEST;
                 }
 
-                // Check the new location for audio - is a phantom nearby?
-                if (!is_dead) check_senses();
+                if (!is_dead) {
+                    // Move the player
+                    player_x = nx;
+                    player_y = ny;
+
+                    // Check the new location for audio - is a phantom nearby?
+                    check_senses();
+                }
             } else {
                 // Joystick is in deadzone
                 if (gpio_get(PIN_FIRE_BUTTON)) {
@@ -331,16 +336,16 @@ bool check_joystick(uint16_t x, uint16_t y) {
 uint8_t get_direction(uint16_t x, uint16_t y) {
     // Get player direction from the analog input
     if (x < y) {
-        if (x > (JOY_MAX - y)) {
-            return DIRECTION_NORTH;     // up
+        if (x > (JOY_MAX + 1 - y)) {
+            return MOVE_FORWARD;     // up
         } else {
-            return DIRECTION_WEST;      // right
+            return TURN_RIGHT;      // right
         }
     } else {
-        if (x > (JOY_MAX - y)) {
-            return DIRECTION_EAST;      // left
+        if (x > (JOY_MAX + 1 - y)) {
+            return TURN_LEFT;      // left
         } else {
-            return DIRECTION_SOUTH;     // down
+            return MOVE_BACKWARD;     // down
         }
     }
 }
@@ -382,8 +387,6 @@ void draw_screen() {
             // Facing north, so left = W, right = E
             // Run through squares from current to map limit
             for (uint8_t i = player_y ; i >= 0 ; --i) {
-                draw_floor_line(steps);
-
                 // Are the walls to the left and right open or closed
                 bool left_open = (get_view_distance(player_x, i, DIRECTION_WEST) > 0);
                 bool right_open = (get_view_distance(player_x, i, DIRECTION_EAST) > 0);
@@ -399,6 +402,7 @@ void draw_screen() {
                     break;
                 } else {
                     // Step to the next most distant square
+                    draw_floor_line(steps);
                     steps++;
                 }
             }
@@ -406,8 +410,6 @@ void draw_screen() {
         case DIRECTION_EAST:
             // Facing E, so left = N, right = S
             for (uint8_t i = player_x ; i < 20 ; ++i) {
-                draw_floor_line(steps);
-
                 bool left_open = (get_view_distance(i, player_y, DIRECTION_NORTH) > 0);
                 bool right_open = (get_view_distance(i, player_y, DIRECTION_SOUTH) > 0);
 
@@ -418,6 +420,7 @@ void draw_screen() {
                     draw_end(steps);
                     break;
                 } else {
+                    draw_floor_line(steps);
                     steps++;
                 }
             }
@@ -425,8 +428,6 @@ void draw_screen() {
         case DIRECTION_SOUTH:
             // Facing S, so left = E, right = W
             for (uint8_t i = player_y ; i < 20 ; ++i) {
-                draw_floor_line(steps);
-
                 bool left_open = (get_view_distance(player_x, i, DIRECTION_EAST) > 0);
                 bool right_open = (get_view_distance(player_x, i, DIRECTION_WEST) > 0);
 
@@ -437,6 +438,7 @@ void draw_screen() {
                     draw_end(steps);
                     break;
                 } else {
+                    draw_floor_line(steps);
                     steps++;
                 }
             }
@@ -444,8 +446,6 @@ void draw_screen() {
         default:
             // Facing W, so left = S, right = N
             for (uint8_t i = player_y ; i < 20 ; ++i) {
-                draw_floor_line(steps);
-
                 bool left_open = (get_view_distance(player_x, i, DIRECTION_SOUTH) > 0);
                 bool right_open = (get_view_distance(player_x, i, DIRECTION_NORTH) > 0);
 
@@ -456,6 +456,7 @@ void draw_screen() {
                     draw_end(steps);
                     break;
                 } else {
+                    draw_floor_line(steps);
                     steps++;
                 }
             }
@@ -466,8 +467,8 @@ void draw_screen() {
 void draw_floor_line(uint8_t inset) {
     // Draw a grid line on the floor
     Rect r = rects[inset + 1];
-    ssd1306_line(r.origin_x, r.origin_y + r.height, r.origin_x + r.width, r.origin_y + r.height, 1, 1);
-    ssd1306_draw();
+    ssd1306_line(r.origin_x - 1, r.origin_y + r.height, r.origin_x + r.width + 1, r.origin_y + r.height, 1, 1);
+    //ssd1306_draw();
 }
 
 void draw_left_wall(uint8_t inset, bool is_open) {
@@ -478,41 +479,52 @@ void draw_left_wall(uint8_t inset, bool is_open) {
     if (is_open) return;
 
     // Add upper and lower triangles for a closed wall
-    for (uint8_t i = 0 ; i < 10 ; ++i) {
-        uint8_t byte =  angles[0][i];
+    uint8_t byte = 0;
+    for (uint8_t k = 0 ; k < (i.origin_x - 1 - o.origin_x) ; ++k) {
+        byte =  angles[0][k];
         for (uint8_t j = 0 ; j < 8 ; ++j) {
-            if ((byte & (1 << j)) > 0) ssd1306_plot(o.origin_x + i, o.origin_x + j, 1);
+            if ((byte & (1 << j)) != 0) {
+                ssd1306_plot(o.origin_x + k, o.origin_y + j, 1);
+            }
         }
 
-        byte = angles[1][i];
+        byte = angles[1][k];
         for (uint8_t j = 0 ; j < 8 ; ++j) {
-            if ((byte & (1 << j)) > 0) ssd1306_plot(o.origin_x + i, o.origin_x + o.height + j, 1);
+            if ((byte & (1 << j)) != 0) {
+                ssd1306_plot(o.origin_x + k, o.origin_y + o.height - 9 + j, 1);
+            }
         }
     }
-    ssd1306_draw();
+    //ssd1306_draw();
 }
 
 void draw_right_wall(uint8_t inset, bool is_open) {
     // Draw main right-side rect
     Rect i = rects[inset + 1];
     Rect o = rects[inset];
-    uint8_t x = i.origin_x + i.width + 1;
-    ssd1306_rect(x, i.origin_y, o.origin_x + o.width - x + 2, i.height, 1, true);
+    uint8_t xd = i.width + i.origin_x;
+    ssd1306_rect(xd + 1, i.origin_y, (o.width + o.origin_x) - xd - 1, i.height, 1, true);
     if (is_open) return;
 
     // Add upper and lower triangles for a closed wall
-    for (uint8_t i = 0 ; i < 10 ; ++i) {
-        uint8_t byte =  angles[0][i];
+    uint8_t byte = 0;
+    uint8_t max = (o.width + o.origin_x) - xd - 1;
+    for (uint8_t k = 0 ; k < max ; ++k) {
+        byte = angles[0][k];
         for (uint8_t j = 0 ; j < 8 ; ++j) {
-            if ((byte & (1 << j)) > 0) ssd1306_plot(o.width - o.origin_x - i, o.origin_x + j, 1);
+            if ((byte & (1 << j)) > 0) {
+                ssd1306_plot(o.width + o.origin_x - k - 1, o.origin_y + j, 1);
+            }
         }
 
-        byte = angles[1][i];
+        byte = angles[1][k];
         for (uint8_t j = 0 ; j < 8 ; ++j) {
-            if ((byte & (1 << j)) > 0) ssd1306_plot(o.width - o.origin_x - i, o.origin_x + o.height + j, 1);
+            if ((byte & (1 << j)) > 0) {
+                ssd1306_plot(o.width + o.origin_x - k - 1, o.origin_y + o.height - 9 + j, 1);
+            }
         }
     }
-    ssd1306_draw();
+    //ssd1306_draw();
 }
 
 
@@ -530,9 +542,16 @@ void draw_rect(Rect *inner_rect, Rect *outer_rect, bool is_open) {
 }
 
 void draw_end(uint8_t steps) {
-    if (steps == 6) return;
-    Rect i = rects[steps + 1];
-    ssd1306_rect(i.origin_x + 2, i.origin_y, i.width - 2, i.height, 1, true);
+    if (steps > 6) return;
+
+    Rect i;
+    if (steps > 4) {
+        i = rects[6];
+    } else {
+        i = rects[steps + 1];
+    }
+
+    ssd1306_rect(i.origin_x, i.origin_y, i.width, i.height, 1, true);
     ssd1306_draw();
 }
 
@@ -615,9 +634,9 @@ int main() {
     */
     map_init();
     show_map(0);
-    ssd1306_draw();
+    //ssd1306_draw();
 
-    sleep_ms(5000);
+    //sleep_ms(5000);
     ssd1306_clear();
     ssd1306_draw();
     ssd1306_inverse(true);
@@ -643,13 +662,13 @@ int main() {
 
         player_x = 0;
         player_y = 0;
-        player_direction = 1;
+        player_direction = DIRECTION_EAST;
 
         draw_world();
         //check_senses();
 
         // ...and start play
-        //game_loop();
+        game_loop();
     }
 
     return 0;
