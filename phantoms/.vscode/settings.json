@@ -12,6 +12,7 @@
         "algorithm": "c",
         "cstddef": "c",
         "phantoms.h": "c",
-        "time.h": "c"
+        "time.h": "c",
+        "sstream": "c"
     }
 }

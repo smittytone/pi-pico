@@ -6,7 +6,7 @@
  */
 const char CHARSET[128][6] = {
     "\x00\x00\x00",              // space - Ascii 32
-    "\xfa\x00",                  // !
+    "\x5F\x00",                  // !
     "\xc0\x00\xc0\x00",          // "
     "\x24\x7e\x24\x7e\x24\x00",  // #
     "\x24\xd4\x56\x48\x00",      // $
@@ -21,16 +21,16 @@ const char CHARSET[128][6] = {
     "\x10\x10\x10\x10\x00",      // -
     "\x06\x06\x00",              // .
     "\x04\x08\x10\x20\x40\x00",  // /
-    "\x7c\x8a\x92\xa2\x7c\x00",  // 0 - Ascii 48
-    "\x42\xfe\x02\x00",          // 1
-    "\x46\x8a\x92\x92\x62\x00",  // 2
-    "\x44\x92\x92\x92\x6c\x00",  // 3
-    "\x18\x28\x48\xfe\x08\x00",  // 4
-    "\xf4\x92\x92\x92\x8c\x00",  // 5
-    "\x3c\x52\x92\x92\x8c\x00",  // 6
-    "\x80\x8e\x90\xa0\xc0\x00",  // 7
-    "\x6c\x92\x92\x92\x6c\x00",  // 8
-    "\x60\x92\x92\x94\x78\x00",  // 9
+    "\x3E\x51\x49\x45\x3E\x00",  // 0 - Ascii 48
+    "\x42\x7F\x40\x00",          // 1
+    "\x62\x51\x49\x49\x46\x00",  // 2
+    "\x22\x49\x49\x49\x36\x00",  // 3
+    "\x18\x14\x12\x7F\x10\x00",  // 4
+    "\x2F\x49\x49\x49\x31\x00",  // 5
+    "\x3C\x4A\x49\x49\x31\x00",  // 6
+    "\x01\x71\x09\x05\x03\x00",  // 7
+    "\x36\x49\x49\x49\x36\x00",  // 8
+    "\x06\x49\x49\x29\x1E\x00",  // 9
     "\x36\x36\x00",              // : - Ascii 58
     "\x36\x37\x00",              //
     "\x10\x28\x44\x82\x00",      // <
@@ -317,29 +317,27 @@ void ssd1306_rect(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t c
     }
 }
 
-void ssd1306_text(uint8_t x, uint8_t y, char *the_string, bool do_wrap, bool do_double) {
+void ssd1306_text(uint8_t x, uint8_t y, const char *the_string, bool do_wrap, bool do_double) {
 
     uint8_t space_size = do_double ? 4 : 1;
     uint8_t bit_max = do_double ? 16 : 8;
 
-    for (size_t i = 0; i < strlen(the_string); ++i) {
+    size_t sl = strlen(the_string);
+    for (size_t i = 0 ; i < sl ; ++i) {
         uint8_t asc_val = the_string[i] - 32;
-        uint8_t glyph_len = strlen(CHARSET[asc_val]);
+        uint8_t glyph_len = asc_val == 0 ? 2 : strlen(CHARSET[asc_val]);
 
         char glyph[glyph_len];
+
         for (uint j = 0 ; j < glyph_len ; ++j) {
-            if (j < glyph_len) {
-                glyph[j] = CHARSET[asc_val][j];
-            } else {
-                glyph[j] = 0x00;
-            }
+            glyph[j] = CHARSET[asc_val][j];
         }
 
-        uint8_t col_0 = ssd1306_text_flip(glyph[0]);
-        uint8_t col_1 = 0;
+        char col_0 = glyph[0];
+        char col_1 = 0;
 
         if (do_wrap) {
-            if (x + sizeof(glyph) * (do_double ? 2 : 1) >= oled_width) {
+            if (x + glyph_len * (do_double ? 2 : 1) >= oled_width) {
                 if (y + bit_max < oled_height) {
                     x = 0;
                     y += bit_max;
@@ -349,18 +347,18 @@ void ssd1306_text(uint8_t x, uint8_t y, char *the_string, bool do_wrap, bool do_
             }
         }
 
-        for (uint8_t j = 1 ; j < strlen(glyph) + 1 ; ++j) {
-            if (j == strlen(glyph)) {
+        for (uint8_t j = 1 ; j < glyph_len + 1 ; ++j) {
+            if (j == glyph_len) {
                 if (do_double) break;
-                col_1 = ssd1306_text_flip(glyph[j - 1]);
+                col_1 = glyph[j - 1];
             } else{
-                col_1 = ssd1306_text_flip(glyph[j]);
+                col_1 = glyph[j];
             }
 
-            uint8_t col_0_right = 0;
-            uint8_t col_1_right = 0;
-            uint8_t col_0_left = 0;
-            uint8_t col_1_left = 0;
+            char col_0_right = 0;
+            char col_1_right = 0;
+            char col_0_left = 0;
+            char col_1_left = 0;
 
             if (do_double) {
                 col_0_right = ssd1306_text_stretch(col_0);
@@ -479,7 +477,7 @@ uint8_t ssd1306_text_stretch(uint8_t x) {
 }
 
 void ssd1306_char_plot(uint8_t x, uint8_t y, uint8_t k, uint8_t c, uint8_t a) {
-    // Write a pixel from a character glyph to the buffer
+    // Write a line from a character glyph to the buffer
     uint16_t b = ssd1306_coords_to_index(x, y + k);
     if (c & (1 << k) != 0) oled_buffer[b] |= (1 << a);
 }

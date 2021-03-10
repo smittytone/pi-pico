@@ -10,6 +10,7 @@ void show_map(uint8_t y_delta);
 
 uint8_t get_view_distance(uint8_t x, uint8_t y, uint8_t direction);
 uint8_t get_square_contents(uint8_t x, uint8_t y);
+bool set_square_contents(uint8_t x, uint8_t y, uint8_t value);
 
 
 /*

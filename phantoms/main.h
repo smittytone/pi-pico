@@ -43,6 +43,8 @@ typedef struct {
 
     uint8_t phantoms;
     uint8_t audio_range;
+    uint8_t tele_x;
+    uint8_t tele_y;
 
     uint16_t level;
     uint16_t score;
@@ -62,6 +64,7 @@ void game_loop();
 bool check_joystick(uint16_t x, uint16_t y) ;
 uint8_t get_direction(uint16_t x, uint16_t y);
 
+bool check_hazard(uint8_t x, uint8_t y);
 void check_senses();
 void do_teleport();
 void fire_laser();
@@ -70,7 +73,7 @@ void death();
 
 void draw_screen();
 void draw_floor_line(uint8_t inset);
-void draw_rect(Rect *the_rect, Rect *outer_rect, bool is_open);
+void draw_teleporter(uint8_t inset);
 void draw_left_wall(uint8_t steps, bool left_open);
 void draw_right_wall(uint8_t steps, bool right_open);
 void draw_end(uint8_t steps);
@@ -110,8 +113,8 @@ void tone(unsigned int frequency, unsigned long duration, unsigned long post);
 #define TURN_LEFT                                       3
 
 #define DEADZONE                                        400
-#define UPPER_LIMIT                                     3500
-#define LOWER_LIMIT                                     512
+#define UPPER_LIMIT                                     3200
+#define LOWER_LIMIT                                     2800
 #define JOY_MAX                                         4096
 
 #define DEBOUNCE_TIME_US                                10000

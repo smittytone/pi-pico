@@ -69,11 +69,11 @@ void setup() {
     */
     uint8_t coords[] = {0,0,128,64,
                         11,5,106,54,
-        24,10,80,44,
-        36,15,56,34,
-        47,20,34,24,
-        55,25,18,14,
-        61,27,6,10};
+                        24,10,80,44,
+                        36,15,56,34,
+                        47,20,34,24,
+                        55,25,18,14,
+                        61,27,6,10};
 
     for (uint8_t i = 0 ; i < sizeof(coords) ; i += 4) {
         Rect a_rect;
@@ -201,29 +201,14 @@ void game_loop() {
                 uint8_t nx = player_x;
                 uint8_t ny = player_y;
 
-                if (dir == MOVE_FORWARD) {
-                    // Move player forward if we can
-                    if (player_direction == DIRECTION_NORTH) --ny;
-                    if (player_direction == DIRECTION_SOUTH) ++ny;
-                    if (player_direction == DIRECTION_EAST) ++nx;
-                    if (player_direction == DIRECTION_WEST) --nx;
+                if (dir == MOVE_FORWARD || MOVE_BACKWARD) {
+                    // Move player forward or backward if we can
+                    if (player_direction == DIRECTION_NORTH) ny += dir == MOVE_FORWARD ? 1 : -1;
+                    if (player_direction == DIRECTION_SOUTH) ny += dir == MOVE_FORWARD ? -1 : 1;
+                    if (player_direction == DIRECTION_EAST) nx += dir == MOVE_FORWARD ? 1 : -1;
+                    if (player_direction == DIRECTION_WEST) nx += dir == MOVE_FORWARD ? -1 : 1;
 
-                    if (get_square_contents(nx, ny) != 0xFF) {
-                        // Collision
-                        printf("");
-                    } else {
-                        player_x = nx;
-                        player_y = ny;
-                    }
-                } else if (dir == MOVE_BACKWARD) {
-                    // Move player down
-                    // Move player backward if we can
-                    if (player_direction == DIRECTION_NORTH) ++ny;
-                    if (player_direction == DIRECTION_SOUTH) --ny;
-                    if (player_direction == DIRECTION_EAST) --nx;
-                    if (player_direction == DIRECTION_WEST) ++nx;
-
-                    if (get_square_contents(nx, ny) != 0xFF) {
+                    if (ny > 19 || nx > 19 || check_hazard(nx, ny)) {
                         // Collision
                         printf("");
                     } else {
@@ -339,24 +324,26 @@ uint8_t get_direction(uint16_t x, uint16_t y) {
     // Get player direction from the analog input
     if (y > UPPER_LIMIT) return MOVE_FORWARD;
     if (y < LOWER_LIMIT) return MOVE_BACKWARD;
+    if (x > UPPER_LIMIT) return TURN_RIGHT;
+    if (x < LOWER_LIMIT) return TURN_LEFT;
 
-    if (x < LOWER_LIMIT) return TURN_RIGHT;
-    if (x > UPPER_LIMIT) return TURN_LEFT;
+    // Just in case
     return 99;
+}
 
-    if (x < y) {
-        if (x > (JOY_MAX + 1 - y)) {
-            return MOVE_FORWARD;     // up
-        } else {
-            return TURN_RIGHT;      // right
-        }
-    } else {
-        if (x > (JOY_MAX + 1 - y)) {
-            return TURN_LEFT;      // left
-        } else {
-            return MOVE_BACKWARD;     // down
-        }
+bool check_hazard(uint8_t x, uint8_t y) {
+    uint8_t sc = get_square_contents(x, y);
+
+    if (sc == 0xAA) {
+        // Player has walked on the teleport square - record it
+        // and clear the map location
+        game.tele_x = x;
+        game.tele_y = y;
+        game.can_teleport = true;
+        set_square_contents(x, y, MAP_TILE_CLEAR);
     }
+
+    return !(sc == 0xFF || sc == 0xAA);
 }
 
 void draw_world() {
@@ -396,6 +383,10 @@ void draw_screen() {
             // Facing north, so left = W, right = E
             // Run through squares from current to map limit
             for (uint8_t i = player_y ; i >= 0 ; --i) {
+                if (get_square_contents(player_x, i) == MAP_TILE_TELEPORTER) {
+                    draw_teleporter(steps);
+                }
+
                 // Are the walls to the left and right open or closed
                 bool left_open = (get_view_distance(player_x, i, DIRECTION_WEST) > 0);
                 bool right_open = (get_view_distance(player_x, i, DIRECTION_EAST) > 0);
@@ -419,6 +410,10 @@ void draw_screen() {
         case DIRECTION_EAST:
             // Facing E, so left = N, right = S
             for (uint8_t i = player_x ; i < 20 ; ++i) {
+                if (get_square_contents(i, player_y) == MAP_TILE_TELEPORTER) {
+                    draw_teleporter(steps);
+                }
+
                 bool left_open = (get_view_distance(i, player_y, DIRECTION_NORTH) > 0);
                 bool right_open = (get_view_distance(i, player_y, DIRECTION_SOUTH) > 0);
 
@@ -437,6 +432,10 @@ void draw_screen() {
         case DIRECTION_SOUTH:
             // Facing S, so left = E, right = W
             for (uint8_t i = player_y ; i < 20 ; ++i) {
+                if (get_square_contents(player_x, i) == MAP_TILE_TELEPORTER) {
+                    draw_teleporter(steps);
+                }
+
                 bool left_open = (get_view_distance(player_x, i, DIRECTION_EAST) > 0);
                 bool right_open = (get_view_distance(player_x, i, DIRECTION_WEST) > 0);
 
@@ -454,7 +453,11 @@ void draw_screen() {
             break;
         default:
             // Facing W, so left = S, right = N
-            for (uint8_t i = player_y ; i < 20 ; ++i) {
+            for (uint8_t i = player_x ; i >= 0 ; --i) {
+                if (get_square_contents(i, player_y) == MAP_TILE_TELEPORTER) {
+                    draw_teleporter(steps);
+                }
+
                 bool left_open = (get_view_distance(player_x, i, DIRECTION_SOUTH) > 0);
                 bool right_open = (get_view_distance(player_x, i, DIRECTION_NORTH) > 0);
 
@@ -478,6 +481,23 @@ void draw_floor_line(uint8_t inset) {
     Rect r = rects[inset + 1];
     ssd1306_line(r.origin_x - 1, r.origin_y + r.height, r.origin_x + r.width + 1, r.origin_y + r.height, 1, 1);
     //ssd1306_draw();
+}
+
+void draw_teleporter(uint8_t inset) {
+    // Draw a grey floor
+    Rect r = rects[inset + 1];
+    bool sstate = true;
+
+    for (uint8_t y = r.origin_y + r.height -  4; y < r.origin_y + r.height ; ++y) {
+        for (uint8_t i = r.origin_x ; i < r.origin_x + r.width - 2; i += 2) {
+            if (sstate) {
+                ssd1306_plot(i, y, 1);
+            } else {
+                ssd1306_plot(i + 1, y, 1);
+            }
+        }
+        sstate = !sstate;
+    }
 }
 
 void draw_left_wall(uint8_t inset, bool is_open) {
@@ -534,20 +554,6 @@ void draw_right_wall(uint8_t inset, bool is_open) {
         }
     }
     //ssd1306_draw();
-}
-
-
-void draw_rect(Rect *inner_rect, Rect *outer_rect, bool is_open) {
-    // Draw a generic left or right wall rect, open or closed
-
-    // Draw an open-wall rect
-    ssd1306_rect(outer_rect->origin_x, inner_rect->origin_y, inner_rect->origin_x - outer_rect->origin_x, inner_rect->height, 0, true);
-
-    // If the wall is open, we're done
-    if (is_open) return;
-
-    // TO DO
-    // Draw the closed top and bottom triangles
 }
 
 void draw_end(uint8_t steps) {
@@ -649,17 +655,6 @@ int main() {
     ssd1306_clear();
     ssd1306_draw();
     ssd1306_inverse(true);
-
-    /*
-    for (uint8_t i = 0 ; i < 7 ; ++i) {
-        Rect r = rects[i];
-        ssd1306_rect(r.origin_x, r. origin_y, r.width, r.height, 1, false);
-    }
-
-    ssd1306_line(63,0,63,63,1,1);
-    ssd1306_draw();
-    sleep_ms(5000);
-    */
 
     while (1) {
         // Set up a new round...

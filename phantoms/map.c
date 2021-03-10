@@ -2,7 +2,7 @@
 
 
 // Define a basic map for testing
-char base_map_01[20] = "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF";
+char base_map_01[20] = "\xFF\xFF\xAA\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF";
 char base_map_02[20] = "\xFF\x00\x00\xFF\x00\x00\xFF\x00\x00\x00\x00\xFF\x00\x00\xFF\x00\x00\xFF\x00\x00";
 char base_map_03[20] = "\xFF\x00\x00\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x00\xFF\xFF\xFF\xFF\xFF\xFF\x00";
 char base_map_04[20] = "\xFF\xFF\xFF\x00\xFF\x00\xFF\x00\xFF\x00\x00\xFF\xFF\x00\x00\x00\x00\xFF\x00\xFF";
@@ -84,6 +84,15 @@ uint8_t get_square_contents(uint8_t x, uint8_t y) {
     if (x > 19 || y > 19) return 0x00;
     char *line = current_map[y];
     return line[x];
+}
+
+
+bool set_square_contents(uint8_t x, uint8_t y, uint8_t value) {
+    // Return the contents of the current map
+    // specified grid reference
+    if (x > 19 || y > 19) return false;
+    char *line = current_map[y];
+    line[x] = value;
 }
 
 
