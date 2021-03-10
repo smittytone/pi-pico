@@ -199,7 +199,7 @@ void game_loop() {
                 // 3 = rotate left
                 uint8_t dir = get_direction(x, y);
                 uint8_t nx = player_x;
-                uint8_t ny = player_x;
+                uint8_t ny = player_y;
 
                 if (dir == MOVE_FORWARD) {
                     // Move player forward if we can
@@ -211,6 +211,9 @@ void game_loop() {
                     if (get_square_contents(nx, ny) != 0xFF) {
                         // Collision
                         printf("");
+                    } else {
+                        player_x = nx;
+                        player_y = ny;
                     }
                 } else if (dir == MOVE_BACKWARD) {
                     // Move player down
@@ -223,6 +226,9 @@ void game_loop() {
                     if (get_square_contents(nx, ny) != 0xFF) {
                         // Collision
                         printf("");
+                    } else {
+                        player_x = nx;
+                        player_y = ny;
                     }
                 } else if (dir == TURN_RIGHT) {
                     // Turn player right
@@ -235,10 +241,6 @@ void game_loop() {
                 }
 
                 if (!is_dead) {
-                    // Move the player
-                    player_x = nx;
-                    player_y = ny;
-
                     // Check the new location for audio - is a phantom nearby?
                     check_senses();
                 }
@@ -335,6 +337,13 @@ bool check_joystick(uint16_t x, uint16_t y) {
 
 uint8_t get_direction(uint16_t x, uint16_t y) {
     // Get player direction from the analog input
+    if (y > UPPER_LIMIT) return MOVE_FORWARD;
+    if (y < LOWER_LIMIT) return MOVE_BACKWARD;
+
+    if (x < LOWER_LIMIT) return TURN_RIGHT;
+    if (x > UPPER_LIMIT) return TURN_LEFT;
+    return 99;
+
     if (x < y) {
         if (x > (JOY_MAX + 1 - y)) {
             return MOVE_FORWARD;     // up

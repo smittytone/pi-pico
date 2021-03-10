@@ -81,6 +81,7 @@ void show_map(uint8_t y_delta) {
 uint8_t get_square_contents(uint8_t x, uint8_t y) {
     // Return the contents of the current map
     // specified grid reference
+    if (x > 19 || y > 19) return 0x00;
     char *line = current_map[y];
     return line[x];
 }
