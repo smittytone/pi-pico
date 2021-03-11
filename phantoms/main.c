@@ -96,53 +96,68 @@ void create_world() {
         game.phantoms = 0;
     } else {
         // Reset the game
-        init_game();
+        if (game.level > 0) init_game();
+        game.in_play = true;
     }
+
+    last_draw = 0;
 
     uint8_t player_quad = irandom(0, 3);
 
     // Generate phantoms
     // Place one in each non-player quadrant
-    game.phantoms = irandom(1, 3);;
+    game.phantoms = irandom(1, 3);
     uint8_t inc = 0;
 
-    for (uint8_t i = 0 ; i < game.phantoms ; ++i) {
-        Phantom a_phantom;
-        phantoms[i] = a_phantom;
+    for (uint8_t i = 0 ; i < 3 ; ++i) {
+        Phantom p;
+        p.x = 99;
+        p.y = 99;
         if (i == player_quad) inc++;
-        a_phantom.hp = i + inc;
+        p.hp = i + inc;
+        phantoms[i] = p;
     }
 
+    phantoms[0].x = 11;
+    phantoms[0].y = 0;
+    /*
     // Add the phantoms to the map
     for (uint8_t i = 0 ; i < game.phantoms ; ++i) {
-        Phantom a_phantom;
+        Phantom p = phantoms[i];
         while(1) {
-            uint8_t x = irandom(0, 10);
-            uint8_t y = irandom(0, 10);
-            if (a_phantom.hp = 1 || a_phantom.hp == 2) x += 10;
-            if (a_phantom.hp = 2 || a_phantom.hp == 3) y += 10;
+            uint8_t x = irandom(0, 19);
+            uint8_t y = irandom(0, 19);
+            //if (p.hp = 1 || p.hp == 2) x += 10;
+            //if (p.hp = 2 || p.hp == 3) y += 10;
 
             if (get_square_contents(x, y) == 0xFF) {
-                a_phantom.x = x;
-                a_phantom.y = y;
-                a_phantom.hp = irandom(1,3) + game.level;
+                p.x = x;
+                p.y = y;
+                p.hp = irandom(1,3) + game.level;
                 break;
             }
         }
     }
+    */
 
     // Place the player
-    while(1) {
-        uint8_t x = irandom(0, 10);
-        uint8_t y = irandom(0, 10);
-        if (player_quad = 1 || player_quad == 2) x += 10;
-        if (player_quad = 2 || player_quad == 3) y += 10;
+    uint8_t x = 0;
+    uint8_t y = 0;
+    uint16_t z = irandom(48, 300);
 
+    for (uint16_t i = 0 ; i < z ; ++i) {
         if (get_square_contents(x, y) == 0xFF) {
             player_x = x;
             player_y = y;
             player_direction = irandom(0,4);
             break;
+        }
+
+        x++;
+        if (x > 19) {
+            y++;
+            if (y > 19) y = 0;
+            x = (player_quad = 1 || player_quad == 2) ? 10 : 0;
         }
     }
 
@@ -153,7 +168,7 @@ void create_world() {
 
 void init_game() {
     // Reset the main game control structure
-    game.in_play = true;
+    game.in_play = false;
     game.show_reticule = false;
     game.is_firing = false;
     game.can_teleport = false;
@@ -190,7 +205,7 @@ void game_loop() {
             adc_select_input(1);
             uint16_t y = adc_read();
 
-            if (check_joystick(x, y)) {
+            if (check_joystick(x,y)) {
                 // Joystick is pointing in a direction, so
                 // get the direction the player has chosen
                 // 0 = forward
@@ -201,12 +216,12 @@ void game_loop() {
                 uint8_t nx = player_x;
                 uint8_t ny = player_y;
 
-                if (dir == MOVE_FORWARD || MOVE_BACKWARD) {
+                if (dir == MOVE_FORWARD || dir == MOVE_BACKWARD) {
                     // Move player forward or backward if we can
-                    if (player_direction == DIRECTION_NORTH) ny += dir == MOVE_FORWARD ? 1 : -1;
-                    if (player_direction == DIRECTION_SOUTH) ny += dir == MOVE_FORWARD ? -1 : 1;
-                    if (player_direction == DIRECTION_EAST) nx += dir == MOVE_FORWARD ? 1 : -1;
-                    if (player_direction == DIRECTION_WEST) nx += dir == MOVE_FORWARD ? -1 : 1;
+                    if (player_direction == DIRECTION_NORTH) ny += (dir == MOVE_FORWARD ? -1 : 1);
+                    if (player_direction == DIRECTION_SOUTH) ny += (dir == MOVE_FORWARD ? 1 : -1);
+                    if (player_direction == DIRECTION_EAST) nx += (dir == MOVE_FORWARD ? 1 : -1);
+                    if (player_direction == DIRECTION_WEST) nx += (dir == MOVE_FORWARD ? -1 : 1);
 
                     if (ny > 19 || nx > 19 || check_hazard(nx, ny)) {
                         // Collision
@@ -219,7 +234,7 @@ void game_loop() {
                     // Turn player right
                     ++player_direction;
                     if (player_direction > DIRECTION_WEST) player_direction = DIRECTION_NORTH;
-                } else {
+                } else if (dir == TURN_LEFT) {
                     // Turn player left
                     --player_direction;
                     if (player_direction > DIRECTION_WEST) player_direction = DIRECTION_WEST;
@@ -324,8 +339,8 @@ uint8_t get_direction(uint16_t x, uint16_t y) {
     // Get player direction from the analog input
     if (y > UPPER_LIMIT) return MOVE_FORWARD;
     if (y < LOWER_LIMIT) return MOVE_BACKWARD;
-    if (x > UPPER_LIMIT) return TURN_RIGHT;
-    if (x < LOWER_LIMIT) return TURN_LEFT;
+    if (x > UPPER_LIMIT) return TURN_LEFT;
+    if (x < LOWER_LIMIT) return TURN_RIGHT;
 
     // Just in case
     return 99;
@@ -348,9 +363,32 @@ bool check_hazard(uint8_t x, uint8_t y) {
 
 void draw_world() {
 
-    ssd1306_clear();
-    draw_screen();
-    ssd1306_draw();
+    uint32_t now = time_us_32();
+    if (now - last_draw > ANIM_TIME_US) {
+        ssd1306_clear();
+        draw_screen();
+        if (player_direction == 0 || player_direction == 2) {
+            ssd1306_line(64,0,64,4,1,1);
+            if (player_direction == 0) {
+                ssd1306_plot(63,1,1);
+                ssd1306_plot(65,1,1);
+            } else {
+                ssd1306_plot(63,3,1);
+                ssd1306_plot(65,3,1);
+            }
+        } else {
+            ssd1306_line(62,2,66,2,1,1);
+            if (player_direction == 3) {
+                ssd1306_plot(63,1,1);
+                ssd1306_plot(63,3,1);
+            } else {
+                ssd1306_plot(64,1,1);
+                ssd1306_plot(64,3,1);
+            }
+        }
+        ssd1306_draw();
+        last_draw = now;
+    }
 }
 
 
@@ -406,6 +444,11 @@ void draw_screen() {
                     steps++;
                 }
             }
+
+            for (uint8_t i = player_y ; i > player_y - steps ; --i) {
+                draw_phantom(player_x, i, player_y - i);
+            }
+
             break;
         case DIRECTION_EAST:
             // Facing E, so left = N, right = S
@@ -428,6 +471,11 @@ void draw_screen() {
                     steps++;
                 }
             }
+
+            for (uint8_t i = player_x ; i < player_x + steps ; ++i) {
+                draw_phantom(i, player_y, i - player_x);
+            }
+
             break;
         case DIRECTION_SOUTH:
             // Facing S, so left = E, right = W
@@ -450,6 +498,11 @@ void draw_screen() {
                     steps++;
                 }
             }
+
+            for (uint8_t i = player_y ; i < player_y + steps ; ++i) {
+                draw_phantom(player_x, i, i - player_y);
+            }
+
             break;
         default:
             // Facing W, so left = S, right = N
@@ -458,8 +511,8 @@ void draw_screen() {
                     draw_teleporter(steps);
                 }
 
-                bool left_open = (get_view_distance(player_x, i, DIRECTION_SOUTH) > 0);
-                bool right_open = (get_view_distance(player_x, i, DIRECTION_NORTH) > 0);
+                bool left_open = (get_view_distance(i, player_y, DIRECTION_SOUTH) > 0);
+                bool right_open = (get_view_distance(i, player_y, DIRECTION_NORTH) > 0);
 
                 draw_left_wall(steps, left_open);
                 draw_right_wall(steps, right_open);
@@ -472,6 +525,11 @@ void draw_screen() {
                     steps++;
                 }
             }
+
+            for (uint8_t i = player_x ; i > player_x - steps ; --i) {
+                draw_phantom(i, player_y, player_x - i);
+            }
+
             break;
     }
 }
@@ -570,6 +628,73 @@ void draw_end(uint8_t steps) {
     ssd1306_draw();
 }
 
+void draw_phantom(uint8_t x, uint8_t y, uint8_t c) {
+    // Run through the list of phantoms to see if
+    // the player is facing any of them
+    for (uint8_t i = 0 ; i < 3 ; ++i) {
+        Phantom p = phantoms[i];
+
+        if (p.x == x && p.y == y) {
+            Rect r = rects[c];
+            ssd1306_rect(59, r.origin_y + 2, 10, r.height - 3, 1, false);
+            ssd1306_rect(60, r.origin_y + 3, 8, r.height - 4, 0, true);
+            ssd1306_rect(62, r.origin_y + 5, 4, 6, 1, true);
+        }
+    }
+}
+
+void move_phantoms() {
+
+    for (uint8_t i = 0 ; i < 3 ; ++i) {
+        Phantom p = phantoms[i];
+        if (p.hp != 99) {
+            uint8_t ox = p.x;
+            uint8_t oy = p.y;
+
+            int8_t dx = p.x - player_x;
+            int8_t dy = p.y - player_y;
+
+            if (dx > 0) {
+                ++p.x;
+            } else if (dx < 0) {
+                --p.x;
+            }
+
+            if (get_square_contents(p.x, p.y) == MAP_TILE_WALL) p.x = ox;
+
+            if (dy > 0) {
+                ++p.y;
+            } else if (dy < 0) {
+                --p.y;
+            }
+
+            if (get_square_contents(p.x, p.y) == MAP_TILE_WALL) p.y = oy;
+
+
+            if (p.y == oy && p.x == ox) {
+                // Phantom can't move towards player so move elsewhere
+                if (p.x > 0 && get_square_contents(p.x - 1, p.y) != MAP_TILE_WALL) {
+                    --p.x;
+                    continue;
+                }
+
+                if (p.y > 0 && get_square_contents(p.x, p.y - 1) != MAP_TILE_WALL) {
+                    --p.y;
+                    continue;
+                }
+
+                if (p.x < 19  && get_square_contents(p.x + 1, p.y) != MAP_TILE_WALL) {
+                    ++p.x;
+                    continue;
+                }
+
+                if (p.y < 19  && get_square_contents(p.x, p.y + 1) != MAP_TILE_WALL) {
+                    ++p.y;
+                    continue;
+                }
+            }
+        }
+}
 
 /*
  *  Actions
@@ -591,7 +716,7 @@ void fire_laser() {
  */
 int irandom(int start, int max) {
     // Generate a PRG between start and max
-    return rand() % max + start;
+    return (rand() % max + start);
 }
 
 void tone(unsigned int frequency, unsigned long duration, unsigned long post) {
@@ -647,14 +772,6 @@ int main() {
 
     uint8_t d = 99;
     */
-    map_init();
-    show_map(0);
-    //ssd1306_draw();
-
-    //sleep_ms(5000);
-    ssd1306_clear();
-    ssd1306_draw();
-    ssd1306_inverse(true);
 
     while (1) {
         // Set up a new round...
@@ -664,10 +781,12 @@ int main() {
         init_game();
         create_world();
 
-        player_x = 0;
-        player_y = 0;
-        player_direction = DIRECTION_EAST;
+        ssd1306_clear();
+        show_map(0);
+        ssd1306_draw();
+        sleep_ms(10000);
 
+        ssd1306_inverse(true);
         draw_world();
         //check_senses();
 

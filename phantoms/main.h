@@ -1,6 +1,7 @@
 #ifndef _PHANTOMS_MAIN_HEADER_
 #define _PHANTOMS_MAIN_HEADER_
 
+
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -77,6 +78,7 @@ void draw_teleporter(uint8_t inset);
 void draw_left_wall(uint8_t steps, bool left_open);
 void draw_right_wall(uint8_t steps, bool right_open);
 void draw_end(uint8_t steps);
+void draw_phantom(uint8_t x, uint8_t y, uint8_t c);
 
 int irandom(int start, int max);
 void tone(unsigned int frequency, unsigned long duration, unsigned long post);
@@ -92,14 +94,13 @@ void tone(unsigned int frequency, unsigned long duration, unsigned long post);
 
 #define PIN_SDA                                         8
 #define PIN_SCL                                         9
-#define PIN_LED                                         25
-
-#define PIN_SPEAKER                                     17
-#define PIN_Y                                           27
-#define PIN_X                                           26
-#define PIN_FIRE_BUTTON                                 19
-#define PIN_TELE_BUTTON                                 19
 #define SSD1306_RST_PIN                                 16
+#define PIN_SPEAKER                                     17
+#define PIN_TELE_BUTTON                                 18
+#define PIN_FIRE_BUTTON                                 19
+#define PIN_LED                                         25
+#define PIN_X                                           26
+#define PIN_Y                                           27
 
 // Player movement directions
 #define DIRECTION_NORTH                                 0
@@ -113,11 +114,12 @@ void tone(unsigned int frequency, unsigned long duration, unsigned long post);
 #define TURN_LEFT                                       3
 
 #define DEADZONE                                        400
-#define UPPER_LIMIT                                     3200
-#define LOWER_LIMIT                                     2800
+#define UPPER_LIMIT                                     2448
+#define LOWER_LIMIT                                     1648
 #define JOY_MAX                                         4096
 
 #define DEBOUNCE_TIME_US                                10000
+#define ANIM_TIME_US                                    22000
 
 // Map square types
 #define MAP_TILE_CLEAR                                  0xFF
@@ -151,6 +153,7 @@ Rect rects[7];
 Phantom phantoms[3];
 Game game;
 
+uint32_t last_draw;
 
 // _PHANTOMS_MAIN_HEADER_
 #endif
