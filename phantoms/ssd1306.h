@@ -1,3 +1,12 @@
+/*
+ * Phantoms
+ *
+ * @version     1.0.0
+ * @author      smittytone
+ * @copyright   2021, Tony Smith
+ * @licence     MIT
+ *
+ */
 #ifndef _SSD1306_HEADER_
 #define _SSD1306_HEADER_
 
@@ -15,6 +24,7 @@ void ssd1306_inverse(bool do_invert);
 void ssd1306_plot(uint8_t x, uint8_t y, uint8_t colour);
 void ssd1306_line(uint8_t x, uint8_t y, uint8_t tox, uint8_t toy, uint8_t colour, uint8_t thick);
 void ssd1306_rect(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t colour, bool fill);
+void ssd1306_circle(uint8_t x, uint8_t y, uint8_t radius, uint8_t colour, bool fill) ;
 void ssd1306_text(uint8_t x, uint8_t y, const char *the_string, bool do_wrap, bool do_double);
 void ssd1306_clear();
 void ssd1306_draw();

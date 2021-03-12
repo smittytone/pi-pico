@@ -1,3 +1,12 @@
+/*
+ * Phantoms
+ *
+ * @version     1.0.0
+ * @author      smittytone
+ * @copyright   2021, Tony Smith
+ * @licence     MIT
+ *
+ */
 #include "main.h"
 
 
@@ -102,6 +111,34 @@ const char CHARSET[128][6] = {
     "\x40\x80\x40\x80\x00",      // ~
     "\x60\x90\x90\x60\x00"       // Degrees sign - Ascii 127
 };
+
+
+/*
+ * Trig. tables, because it's easier to lookup than calculate
+ */
+float COS_TABLE[] = {
+    0.000,0.035,0.070,0.105,0.140,0.174,0.208,0.243,0.276,0.310,0.343,0.376,0.408,0.439,0.471,0.501,0.531,0.561,0.589,0.617,0.644,
+    0.671,0.696,0.721,0.745,0.768,0.790,0.810,0.830,0.849,0.867,0.884,0.900,0.915,0.928,0.941,0.952,0.962,0.971,0.979,0.985,0.991,
+    0.995,0.998,1.000,1.000,0.999,0.997,0.994,0.990,0.984,0.977,0.969,0.960,0.949,0.938,0.925,0.911,0.896,0.880,0.863,0.845,0.826,
+    0.806,0.784,0.762,0.739,0.715,0.690,0.664,0.638,0.610,0.582,0.554,0.524,0.494,0.463,0.432,0.400,0.368,0.335,0.302,0.268,0.234,
+    0.200,0.166,0.131,0.096,0.062,0.027,-0.008,-0.043,-0.078,-0.113,-0.148,-0.182,-0.217,-0.251,-0.284,-0.318,-0.351,-0.383,-0.415,
+    -0.447,-0.478,-0.508,-0.538,-0.567,-0.596,-0.624,-0.651,-0.677,-0.702,-0.727,-0.750,-0.773,-0.795,-0.815,-0.835,-0.854,-0.872,
+    -0.888,-0.904,-0.918,-0.931,-0.944,-0.955,-0.964,-0.973,-0.981,-0.987,-0.992,-0.996,-0.998,-1.000,-1.000,-0.999,-0.997,-0.993,
+    -0.988,-0.982,-0.975,-0.967,-0.957,-0.947,-0.935,-0.922,-0.908,-0.893,-0.876,-0.859,-0.840,-0.821,-0.801,-0.779,-0.757,-0.733,
+    -0.709,-0.684,-0.658,-0.631,-0.604,-0.575,-0.547,-0.517,-0.487,-0.456,-0.424,-0.392,-0.360,-0.327,-0.294,-0.260,-0.226,-0.192,
+    -0.158,-0.123,-0.088,-0.053,-0.018};
+
+float SIN_TABLE[] = {
+    1.000,0.999,0.998,0.994,0.990,0.985,0.978,0.970,0.961,0.951,0.939,0.927,0.913,0.898,0.882,0.865,0.847,0.828,0.808,0.787,
+    0.765,0.742,0.718,0.693,0.667,0.641,0.614,0.586,0.557,0.528,0.498,0.467,0.436,0.404,0.372,0.339,0.306,0.272,0.238,0.204,
+    0.170,0.135,0.101,0.066,0.031,-0.004,-0.039,-0.074,-0.109,-0.144,-0.178,-0.213,-0.247,-0.280,-0.314,-0.347,-0.379,-0.412,
+    -0.443,-0.474,-0.505,-0.535,-0.564,-0.593,-0.620,-0.647,-0.674,-0.699,-0.724,-0.747,-0.770,-0.792,-0.813,-0.833,-0.852,
+    -0.870,-0.886,-0.902,-0.916,-0.930,-0.942,-0.953,-0.963,-0.972,-0.980,-0.986,-0.991,-0.995,-0.998,-1.000,-1.000,-0.999,
+    -0.997,-0.994,-0.989,-0.983,-0.976,-0.968,-0.959,-0.948,-0.936,-0.924,-0.910,-0.895,-0.878,-0.861,-0.843,-0.823,-0.803,
+    -0.782,-0.759,-0.736,-0.712,-0.687,-0.661,-0.635,-0.607,-0.579,-0.550,-0.520,-0.490,-0.459,-0.428,-0.396,-0.364,-0.331,
+    -0.298,-0.264,-0.230,-0.196,-0.162,-0.127,-0.092,-0.057,-0.022,0.013,0.048,0.083,0.117,0.152,0.187,0.221,0.255,0.288,
+    0.322,0.355,0.387,0.419,0.451,0.482,0.512,0.542,0.571,0.599,0.627,0.654,0.680,0.705,0.730,0.753,0.776,0.797,0.818,0.837,
+    0.856,0.874,0.890,0.906,0.920,0.933,0.945,0.956,0.966,0.974,0.981,0.988,0.992,0.996,0.999,1.000};
 
 
 /*
@@ -317,7 +354,39 @@ void ssd1306_rect(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t c
     }
 }
 
-void ssd1306_text(uint8_t x, uint8_t y, const char *the_string, bool do_wrap, bool do_double) {
+void ssd1306_circle(uint8_t x, uint8_t y, uint8_t radius, uint8_t colour, bool fill) {
+    // Draw a circle with its centre on the specified co-ordinates and of the
+    // required radius
+    if (colour != 0 && colour != 1) colour = 1;
+    for (uint8_t i = 0 ; i < 180 ; ++i) {
+        uint8_t a = x - (uint8_t)(radius * SIN_TABLE[i]);
+        uint8_t b = y - (uint8_t)(radius * COS_TABLE[i]);
+
+        if (a >= 0 && a < oled_width && b >= 0 && b < oled_height) {
+            ssd106_plot(a, b, colour);
+
+            if (fill) {
+                if (a > x) {
+                    uint8_t j = x;
+                    while(1) {
+                        ssd1306_plot(j, b, colour);
+                        ++j;
+                        if (j >= a) break;
+                    }
+                }
+            } else {
+                uint8_t j = a + 1;
+                while(1) {
+                    ssd1306_plot(j, b, colour);
+                    ++j;
+                    if (j > x) break;
+                }
+            }
+        }
+    }
+}
+
+void ssd1306_text(uint8_t x, uint8_t y, const char *the_string, bool do_wrap) {
 
     uint8_t space_size = do_double ? 4 : 1;
     uint8_t bit_max = do_double ? 16 : 8;
@@ -434,13 +503,15 @@ void ssd1306_clear() {
     }
 }
 
+
 void ssd1306_draw() {
     // Write the buffer out to the display
     ssd1306_write(false, oled_buffer, oled_buffer_size);
 }
 
+
 void ssd1306_write(bool is_command, uint8_t *data, uint16_t data_size) {
-    // Write a commmand or data to the display via I2C
+    // Write a command or data to the display via I2C
     i2c_tx_buffer[0] = (is_command ? SSD1306_DO_CMD : SSD1306_WRITE_TO_BUFFER);
 
     // Copy the input data to index 1 of the TX array
@@ -452,10 +523,12 @@ void ssd1306_write(bool is_command, uint8_t *data, uint16_t data_size) {
     i2c_write_block(i2c_tx_buffer, data_size + 1);
 }
 
+
 uint16_t ssd1306_coords_to_index(uint8_t x, uint8_t y) {
     // Convert pixel co-ordinates to a bytearray index
     return ((y >> 3) * oled_width) + x;
 }
+
 
 uint8_t ssd1306_text_flip(uint8_t value) {
     // Rotates the character array from the saved state
@@ -467,6 +540,7 @@ uint8_t ssd1306_text_flip(uint8_t value) {
     return flipped;
 }
 
+
 uint8_t ssd1306_text_stretch(uint8_t x) {
     // Pixel-doubles an 8-bit value to 16 bits
     x = (x & 0xF0) << 4 | (x & 0x0F);
@@ -476,8 +550,9 @@ uint8_t ssd1306_text_stretch(uint8_t x) {
     return x;
 }
 
-void ssd1306_char_plot(uint8_t x, uint8_t y, uint8_t k, uint8_t c, uint8_t a) {
+
+void ssd1306_char_plot(uint8_t x, uint8_t y, uint8_t char_bit, uint8_t char_byte, uint8_t byte_bit) {
     // Write a line from a character glyph to the buffer
-    uint16_t b = ssd1306_coords_to_index(x, y + k);
-    if (c & (1 << k) != 0) oled_buffer[b] |= (1 << a);
+    uint16_t byte = ssd1306_coords_to_index(x, y + k);
+    if (char_byte & (1 << char_bit) != 0) oled_buffer[byte] |= (1 << byte_bit);
 }

@@ -1,7 +1,18 @@
+/*
+ * Phantoms
+ *
+ * @version     1.0.0
+ * @author      smittytone
+ * @copyright   2021, Tony Smith
+ * @licence     MIT
+ *
+ */
 #include "main.h"
 
 
-// Define a basic map for testing
+/*
+ * Define a basic map for testing
+ */
 char base_map_00[20] = "\xFF\xFF\xAA\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF";
 char base_map_01[20] = "\xFF\x00\x00\xFF\x00\x00\xFF\x00\x00\x00\x00\xFF\x00\x00\xFF\x00\x00\xFF\x00\x00";
 char base_map_02[20] = "\xFF\x00\x00\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x00\xFF\xFF\xFF\xFF\xFF\xFF\x00";
@@ -54,7 +65,8 @@ void map_init() {
 
 
 void show_map(uint8_t y_delta) {
-    // Draw the current map on the screen buffer
+    // Draw the current map on the screen buffer, centred but
+    // vertically adjusted according to 'y_delta'
 
     // Put a Box around the map
     ssd1306_rect(40, 8 + y_delta, 48, 48, 1, false);
@@ -86,18 +98,19 @@ void show_map(uint8_t y_delta) {
 uint8_t get_square_contents(uint8_t x, uint8_t y) {
     // Return the contents of the current map
     // specified grid reference
-    if (x > 19 || y > 19) return 0x00;
+    if (x > 19 || y > 19) return MAP_TILE_WALL;
     char *line = current_map[y];
     return line[x];
 }
 
 
 bool set_square_contents(uint8_t x, uint8_t y, uint8_t value) {
-    // Return the contents of the current map
-    // specified grid reference
+    // Return the contents of the current map specified
+    // grid reference and return true, otherwise false
     if (x > 19 || y > 19) return false;
     char *line = current_map[y];
     line[x] = value;
+    return true;
 }
 
 

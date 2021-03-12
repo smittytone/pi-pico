@@ -1,13 +1,13 @@
-#include "main.h"
-
-
 /*
- *  Corner triangles
+ * Phantoms
+ *
+ * @version     1.0.0
+ * @author      smittytone
+ * @copyright   2021, Tony Smith
+ * @licence     MIT
+ *
  */
-const char angles[2][13] = {
-    "\x3F\x3E\x3E\x3E\x3C\x3C\x3C\x38\x38\x38\x30\x30\x30",
-    "\xFE\x7E\x7E\x7E\x3E\x3E\x3E\x1E\x1E\x1E\x1C\x1C\x1C"
-};
+#include "main.h"
 
 
 /*
@@ -58,15 +58,6 @@ void setup() {
 
     // Make the graphic frame rects
     // NOTE These are pixel values
-    /*
-    uint8_t coords[] = {0,0,128,64,
-                        11,5,106,54,
-                        24,9,80,43,
-                        36,15,56,33,
-                        47,20,34,24,
-                        55,22,18,18,
-                        61,25,6,12};
-    */
     uint8_t coords[] = {0,0,128,64,
                         11,5,106,54,
                         24,10,80,44,
@@ -111,8 +102,8 @@ void create_world() {
 
     for (uint8_t i = 0 ; i < 3 ; ++i) {
         Phantom p;
-        p.x = 99;
-        p.y = 99;
+        p.x = ERROR_CONDITION;
+        p.y = ERROR_CONDITION;
         if (i == player_quad) inc++;
         p.hp = i + inc;
         phantoms[i] = p;
@@ -184,8 +175,8 @@ void init_game() {
     game.level = 1;
     game.zap_time = 0;
     game.debounce_count_button = 0;
-    game.tele_x = 99;
-    game.tele_y = 99;
+    game.tele_x = ERROR_CONDITION;
+    game.tele_y = ERROR_CONDITION;
 }
 
 
@@ -303,8 +294,6 @@ void game_loop() {
             // Draw the world
             update_world(time_us_32());
 
-            // Move the phantoms
-
             if (game.is_firing) {
                 // Fire!
                 fire_laser();
@@ -314,7 +303,20 @@ void game_loop() {
             }
         } else {
             game.in_play = false;
+            death();
             break;
+        }
+
+        // Check for game over
+        uint8_t count = 0;
+        for (uint8_t i = 0 ; i < 3 ; ++i) {
+            Phantom p = phantoms[i];
+            if (p.x == ERROR_CONDITION) ++count;
+        }
+
+        if (count == 0) {
+            // All phantoms on this level are dead
+            win();
         }
     }
 }
@@ -341,21 +343,24 @@ bool check_joystick(uint16_t x, uint16_t y) {
 
 
 uint8_t get_direction(uint16_t x, uint16_t y) {
-    // Get player direction from the analog input
+    // Get player movement action from the analog input
+    // Favour movement over rotation
     if (y > UPPER_LIMIT) return MOVE_FORWARD;
     if (y < LOWER_LIMIT) return MOVE_BACKWARD;
     if (x > UPPER_LIMIT) return TURN_LEFT;
     if (x < LOWER_LIMIT) return TURN_RIGHT;
 
     // Just in case
-    return 99;
+    return ERROR_CONDITION;
 }
 
 
 bool check_hazard(uint8_t x, uint8_t y) {
+    // Check the kind of square the player is standing on
+    // and action accordingly -- only teleport squares for now
     uint8_t sc = get_square_contents(x, y);
 
-    if (sc == 0xAA) {
+    if (sc == MAP_TILE_TELEPORTER) {
         // Player has walked on the teleport square - record it
         // and clear the map location
         game.tele_x = x;
@@ -364,7 +369,7 @@ bool check_hazard(uint8_t x, uint8_t y) {
         set_square_contents(x, y, MAP_TILE_CLEAR);
     }
 
-    return !(sc == 0xFF || sc == 0xAA);
+    return !(sc == MAP_TILE_CLEAR || sc == MAP_TILE_TELEPORTER);
 }
 
 
@@ -374,11 +379,12 @@ void update_world(uint32_t now) {
     if (now - last_draw > ANIM_TIME_US) {
         ssd1306_clear();
         draw_screen();
-        // draw_dir_arrow();
 
         if (game.show_reticule) {
-            ssd1306_rect(64,27,2,10,1,false);
-            ssd1306_rect(59,32,10,2,1,false);
+            ssd1306_rect(64,26,2,5,1,false);
+            ssd1306_rect(64,33,2,5,1,false);
+            ssd1306_rect(58,32,5,2,1,false);
+            ssd1306_rect(65,32,5,2,1,false);
         }
 
         ssd1306_draw();
@@ -393,286 +399,14 @@ void update_world(uint32_t now) {
 }
 
 
-void death() {
-    // The player has died -- show the map and the score
-    ssd1306_clear();
-    ssd1306_text(0, 0, "Score: ", false, false);
-    // TODO
-    // Show the score
-    char score_string[] = "00000";
-    ssd1306_text(64, 0, score_string, false, false);
-    show_map(15);
-
-    sleep_ms(20000);
-    // TODO
-    // Exit on button press OR timer
-}
-
-
 /*
- * Graphics Functions
+ * Phantom Control
  */
-void draw_screen() {
-
-    uint8_t max_steps = get_view_distance(player_x, player_y, player_direction);
-    uint8_t steps = 0;
-
-    switch(player_direction) {
-        case DIRECTION_NORTH:
-            // Facing north, so left = W, right = E
-            // Run through squares from current to map limit
-            for (uint8_t i = player_y ; i >= 0 ; --i) {
-                if (get_square_contents(player_x, i) == MAP_TILE_TELEPORTER) {
-                    draw_teleporter(steps);
-                }
-
-                // Are the walls to the left and right open or closed
-                bool left_open = (get_view_distance(player_x, i, DIRECTION_WEST) > 0);
-                bool right_open = (get_view_distance(player_x, i, DIRECTION_EAST) > 0);
-
-                // Draw in the current walls
-                draw_left_wall(steps, left_open);
-                draw_right_wall(steps, right_open);
-
-                // Got to the end?
-                if (steps == max_steps) {
-                    // Draw the facing wall (or infinity)
-                    draw_end(steps);
-                    break;
-                } else {
-                    // Step to the next most distant square
-                    draw_floor_line(steps);
-                    steps++;
-                }
-            }
-
-            for (uint8_t i = player_y ; i > player_y - steps ; --i) {
-                draw_phantom(player_x, i, player_y - i);
-            }
-
-            break;
-        case DIRECTION_EAST:
-            // Facing E, so left = N, right = S
-            for (uint8_t i = player_x ; i < 20 ; ++i) {
-                if (get_square_contents(i, player_y) == MAP_TILE_TELEPORTER) {
-                    draw_teleporter(steps);
-                }
-
-                bool left_open = (get_view_distance(i, player_y, DIRECTION_NORTH) > 0);
-                bool right_open = (get_view_distance(i, player_y, DIRECTION_SOUTH) > 0);
-
-                draw_left_wall(steps, left_open);
-                draw_right_wall(steps, right_open);
-
-                if (steps == max_steps) {
-                    draw_end(steps);
-                    break;
-                } else {
-                    draw_floor_line(steps);
-                    steps++;
-                }
-            }
-
-            for (uint8_t i = player_x ; i < player_x + steps ; ++i) {
-                draw_phantom(i, player_y, i - player_x);
-            }
-
-            break;
-        case DIRECTION_SOUTH:
-            // Facing S, so left = E, right = W
-            for (uint8_t i = player_y ; i < 20 ; ++i) {
-                if (get_square_contents(player_x, i) == MAP_TILE_TELEPORTER) {
-                    draw_teleporter(steps);
-                }
-
-                bool left_open = (get_view_distance(player_x, i, DIRECTION_EAST) > 0);
-                bool right_open = (get_view_distance(player_x, i, DIRECTION_WEST) > 0);
-
-                draw_left_wall(steps, left_open);
-                draw_right_wall(steps, right_open);
-
-                if (steps == max_steps) {
-                    draw_end(steps);
-                    break;
-                } else {
-                    draw_floor_line(steps);
-                    steps++;
-                }
-            }
-
-            for (uint8_t i = player_y ; i < player_y + steps ; ++i) {
-                draw_phantom(player_x, i, i - player_y);
-            }
-
-            break;
-        default:
-            // Facing W, so left = S, right = N
-            for (uint8_t i = player_x ; i >= 0 ; --i) {
-                if (get_square_contents(i, player_y) == MAP_TILE_TELEPORTER) {
-                    draw_teleporter(steps);
-                }
-
-                bool left_open = (get_view_distance(i, player_y, DIRECTION_SOUTH) > 0);
-                bool right_open = (get_view_distance(i, player_y, DIRECTION_NORTH) > 0);
-
-                draw_left_wall(steps, left_open);
-                draw_right_wall(steps, right_open);
-
-                if (steps == max_steps) {
-                    draw_end(steps);
-                    break;
-                } else {
-                    draw_floor_line(steps);
-                    steps++;
-                }
-            }
-
-            for (uint8_t i = player_x ; i > player_x - steps ; --i) {
-                draw_phantom(i, player_y, player_x - i);
-            }
-
-            break;
-    }
-}
-
-
-void draw_floor_line(uint8_t inset) {
-    // Draw a grid line on the floor
-    Rect r = rects[inset + 1];
-    ssd1306_line(r.origin_x - 1, r.origin_y + r.height, r.origin_x + r.width + 1, r.origin_y + r.height, 1, 1);
-}
-
-
-void draw_teleporter(uint8_t inset) {
-    // Draw a grey floor
-    Rect r = rects[inset + 1];
-    bool sstate = true;
-
-    for (uint8_t y = r.origin_y + r.height -  4; y < r.origin_y + r.height ; ++y) {
-        for (uint8_t i = r.origin_x ; i < r.origin_x + r.width - 2; i += 2) {
-            if (sstate) {
-                ssd1306_plot(i, y, 1);
-            } else {
-                ssd1306_plot(i + 1, y, 1);
-            }
-        }
-        sstate = !sstate;
-    }
-}
-
-
-void draw_left_wall(uint8_t inset, bool is_open) {
-    // Draw main left-side rect
-    Rect i = rects[inset + 1];
-    Rect o = rects[inset];
-    ssd1306_rect(o.origin_x, i.origin_y, i.origin_x - o.origin_x - 1, i.height, 1, true);
-    if (is_open) return;
-
-    // Add upper and lower triangles for a closed wall
-    uint8_t byte = 0;
-    for (uint8_t k = 0 ; k < (i.origin_x - 1 - o.origin_x) ; ++k) {
-        byte =  angles[0][k];
-        for (uint8_t j = 0 ; j < 8 ; ++j) {
-            if ((byte & (1 << j)) != 0) {
-                ssd1306_plot(o.origin_x + k, o.origin_y + j, 1);
-            }
-        }
-
-        byte = angles[1][k];
-        for (uint8_t j = 0 ; j < 8 ; ++j) {
-            if ((byte & (1 << j)) != 0) {
-                ssd1306_plot(o.origin_x + k, o.origin_y + o.height - 9 + j, 1);
-            }
-        }
-    }
-}
-
-
-void draw_right_wall(uint8_t inset, bool is_open) {
-    // Draw main right-side rect
-    Rect i = rects[inset + 1];
-    Rect o = rects[inset];
-    uint8_t xd = i.width + i.origin_x;
-    ssd1306_rect(xd + 1, i.origin_y, (o.width + o.origin_x) - xd - 1, i.height, 1, true);
-    if (is_open) return;
-
-    // Add upper and lower triangles for a closed wall
-    uint8_t byte = 0;
-    uint8_t max = (o.width + o.origin_x) - xd - 1;
-    for (uint8_t k = 0 ; k < max ; ++k) {
-        byte = angles[0][k];
-        for (uint8_t j = 0 ; j < 8 ; ++j) {
-            if ((byte & (1 << j)) > 0) {
-                ssd1306_plot(o.width + o.origin_x - k - 1, o.origin_y + j, 1);
-            }
-        }
-
-        byte = angles[1][k];
-        for (uint8_t j = 0 ; j < 8 ; ++j) {
-            if ((byte & (1 << j)) > 0) {
-                ssd1306_plot(o.width + o.origin_x - k - 1, o.origin_y + o.height - 9 + j, 1);
-            }
-        }
-    }
-}
-
-
-void draw_end(uint8_t steps) {
-    if (steps > 6) return;
-
-    Rect i;
-    if (steps > 4) {
-        i = rects[6];
-    } else {
-        i = rects[steps + 1];
-    }
-
-    ssd1306_rect(i.origin_x, i.origin_y, i.width, i.height, 1, true);
-}
-
-
-void draw_dir_arrow() {
-    if (player_direction == 0 || player_direction == 2) {
-        ssd1306_line(64,0,64,4,1,1);
-        if (player_direction == 0) {
-            ssd1306_plot(63,1,1);
-            ssd1306_plot(65,1,1);
-        } else {
-            ssd1306_plot(63,3,1);
-            ssd1306_plot(65,3,1);
-        }
-    } else {
-        ssd1306_line(62,2,66,2,1,1);
-        if (player_direction == 3) {
-            ssd1306_plot(63,1,1);
-            ssd1306_plot(63,3,1);
-        } else {
-            ssd1306_plot(64,1,1);
-            ssd1306_plot(64,3,1);
-        }
-    }
-}
-
-
-void draw_phantom(uint8_t x, uint8_t y, uint8_t c) {
-    // Run through the list of phantoms to see if
-    // the player is facing any of them
-    // 'x' and 'y' are iterated co-ordinates from the most
-    // distant square up to the player
-    if (locate_phantom(x, y) != 99) {
-        Rect r = rects[c];
-        ssd1306_rect(59, r.origin_y + 2, 10, r.height - 3, 1, false);
-        ssd1306_rect(60, r.origin_y + 3, 8, r.height - 5, 0, true);
-        ssd1306_rect(62, r.origin_y + 5, 4, 6, 1, true);
-    }
-}
-
-
 void move_phantoms() {
     // Move each phantom toward the player
     for (uint8_t i = 0 ; i < 3 ; ++i) {
         Phantom* p = &phantoms[i];
-        if (p->x != 99) {
+        if (p->x != ERROR_CONDITION) {
             uint8_t ox = p->x;
             uint8_t oy = p->y;
 
@@ -748,38 +482,39 @@ void move_phantoms() {
     }
 }
 
+
 uint8_t get_facing_phantom(uint8_t range) {
     // Return the index of the closest facing phantom
-    // in the 'phantoms' array -- or 99
-    uint8_t phantom = 99;
+    // in the 'phantoms' array -- or ERROR_CONDITION
+    uint8_t phantom = ERROR_CONDITION;
 
     switch(player_direction) {
         case DIRECTION_NORTH:
             if (player_y - range < 0) range = player_y;
             for (uint8_t i = player_y ; i >= player_y - range ; --i) {
                 phantom = locate_phantom(player_x, i);
-                if (phantom != 99) return phantom;
+                if (phantom != ERROR_CONDITION) return phantom;
             }
             break;
         case DIRECTION_EAST:
             if (player_x + range > 19) range = 20 - player_x;
             for (uint8_t i = player_x ; i < player_y + range ; ++i) {
                 phantom = locate_phantom(i, player_y);
-                if (phantom != 99) return phantom;
+                if (phantom != ERROR_CONDITION) return phantom;
             }
             break;
         case DIRECTION_SOUTH:
             if (player_y + range > 19) range = 20 - player_y;
             for (uint8_t i = player_y ; i < player_y + range ; ++i) {
                 phantom = locate_phantom(player_x, i);
-                if (phantom != 99) return phantom;
+                if (phantom != ERROR_CONDITION) return phantom;
             }
             break;
         default:
             if (player_x - range < 0) range = player_x;
             for (uint8_t i = player_x ; i >= player_x - range ; --i) {
                 phantom = locate_phantom(i, player_y);
-                if (phantom != 99) return phantom;
+                if (phantom != ERROR_CONDITION) return phantom;
             }
             break;
     }
@@ -789,12 +524,12 @@ uint8_t get_facing_phantom(uint8_t range) {
 
 
 uint8_t locate_phantom(uint8_t x, uint8_t y) {
-    // Return index of the phantom at (x,y) -- or 99
+    // Return index of the phantom at (x,y) -- or ERROR_CONDITION
     for (uint8_t i = 0 ; i < 3 ; i++) {
         Phantom p = phantoms[i];
         if (x == p.x && y == p.y) return i;
     }
-    return 99;
+    return ERROR_CONDITION;
 }
 
 
@@ -812,7 +547,7 @@ void check_senses() {
         for (int8_t j = dy ; j < dy + 10 ; ++j) {
             if (j < 0) continue;
             if (j > 19) break;
-            if (locate_phantom(i, j) != 99) {
+            if (locate_phantom(i, j) != ERROR_CONDITION) {
                 // PLAY SOUND
 
                 // Only play one beep, no matter
@@ -851,20 +586,73 @@ void fire_laser() {
 
     // PLAY SOUND
 
+    // Animate the zap
+    uint8_t radii[] = {20, 16, 10, 4};
+    uint8_t temp_buf[oled_buffer_size];
+    for (uint8_t j = 0 ; j < oled_buffer_size ; ++j) {
+        temp_buf[j] = oled_buffer[j];
+    }
+
+    for (uint8_t i = 0 ; i < 4 ; ++i) {
+        ssd1306_circle(64, 32, radii[i], 1, true);
+        ssd1306_draw();
+        sleep_ms(100);
+        for (uint8_t j = 0 ; j < oled_buffer_size ; ++j) {
+            oled_buffer[j] = tmp_buffer[j];
+        }
+    }
+
+    // Draw the bulletless view
+    ssd1306_draw();
+
     uint8_t n = get_facing_phantom(5);
-    if (n != 99) {
+    if (n != ERROR_CONDITION) {
         // A hit! A palpable hit!
         Phantom* p = &phantoms[n];
         p->hp -= 1;
         if (p->hp == 0) {
             // One dead phantom
-            p->x = 99;
+            p->x = ERROR_CONDITION;
             ++game.score;
+
+            // Briefly invert the screen
+            ssd1306_inverse(false);
+            sleep_ms(200);
+
+            // Draw without the front phantom
+            draw_screen();
+            ssd1306_draw();
+            ssd1306_inverse(false);
 
             // PLAY SOUND
         }
     }
 }
+
+
+/*
+ * Game Outcomes
+ */
+void death() {
+    // The player has died -- show the map and the score
+    ssd1306_clear();
+    ssd1306_text(0, 0, "Score: ", false, false);
+    // TODO
+    // Show the score
+    char score_string[] = "00000";
+    ssd1306_text(64, 0, score_string, false, false);
+    show_map(15);
+
+    sleep_ms(20000);
+    // TODO
+    // Exit on button press OR timer
+}
+
+
+void win() {
+    return;
+}
+
 
 /*
  *  Misc Functions
@@ -873,6 +661,7 @@ int irandom(int start, int max) {
     // Generate a PRG between start and max
     return (rand() % max + start);
 }
+
 
 void tone(unsigned int frequency, unsigned long duration, unsigned long post) {
     // Get the cycle period in microseconds
@@ -893,7 +682,6 @@ void tone(unsigned int frequency, unsigned long duration, unsigned long post) {
     // Apply a post-tone delay
     sleep_ms(post);
 }
-
 
 
 /*

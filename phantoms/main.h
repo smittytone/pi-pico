@@ -1,3 +1,12 @@
+/*
+ * Phantoms
+ *
+ * @version     1.0.0
+ * @author      smittytone
+ * @copyright   2021, Tony Smith
+ * @licence     MIT
+ *
+ */
 #ifndef _PHANTOMS_MAIN_HEADER_
 #define _PHANTOMS_MAIN_HEADER_
 
@@ -16,7 +25,8 @@
 // Game headers
 #include "map.h"
 #include "ssd1306.h"
-#include "sprites.h"
+#include "gfx.h"
+//#include "sprites.h"
 
 
 /*
@@ -60,28 +70,21 @@ typedef struct {
 void setup();
 void create_world();
 void init_game();
-void game_loop();
-void update_world(uint32_t now);
 
+void game_loop();
 bool check_joystick(uint16_t x, uint16_t y) ;
 uint8_t get_direction(uint16_t x, uint16_t y);
-
 bool check_hazard(uint8_t x, uint8_t y);
 void check_senses();
+void update_world(uint32_t now);
+
 void do_teleport();
 void fire_laser();
+
 void death();
+void win();
 
-void draw_screen();
-void draw_floor_line(uint8_t inset);
-void draw_teleporter(uint8_t inset);
-void draw_left_wall(uint8_t steps, bool left_open);
-void draw_right_wall(uint8_t steps, bool right_open);
-void draw_end(uint8_t steps);
-void draw_dir_arrow();
-void draw_phantom(uint8_t x, uint8_t y, uint8_t c);
 void move_phantoms();
-
 uint8_t get_facing_phantom(uint8_t range);
 uint8_t locate_phantom(uint8_t x, uint8_t y);
 
@@ -128,9 +131,12 @@ void tone(unsigned int frequency, unsigned long duration, unsigned long post);
 #define PHANTOM_MOVE_TIME_US                            1000000
 
 // Map square types
-#define MAP_TILE_CLEAR                                  0xFF
 #define MAP_TILE_WALL                                   0x00
+#define MAP_TILE_CLEAR                                  0xFF
 #define MAP_TILE_TELEPORTER                             0xAA
+#define MAX_VIEW_RANGE                                  6
+
+#define ERROR_CONDITION                                 99
 
 
 /*
