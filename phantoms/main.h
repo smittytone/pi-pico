@@ -82,6 +82,9 @@ void draw_dir_arrow();
 void draw_phantom(uint8_t x, uint8_t y, uint8_t c);
 void move_phantoms();
 
+uint8_t get_facing_phantom(uint8_t range);
+uint8_t locate_phantom(uint8_t x, uint8_t y);
+
 int irandom(int start, int max);
 void tone(unsigned int frequency, unsigned long duration, unsigned long post);
 

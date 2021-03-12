@@ -120,7 +120,7 @@ void create_world() {
 
     phantoms[0].x = 11;
     phantoms[0].y = 0;
-    phantoms[0].hp = 3;
+    phantoms[0].hp = 1;
     /*
     // Add the phantoms to the map
     for (uint8_t i = 0 ; i < game.phantoms ; ++i) {
@@ -374,8 +374,12 @@ void update_world(uint32_t now) {
     if (now - last_draw > ANIM_TIME_US) {
         ssd1306_clear();
         draw_screen();
-
         // draw_dir_arrow();
+
+        if (game.show_reticule) {
+            ssd1306_rect(64,27,2,10,1,false);
+            ssd1306_rect(59,32,10,2,1,false);
+        }
 
         ssd1306_draw();
         last_draw = now;
@@ -531,11 +535,13 @@ void draw_screen() {
     }
 }
 
+
 void draw_floor_line(uint8_t inset) {
     // Draw a grid line on the floor
     Rect r = rects[inset + 1];
     ssd1306_line(r.origin_x - 1, r.origin_y + r.height, r.origin_x + r.width + 1, r.origin_y + r.height, 1, 1);
 }
+
 
 void draw_teleporter(uint8_t inset) {
     // Draw a grey floor
@@ -553,6 +559,7 @@ void draw_teleporter(uint8_t inset) {
         sstate = !sstate;
     }
 }
+
 
 void draw_left_wall(uint8_t inset, bool is_open) {
     // Draw main left-side rect
@@ -579,6 +586,7 @@ void draw_left_wall(uint8_t inset, bool is_open) {
         }
     }
 }
+
 
 void draw_right_wall(uint8_t inset, bool is_open) {
     // Draw main right-side rect
@@ -608,6 +616,7 @@ void draw_right_wall(uint8_t inset, bool is_open) {
     }
 }
 
+
 void draw_end(uint8_t steps) {
     if (steps > 6) return;
 
@@ -620,6 +629,7 @@ void draw_end(uint8_t steps) {
 
     ssd1306_rect(i.origin_x, i.origin_y, i.width, i.height, 1, true);
 }
+
 
 void draw_dir_arrow() {
     if (player_direction == 0 || player_direction == 2) {
@@ -641,53 +651,56 @@ void draw_dir_arrow() {
             ssd1306_plot(64,3,1);
         }
     }
-
-    if (game.show_reticule) {
-        ssd1306_rect(64,27,2,10,1,false);
-        ssd1306_rect(59,32,10,2,1,false);
-    }
 }
+
 
 void draw_phantom(uint8_t x, uint8_t y, uint8_t c) {
     // Run through the list of phantoms to see if
     // the player is facing any of them
     // 'x' and 'y' are iterated co-ordinates from the most
     // distant square up to the player
-    for (uint8_t i = 0 ; i < 3 ; ++i) {
-        Phantom p = phantoms[i];
-        if (p.x != 99) {
-            if (x == p.x && y == p.y) {
-                Rect r = rects[c];
-                ssd1306_rect(59, r.origin_y + 2, 10, r.height - 3, 1, false);
-                ssd1306_rect(60, r.origin_y + 3, 8, r.height - 4, 0, true);
-                ssd1306_rect(62, r.origin_y + 5, 4, 6, 1, true);
-            }
-        }
+    if (locate_phantom(x, y) != 99) {
+        Rect r = rects[c];
+        ssd1306_rect(59, r.origin_y + 2, 10, r.height - 3, 1, false);
+        ssd1306_rect(60, r.origin_y + 3, 8, r.height - 5, 0, true);
+        ssd1306_rect(62, r.origin_y + 5, 4, 6, 1, true);
     }
 }
 
+
 void move_phantoms() {
     // Move each phantom toward the player
-    uint8_t ox, oy;
-    int8_t dx, dy;
     for (uint8_t i = 0 ; i < 3 ; ++i) {
         Phantom* p = &phantoms[i];
         if (p->x != 99) {
-            ox = p->x;
-            oy = p->y;
+            uint8_t ox = p->x;
+            uint8_t oy = p->y;
 
-            dx = p->x - player_x;
-            dy = p->y - player_y;
+            int8_t dx = p->x - player_x;
+            int8_t dy = p->y - player_y;
 
-            if (dx > 0) {
-                p->x -= 1;
-            } else if (dx < 0) {
-                p->x += 1;
-            }
+            if (irandom(0,100) > 49) {
+                // Move the phantom in the x axis
+                if (dx > 0) {
+                    p->x -= 1;
+                } else if (dx < 0) {
+                    p->x += 1;
+                }
 
-            if (dx == 0 || get_square_contents(p->x, p->y) == MAP_TILE_WALL) {
-                p->x = ox;
+                if (dx == 0 || get_square_contents(p->x, p->y) == MAP_TILE_WALL) {
+                    p->x = ox;
 
+                    if (dy > 0) {
+                        p->y -= 1;
+                    } else if (dy < 0) {
+                        p->y += 1;
+                    }
+
+                    if (dy == 0 || get_square_contents(p->x, p->y) == MAP_TILE_WALL) {
+                        p->y = oy;
+                    }
+                }
+            } else {
                 if (dy > 0) {
                     p->y -= 1;
                 } else if (dy < 0) {
@@ -696,6 +709,16 @@ void move_phantoms() {
 
                 if (dy == 0 || get_square_contents(p->x, p->y) == MAP_TILE_WALL) {
                     p->y = oy;
+
+                    if (dy > 0) {
+                        p->y -= 1;
+                    } else if (dy < 0) {
+                        p->y += 1;
+                    }
+
+                    if (dx == 0 || get_square_contents(p->x, p->y) == MAP_TILE_WALL) {
+                        p->x = ox;
+                    }
                 }
             }
 
@@ -725,33 +748,122 @@ void move_phantoms() {
     }
 }
 
+uint8_t get_facing_phantom(uint8_t range) {
+    // Return the index of the closest facing phantom
+    // in the 'phantoms' array -- or 99
+    uint8_t phantom = 99;
+
+    switch(player_direction) {
+        case DIRECTION_NORTH:
+            if (player_y - range < 0) range = player_y;
+            for (uint8_t i = player_y ; i >= player_y - range ; --i) {
+                phantom = locate_phantom(player_x, i);
+                if (phantom != 99) return phantom;
+            }
+            break;
+        case DIRECTION_EAST:
+            if (player_x + range > 19) range = 20 - player_x;
+            for (uint8_t i = player_x ; i < player_y + range ; ++i) {
+                phantom = locate_phantom(i, player_y);
+                if (phantom != 99) return phantom;
+            }
+            break;
+        case DIRECTION_SOUTH:
+            if (player_y + range > 19) range = 20 - player_y;
+            for (uint8_t i = player_y ; i < player_y + range ; ++i) {
+                phantom = locate_phantom(player_x, i);
+                if (phantom != 99) return phantom;
+            }
+            break;
+        default:
+            if (player_x - range < 0) range = player_x;
+            for (uint8_t i = player_x ; i >= player_x - range ; --i) {
+                phantom = locate_phantom(i, player_y);
+                if (phantom != 99) return phantom;
+            }
+            break;
+    }
+
+    return phantom;
+}
+
+
+uint8_t locate_phantom(uint8_t x, uint8_t y) {
+    // Return index of the phantom at (x,y) -- or 99
+    for (uint8_t i = 0 ; i < 3 ; i++) {
+        Phantom p = phantoms[i];
+        if (x == p.x && y == p.y) return i;
+    }
+    return 99;
+}
+
+
 /*
  *  Actions
  */
 void check_senses() {
-    return;
+    // Scan around the player for nearby phantoms
+    int8_t dx = player_x - 5;
+    int8_t dy = player_y - 5;
+
+    for (int8_t i = dx ; i < dx + 10 ; ++i) {
+        if (i < 0) continue;
+        if (i > 19) break;
+        for (int8_t j = dy ; j < dy + 10 ; ++j) {
+            if (j < 0) continue;
+            if (j > 19) break;
+            if (locate_phantom(i, j) != 99) {
+                // PLAY SOUND
+
+                // Only play one beep, no matter
+                // how many nearby phantoms there are
+                return;
+            }
+        }
+    }
 }
 
+
 void do_teleport() {
-    // Jump back to sqaure
+    // Jump back to the teleport sqaure
+    // if the player has walked over it
+    // NOTE Only one usage per level
     if (game.can_teleport) {
         game.can_teleport = false;
+
+        // Flash the screen
         bool tstate = false;
         for (uint8_t i = 0 ; i < 10 ; i++) {
             ssd1306_inverse(tstate);
-            sleep_ms(20);
+            sleep_ms(40);
             tstate = !tstate;
         }
 
+        // Move the player to the stored square
         player_x = game.tele_x;
         player_y = game.tele_y;
     }
-
-    return;
 }
 
+
 void fire_laser() {
-    return;
+    // Hit the front-most facing phantom, if there is one
+
+    // PLAY SOUND
+
+    uint8_t n = get_facing_phantom(5);
+    if (n != 99) {
+        // A hit! A palpable hit!
+        Phantom* p = &phantoms[n];
+        p->hp -= 1;
+        if (p->hp == 0) {
+            // One dead phantom
+            p->x = 99;
+            ++game.score;
+
+            // PLAY SOUND
+        }
+    }
 }
 
 /*
