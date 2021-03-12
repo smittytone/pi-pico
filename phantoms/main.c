@@ -120,6 +120,7 @@ void create_world() {
 
     phantoms[0].x = 11;
     phantoms[0].y = 0;
+    phantoms[0].hp = 3;
     /*
     // Add the phantoms to the map
     for (uint8_t i = 0 ; i < game.phantoms ; ++i) {
@@ -161,6 +162,10 @@ void create_world() {
         }
     }
 
+    player_x = 0;
+    player_y = 0;
+    player_direction = DIRECTION_EAST;
+
     // Initialise the current map
     map_init();
 }
@@ -179,6 +184,8 @@ void init_game() {
     game.level = 1;
     game.zap_time = 0;
     game.debounce_count_button = 0;
+    game.tele_x = 99;
+    game.tele_y = 99;
 }
 
 
@@ -199,6 +206,12 @@ void game_loop() {
                 game.zap_time = 0;
             }
         } else {
+            if (game.is_firing) {
+                // Always hit front phantom
+                game.is_firing = false;
+
+            }
+
             // Read joystick analog output
             adc_select_input(0);
             uint16_t x = adc_read();
@@ -247,27 +260,18 @@ void game_loop() {
             } else {
                 // Joystick is in deadzone
                 if (gpio_get(PIN_FIRE_BUTTON)) {
-                    if (!game.show_reticule) {
-                        uint32_t now = time_us_32();
-                        if (game.debounce_count_button == 0) {
-                            // Set debounce timer
-                            game.debounce_count_button = now;
-                        } else if (now - game.debounce_count_button > DEBOUNCE_TIME_US) {
-                            // Clear debounce timer
-                            game.debounce_count_button == 0;
-                            game.show_reticule == true;
+                    uint32_t now = time_us_32();
+                    if (game.debounce_count_button == 0) {
+                        // Set debounce timer
+                        game.debounce_count_button = now;
+                    } else if (now - game.debounce_count_button > DEBOUNCE_TIME_US) {
+                        // Clear debounce timer
+                        game.debounce_count_button == 0;
+
+                        if (!game.show_reticule) {
+                            game.show_reticule = true;
                             game.zap_time = now;
-                        }
-                    }
-                } else {
-                    if (game.show_reticule) {
-                        uint32_t now = time_us_32();
-                        if (game.debounce_count_button == 0) {
-                            // Set debounce timer
-                            game.debounce_count_button = now;
-                        } else if (now - game.debounce_count_button > DEBOUNCE_TIME_US) {
-                            // Clear debounce timer
-                            game.debounce_count_button == 0;
+                        } else {
                             game.show_reticule = false;
                             game.is_firing = true;
                             game.zap_time = 0;
@@ -286,7 +290,6 @@ void game_loop() {
                         } else if (now - game.debounce_count_button > DEBOUNCE_TIME_US) {
                             // Clear debounce timer
                             game.debounce_count_button == 0;
-                            game.can_teleport = false;
 
                             // Teleport
                             do_teleport();
@@ -298,7 +301,9 @@ void game_loop() {
 
         if (!is_dead) {
             // Draw the world
-            draw_world();
+            update_world(time_us_32());
+
+            // Move the phantoms
 
             if (game.is_firing) {
                 // Fire!
@@ -346,6 +351,7 @@ uint8_t get_direction(uint16_t x, uint16_t y) {
     return 99;
 }
 
+
 bool check_hazard(uint8_t x, uint8_t y) {
     uint8_t sc = get_square_contents(x, y);
 
@@ -361,33 +367,24 @@ bool check_hazard(uint8_t x, uint8_t y) {
     return !(sc == 0xFF || sc == 0xAA);
 }
 
-void draw_world() {
 
-    uint32_t now = time_us_32();
+void update_world(uint32_t now) {
+    // Update the world at the end of the move cycle
+    // Draw the graphics and animate the phantoms
     if (now - last_draw > ANIM_TIME_US) {
         ssd1306_clear();
         draw_screen();
-        if (player_direction == 0 || player_direction == 2) {
-            ssd1306_line(64,0,64,4,1,1);
-            if (player_direction == 0) {
-                ssd1306_plot(63,1,1);
-                ssd1306_plot(65,1,1);
-            } else {
-                ssd1306_plot(63,3,1);
-                ssd1306_plot(65,3,1);
-            }
-        } else {
-            ssd1306_line(62,2,66,2,1,1);
-            if (player_direction == 3) {
-                ssd1306_plot(63,1,1);
-                ssd1306_plot(63,3,1);
-            } else {
-                ssd1306_plot(64,1,1);
-                ssd1306_plot(64,3,1);
-            }
-        }
+
+        // draw_dir_arrow();
+
         ssd1306_draw();
         last_draw = now;
+    }
+
+    // Move the phantoms periodically
+    if (now - last_phantom_move > PHANTOM_MOVE_TIME_US) {
+        last_phantom_move = now;
+        move_phantoms();
     }
 }
 
@@ -538,7 +535,6 @@ void draw_floor_line(uint8_t inset) {
     // Draw a grid line on the floor
     Rect r = rects[inset + 1];
     ssd1306_line(r.origin_x - 1, r.origin_y + r.height, r.origin_x + r.width + 1, r.origin_y + r.height, 1, 1);
-    //ssd1306_draw();
 }
 
 void draw_teleporter(uint8_t inset) {
@@ -582,7 +578,6 @@ void draw_left_wall(uint8_t inset, bool is_open) {
             }
         }
     }
-    //ssd1306_draw();
 }
 
 void draw_right_wall(uint8_t inset, bool is_open) {
@@ -611,7 +606,6 @@ void draw_right_wall(uint8_t inset, bool is_open) {
             }
         }
     }
-    //ssd1306_draw();
 }
 
 void draw_end(uint8_t steps) {
@@ -625,75 +619,110 @@ void draw_end(uint8_t steps) {
     }
 
     ssd1306_rect(i.origin_x, i.origin_y, i.width, i.height, 1, true);
-    ssd1306_draw();
+}
+
+void draw_dir_arrow() {
+    if (player_direction == 0 || player_direction == 2) {
+        ssd1306_line(64,0,64,4,1,1);
+        if (player_direction == 0) {
+            ssd1306_plot(63,1,1);
+            ssd1306_plot(65,1,1);
+        } else {
+            ssd1306_plot(63,3,1);
+            ssd1306_plot(65,3,1);
+        }
+    } else {
+        ssd1306_line(62,2,66,2,1,1);
+        if (player_direction == 3) {
+            ssd1306_plot(63,1,1);
+            ssd1306_plot(63,3,1);
+        } else {
+            ssd1306_plot(64,1,1);
+            ssd1306_plot(64,3,1);
+        }
+    }
+
+    if (game.show_reticule) {
+        ssd1306_rect(64,27,2,10,1,false);
+        ssd1306_rect(59,32,10,2,1,false);
+    }
 }
 
 void draw_phantom(uint8_t x, uint8_t y, uint8_t c) {
     // Run through the list of phantoms to see if
     // the player is facing any of them
+    // 'x' and 'y' are iterated co-ordinates from the most
+    // distant square up to the player
     for (uint8_t i = 0 ; i < 3 ; ++i) {
         Phantom p = phantoms[i];
-
-        if (p.x == x && p.y == y) {
-            Rect r = rects[c];
-            ssd1306_rect(59, r.origin_y + 2, 10, r.height - 3, 1, false);
-            ssd1306_rect(60, r.origin_y + 3, 8, r.height - 4, 0, true);
-            ssd1306_rect(62, r.origin_y + 5, 4, 6, 1, true);
+        if (p.x != 99) {
+            if (x == p.x && y == p.y) {
+                Rect r = rects[c];
+                ssd1306_rect(59, r.origin_y + 2, 10, r.height - 3, 1, false);
+                ssd1306_rect(60, r.origin_y + 3, 8, r.height - 4, 0, true);
+                ssd1306_rect(62, r.origin_y + 5, 4, 6, 1, true);
+            }
         }
     }
 }
 
 void move_phantoms() {
-
+    // Move each phantom toward the player
+    uint8_t ox, oy;
+    int8_t dx, dy;
     for (uint8_t i = 0 ; i < 3 ; ++i) {
-        Phantom p = phantoms[i];
-        if (p.hp != 99) {
-            uint8_t ox = p.x;
-            uint8_t oy = p.y;
+        Phantom* p = &phantoms[i];
+        if (p->x != 99) {
+            ox = p->x;
+            oy = p->y;
 
-            int8_t dx = p.x - player_x;
-            int8_t dy = p.y - player_y;
+            dx = p->x - player_x;
+            dy = p->y - player_y;
 
             if (dx > 0) {
-                ++p.x;
+                p->x -= 1;
             } else if (dx < 0) {
-                --p.x;
+                p->x += 1;
             }
 
-            if (get_square_contents(p.x, p.y) == MAP_TILE_WALL) p.x = ox;
+            if (dx == 0 || get_square_contents(p->x, p->y) == MAP_TILE_WALL) {
+                p->x = ox;
 
-            if (dy > 0) {
-                ++p.y;
-            } else if (dy < 0) {
-                --p.y;
+                if (dy > 0) {
+                    p->y -= 1;
+                } else if (dy < 0) {
+                    p->y += 1;
+                }
+
+                if (dy == 0 || get_square_contents(p->x, p->y) == MAP_TILE_WALL) {
+                    p->y = oy;
+                }
             }
 
-            if (get_square_contents(p.x, p.y) == MAP_TILE_WALL) p.y = oy;
-
-
-            if (p.y == oy && p.x == ox) {
+            if (p->y == oy && p->x == ox) {
                 // Phantom can't move towards player so move elsewhere
-                if (p.x > 0 && get_square_contents(p.x - 1, p.y) != MAP_TILE_WALL) {
-                    --p.x;
+                if (p->x > 0 && get_square_contents(p->x - 1, p->y) != MAP_TILE_WALL) {
+                    p->x -= 1;
                     continue;
                 }
 
-                if (p.y > 0 && get_square_contents(p.x, p.y - 1) != MAP_TILE_WALL) {
-                    --p.y;
+                if (p->y > 0 && get_square_contents(p->x, p->y - 1) != MAP_TILE_WALL) {
+                    p->y -= 1;
                     continue;
                 }
 
-                if (p.x < 19  && get_square_contents(p.x + 1, p.y) != MAP_TILE_WALL) {
-                    ++p.x;
+                if (p->x < 19  && get_square_contents(p->x + 1, p->y) != MAP_TILE_WALL) {
+                    p->x += 1;
                     continue;
                 }
 
-                if (p.y < 19  && get_square_contents(p.x, p.y + 1) != MAP_TILE_WALL) {
-                    ++p.y;
+                if (p->y < 19  && get_square_contents(p->x, p->y + 1) != MAP_TILE_WALL) {
+                    p->y += 1;
                     continue;
                 }
             }
         }
+    }
 }
 
 /*
@@ -704,6 +733,20 @@ void check_senses() {
 }
 
 void do_teleport() {
+    // Jump back to sqaure
+    if (game.can_teleport) {
+        game.can_teleport = false;
+        bool tstate = false;
+        for (uint8_t i = 0 ; i < 10 ; i++) {
+            ssd1306_inverse(tstate);
+            sleep_ms(20);
+            tstate = !tstate;
+        }
+
+        player_x = game.tele_x;
+        player_y = game.tele_y;
+    }
+
     return;
 }
 
@@ -763,32 +806,26 @@ int main() {
     sleep_ms(10000);
     ssd1306_clear();
     ssd1306_draw();
-
-
-    x = 0;
-    y = 0;
-    int8_t dx = 2;
-    int8_t dy = 1;
-
-    uint8_t d = 99;
     */
 
     while (1) {
         // Set up a new round...
-        //play_intro();
 
         // Set up the environment
         init_game();
         create_world();
 
+        // Clear the screen and present the current map
         ssd1306_clear();
         show_map(0);
         ssd1306_draw();
+        ssd1306_inverse(false);
         sleep_ms(10000);
 
+        // Show the world...
         ssd1306_inverse(true);
-        draw_world();
-        //check_senses();
+        update_world(time_us_32());
+        check_senses();
 
         // ...and start play
         game_loop();

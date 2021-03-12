@@ -61,6 +61,7 @@ void setup();
 void create_world();
 void init_game();
 void game_loop();
+void update_world(uint32_t now);
 
 bool check_joystick(uint16_t x, uint16_t y) ;
 uint8_t get_direction(uint16_t x, uint16_t y);
@@ -69,7 +70,6 @@ bool check_hazard(uint8_t x, uint8_t y);
 void check_senses();
 void do_teleport();
 void fire_laser();
-void draw_world();
 void death();
 
 void draw_screen();
@@ -78,7 +78,9 @@ void draw_teleporter(uint8_t inset);
 void draw_left_wall(uint8_t steps, bool left_open);
 void draw_right_wall(uint8_t steps, bool right_open);
 void draw_end(uint8_t steps);
+void draw_dir_arrow();
 void draw_phantom(uint8_t x, uint8_t y, uint8_t c);
+void move_phantoms();
 
 int irandom(int start, int max);
 void tone(unsigned int frequency, unsigned long duration, unsigned long post);
@@ -95,9 +97,9 @@ void tone(unsigned int frequency, unsigned long duration, unsigned long post);
 #define PIN_SDA                                         8
 #define PIN_SCL                                         9
 #define SSD1306_RST_PIN                                 16
-#define PIN_SPEAKER                                     17
+#define PIN_SPEAKER                                     4
 #define PIN_TELE_BUTTON                                 18
-#define PIN_FIRE_BUTTON                                 19
+#define PIN_FIRE_BUTTON                                 17
 #define PIN_LED                                         25
 #define PIN_X                                           26
 #define PIN_Y                                           27
@@ -120,6 +122,7 @@ void tone(unsigned int frequency, unsigned long duration, unsigned long post);
 
 #define DEBOUNCE_TIME_US                                10000
 #define ANIM_TIME_US                                    22000
+#define PHANTOM_MOVE_TIME_US                            1000000
 
 // Map square types
 #define MAP_TILE_CLEAR                                  0xFF
@@ -154,6 +157,7 @@ Phantom phantoms[3];
 Game game;
 
 uint32_t last_draw;
+uint32_t last_phantom_move;
 
 // _PHANTOMS_MAIN_HEADER_
 #endif
