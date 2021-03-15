@@ -43,7 +43,11 @@ void draw_screen() {
                 draw_right_wall(squares, (get_view_distance(player_x, i, DIRECTION_EAST) > 0));
 
                 // Got to the end?
-                if (squares == max_squares) break;
+                if (squares == max_squares) {
+                    draw_far_wall(squares);
+                    break;
+                }
+
                 draw_floor_line(squares);
                 squares++;
             }
@@ -62,7 +66,11 @@ void draw_screen() {
                 draw_left_wall(squares, (get_view_distance(i, player_y, DIRECTION_NORTH) > 0));
                 draw_right_wall(squares, (get_view_distance(i, player_y, DIRECTION_SOUTH) > 0));
 
-                if (squares == max_squares) break;
+                if (squares == max_squares) {
+                    draw_far_wall(squares);
+                    break;
+                }
+
                 draw_floor_line(squares);
                 squares++;
             }
@@ -81,7 +89,11 @@ void draw_screen() {
                 draw_left_wall(squares, (get_view_distance(player_x, i, DIRECTION_EAST) > 0));
                 draw_right_wall(squares, (get_view_distance(player_x, i, DIRECTION_WEST) > 0));
 
-                if (squares == max_squares) break;
+                if (squares == max_squares) {
+                    draw_far_wall(squares);
+                    break;
+                }
+
                 draw_floor_line(squares);
                 squares++;
             }
@@ -100,7 +112,11 @@ void draw_screen() {
                 draw_left_wall(squares, (get_view_distance(i, player_y, DIRECTION_SOUTH) > 0));
                 draw_right_wall(squares, (get_view_distance(i, player_y, DIRECTION_NORTH) > 0));
 
-                if (squares == max_squares) break;
+                if (squares == max_squares) {
+                    draw_far_wall(squares);
+                    break;
+                }
+
                 draw_floor_line(squares);
                 squares++;
             }
@@ -113,7 +129,7 @@ void draw_screen() {
     }
 
     // Draw the facing wall (or infinity)
-    draw_far_wall(squares);
+
 }
 
 
@@ -208,7 +224,7 @@ void draw_far_wall(uint8_t squares) {
     // Draw the wall facing the player, or for long distances,
     // an 'infinity' view
     if (squares > MAX_VIEW_RANGE) return;
-    Rect i = rects[squares > MAX_VIEW_RANGE - 2 ? MAX_VIEW_RANGE : squares + 1]
+    Rect i = rects[squares > MAX_VIEW_RANGE - 2 ? MAX_VIEW_RANGE : squares + 1];
     ssd1306_rect(i.origin_x, i.origin_y, i.width, i.height, 1, true);
 }
 

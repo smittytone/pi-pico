@@ -297,9 +297,6 @@ void game_loop() {
             if (game.is_firing) {
                 // Fire!
                 fire_laser();
-            } else {
-                // Pause between cycles
-                sleep_ms(50);
             }
         } else {
             game.in_play = false;
@@ -589,17 +586,13 @@ void fire_laser() {
     // Animate the zap
     uint8_t radii[] = {20, 16, 10, 4};
     uint8_t temp_buf[oled_buffer_size];
-    for (uint8_t j = 0 ; j < oled_buffer_size ; ++j) {
-        temp_buf[j] = oled_buffer[j];
-    }
+    memcpy(&temp_buf[0], oled_buffer, oled_buffer_size);
 
     for (uint8_t i = 0 ; i < 4 ; ++i) {
         ssd1306_circle(64, 32, radii[i], 1, true);
         ssd1306_draw();
         sleep_ms(100);
-        for (uint8_t j = 0 ; j < oled_buffer_size ; ++j) {
-            oled_buffer[j] = tmp_buffer[j];
-        }
+        memcpy(&oled_buffer[0], temp_buf, oled_buffer_size);
     }
 
     // Draw the bulletless view
@@ -622,7 +615,7 @@ void fire_laser() {
             // Draw without the front phantom
             draw_screen();
             ssd1306_draw();
-            ssd1306_inverse(false);
+            ssd1306_inverse(true);
 
             // PLAY SOUND
         }
@@ -684,6 +677,14 @@ void tone(unsigned int frequency, unsigned long duration, unsigned long post) {
 }
 
 
+void play_intro() {
+
+    ssd1306_text(10, 10, "THE PHANTOM SLAYER", false, false);
+    ssd1306_draw();
+    sleep_ms(10000);
+}
+
+
 /*
  * Runtime start
  *
@@ -694,22 +695,9 @@ int main() {
     setup();
 
     // Play the game
-
-    /*
-    const char title[] = "\x02\x3E\x02\x00\x3E\x08\x3E\x00\x3E\x2A\x22\x00\x00\x3E\x0A\x0E\x00\x3E\x08\x3E\x00\x3C\x0A\x3C\x00\x3E\x02\x3E\x00\x02\x3E\x02\x00\x3E\x22\x3E\x00\x3E\x02\x1E\x02\x3E\x00\x00\x2E\x2A\x3A\x00\x3E\x20\x20\x00\x3C\x0A\x3C\x00\x0E\x38\x0E\x00\x3E\x2A\x22\x00\x3E\x1A\x2E";
-
-    uint8_t x = 30;
-    uint8_t y = 8;
-
-    ssd1306_text(10, 10, "THE PHANTOM SLAYER", false, false);
-    ssd1306_draw();
-    sleep_ms(10000);
-    ssd1306_clear();
-    ssd1306_draw();
-    */
-
     while (1) {
         // Set up a new round...
+        play_intro();
 
         // Set up the environment
         init_game();

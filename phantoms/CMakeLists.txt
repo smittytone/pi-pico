@@ -8,6 +8,7 @@ add_executable(phantoms
     main.c
     map.c
     ssd1306.c
+    gfx.c
 )
 
 pico_sdk_init()

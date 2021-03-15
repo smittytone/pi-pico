@@ -13,6 +13,14 @@
         "cstddef": "c",
         "phantoms.h": "c",
         "time.h": "c",
-        "sstream": "c"
+        "sstream": "c",
+        "optional": "c",
+        "istream": "c",
+        "ostream": "c",
+        "system_error": "c",
+        "functional": "c",
+        "tuple": "c",
+        "type_traits": "c",
+        "utility": "c"
     }
 }

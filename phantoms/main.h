@@ -126,7 +126,7 @@ void tone(unsigned int frequency, unsigned long duration, unsigned long post);
 #define LOWER_LIMIT                                     1648
 #define JOY_MAX                                         4096
 
-#define DEBOUNCE_TIME_US                                10000
+#define DEBOUNCE_TIME_US                                5000
 #define ANIM_TIME_US                                    22000
 #define PHANTOM_MOVE_TIME_US                            1000000
 

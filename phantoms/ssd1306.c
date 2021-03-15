@@ -359,11 +359,11 @@ void ssd1306_circle(uint8_t x, uint8_t y, uint8_t radius, uint8_t colour, bool f
     // required radius
     if (colour != 0 && colour != 1) colour = 1;
     for (uint8_t i = 0 ; i < 180 ; ++i) {
-        uint8_t a = x - (uint8_t)(radius * SIN_TABLE[i]);
-        uint8_t b = y - (uint8_t)(radius * COS_TABLE[i]);
+        int8_t a = x - (int8_t)((float)radius * SIN_TABLE[i]);
+        int8_t b = y - (int8_t)((float)radius * COS_TABLE[i]);
 
         if (a >= 0 && a < oled_width && b >= 0 && b < oled_height) {
-            ssd106_plot(a, b, colour);
+            ssd1306_plot(a, b, colour);
 
             if (fill) {
                 if (a > x) {
@@ -373,36 +373,35 @@ void ssd1306_circle(uint8_t x, uint8_t y, uint8_t radius, uint8_t colour, bool f
                         ++j;
                         if (j >= a) break;
                     }
-                }
-            } else {
-                uint8_t j = a + 1;
-                while(1) {
-                    ssd1306_plot(j, b, colour);
-                    ++j;
-                    if (j > x) break;
+                } else {
+                    uint8_t j = a + 1;
+                    while(1) {
+                        ssd1306_plot(j, b, colour);
+                        ++j;
+                        if (j > x) break;
+                    }
                 }
             }
         }
     }
 }
 
-void ssd1306_text(uint8_t x, uint8_t y, const char *the_string, bool do_wrap) {
+void ssd1306_text(uint8_t x, uint8_t y, const char *the_string, bool do_wrap, bool do_double) {
 
     uint8_t space_size = do_double ? 4 : 1;
     uint8_t bit_max = do_double ? 16 : 8;
 
-    size_t sl = strlen(the_string);
-    for (size_t i = 0 ; i < sl ; ++i) {
+    for (size_t i = 0 ; i < strlen(the_string) ; ++i) {
         uint8_t asc_val = the_string[i] - 32;
-        uint8_t glyph_len = asc_val == 0 ? 2 : strlen(CHARSET[asc_val]);
+        size_t s = sizeof(CHARSET[asc_val]);
+        size_t glyph_len = s;
 
-        char glyph[glyph_len];
-
-        for (uint j = 0 ; j < glyph_len ; ++j) {
+        char glyph[6];
+        for (size_t j = 0 ; j < glyph_len ; ++j) {
             glyph[j] = CHARSET[asc_val][j];
         }
 
-        char col_0 = glyph[0];
+        char col_0 = ssd1306_text_flip(glyph[0]);
         char col_1 = 0;
 
         if (do_wrap) {
@@ -416,12 +415,12 @@ void ssd1306_text(uint8_t x, uint8_t y, const char *the_string, bool do_wrap) {
             }
         }
 
-        for (uint8_t j = 1 ; j < glyph_len + 1 ; ++j) {
+        for (size_t j = 1 ; j < glyph_len + 1 ; ++j) {
             if (j == glyph_len) {
                 if (do_double) break;
                 col_1 = glyph[j - 1];
             } else{
-                col_1 = glyph[j];
+                col_1 = ssd1306_text_flip(glyph[j]);
             }
 
             char col_0_right = 0;
@@ -477,20 +476,6 @@ void ssd1306_text(uint8_t x, uint8_t y, const char *the_string, bool do_wrap) {
             }
 
             col_0 = col_1;
-        }
-
-        // Add spacer if we can
-        if (i < sizeof(the_string) - 1) {
-            x += space_size;
-            if (x >= oled_width) {
-                if (!do_wrap) return;
-                if (y + bit_max < oled_height) {
-                    x = 0;
-                    y += bit_max;
-                } else {
-                    break;
-                }
-            }
         }
     }
 }
@@ -553,6 +538,6 @@ uint8_t ssd1306_text_stretch(uint8_t x) {
 
 void ssd1306_char_plot(uint8_t x, uint8_t y, uint8_t char_bit, uint8_t char_byte, uint8_t byte_bit) {
     // Write a line from a character glyph to the buffer
-    uint16_t byte = ssd1306_coords_to_index(x, y + k);
-    if (char_byte & (1 << char_bit) != 0) oled_buffer[byte] |= (1 << byte_bit);
+    uint16_t byte = ssd1306_coords_to_index(x, y + char_bit);
+    if ((char_byte & (1 << char_bit)) != 0) oled_buffer[byte]  |= (1 << byte_bit);
 }
