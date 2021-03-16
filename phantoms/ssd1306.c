@@ -386,7 +386,7 @@ void ssd1306_circle(uint8_t x, uint8_t y, uint8_t radius, uint8_t colour, bool f
     }
 }
 
-void ssd1306_text(uint8_t x, uint8_t y, const char *the_string, bool do_wrap, bool do_double) {
+void ssd1306_text(int8_t x, int8_t y, const char *the_string, bool do_wrap, bool do_double) {
 
     uint8_t space_size = do_double ? 4 : 1;
     uint8_t bit_max = do_double ? 16 : 8;
@@ -536,8 +536,10 @@ uint8_t ssd1306_text_stretch(uint8_t x) {
 }
 
 
-void ssd1306_char_plot(uint8_t x, uint8_t y, uint8_t char_bit, uint8_t char_byte, uint8_t byte_bit) {
+void ssd1306_char_plot(int8_t x, int8_t y, uint8_t char_bit, uint8_t char_byte, uint8_t byte_bit) {
     // Write a line from a character glyph to the buffer
+    if (x < 0 || x >= oled_width) return;
+    if (y + char_bit < 0 || y + char_bit >= oled_height) return;
     uint16_t byte = ssd1306_coords_to_index(x, y + char_bit);
     if ((char_byte & (1 << char_bit)) != 0) oled_buffer[byte]  |= (1 << byte_bit);
 }

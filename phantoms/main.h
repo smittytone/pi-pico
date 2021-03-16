@@ -58,9 +58,11 @@ typedef struct {
     uint8_t tele_y;
 
     uint16_t level;
-    uint16_t score;
+    uint16_t level_score;
+    uint16_t high_score;
     uint32_t zap_time;
-    uint32_t debounce_count_button;
+    uint32_t debounce_count_press;
+    uint32_t debounce_count_release;
 } Game;
 
 
@@ -68,6 +70,7 @@ typedef struct {
  * PROTOTYPES
  */
 void setup();
+void play_intro();
 void create_world();
 void init_game();
 
@@ -89,6 +92,7 @@ uint8_t get_facing_phantom(uint8_t range);
 uint8_t locate_phantom(uint8_t x, uint8_t y);
 
 int irandom(int start, int max);
+void inkey();
 void tone(unsigned int frequency, unsigned long duration, unsigned long post);
 
 /*

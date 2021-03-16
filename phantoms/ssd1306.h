@@ -25,7 +25,7 @@ void ssd1306_plot(uint8_t x, uint8_t y, uint8_t colour);
 void ssd1306_line(uint8_t x, uint8_t y, uint8_t tox, uint8_t toy, uint8_t colour, uint8_t thick);
 void ssd1306_rect(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t colour, bool fill);
 void ssd1306_circle(uint8_t x, uint8_t y, uint8_t radius, uint8_t colour, bool fill) ;
-void ssd1306_text(uint8_t x, uint8_t y, const char *the_string, bool do_wrap, bool do_double);
+void ssd1306_text(int8_t x, int8_t y, const char *the_string, bool do_wrap, bool do_double);
 void ssd1306_clear();
 void ssd1306_draw();
 void ssd1306_write(bool is_command, uint8_t *data, uint16_t data_size);
@@ -34,7 +34,7 @@ void ssd1306_write(bool is_command, uint8_t *data, uint16_t data_size);
 uint16_t ssd1306_coords_to_index(uint8_t x, uint8_t y) ;
 uint8_t ssd1306_text_flip(uint8_t value);
 uint8_t ssd1306_text_stretch(uint8_t x);
-void ssd1306_char_plot(uint8_t x, uint8_t y, uint8_t k, uint8_t c, uint8_t a);
+void ssd1306_char_plot(int8_t x, int8_t y, uint8_t k, uint8_t c, uint8_t a);
 
 
 /*
