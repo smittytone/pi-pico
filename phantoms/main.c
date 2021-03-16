@@ -52,6 +52,7 @@ void setup() {
     adc_select_input(2);
     srand(adc_read());
 
+    // Set up the LED to flash with the speaker
     gpio_init(PIN_LED);
     gpio_set_dir(PIN_LED, GPIO_OUT);
     gpio_put(PIN_LED, false);
@@ -77,10 +78,41 @@ void setup() {
 }
 
 
+void init_game() {
+    // Reset the main game control structure
+    game.in_play = false;
+    game.show_reticule = false;
+    game.is_firing = false;
+    game.can_teleport = false;
+    game.is_joystick_centred = true;
+    game.level_score = 0;
+    game.audio_range = 4;
+    game.phantoms = 0;
+    game.level = 1;
+    game.zap_time = 0;
+    game.debounce_count_press = 0;
+    game.debounce_count_release = 0;
+    game.tele_x = ERROR_CONDITION;
+    game.tele_y = ERROR_CONDITION;
+}
+
+
+void init_phantoms() {
+    // Reset the phantoms structure
+    for (uint8_t i = 0 ; i < 3 ; ++i) {
+        Phantom* p = &phantoms[i];
+        p->x = ERROR_CONDITION;
+        p->y = ERROR_CONDITION;
+        p->hp = 1;
+    }
+}
+
+
 void create_world() {
     // Generate and populate a new maze which happens
     // at the start of a new game and at the start of
-    // each level
+    // each level. A level jump is triggered when all the
+    // current phantoms have beebn dispatched
 
     if (game.in_play) {
         game.level++;
@@ -98,14 +130,10 @@ void create_world() {
     // Generate phantoms
     game.phantoms = irandom(1, 3);
 
-    for (uint8_t i = 0 ; i < 3 ; ++i) {
-        Phantom* p = &phantoms[i];
-        p->x = ERROR_CONDITION;
-        p->y = ERROR_CONDITION;
-        p->hp = 1 + (irandom(0, game.level));
-    }
+    // Reset the the phant
+    init_phantoms();
 
-    // Add the phantoms to the map
+    // Add the phantoms to the map, everywhere but empty
     uint8_t empty_quad = irandom(0, 4);
     uint8_t count = 0;
     for (uint8_t i = 0 ; i < game.phantoms ; ++i) {
@@ -149,25 +177,6 @@ void create_world() {
     player_x = x;
     player_y = y;
     player_direction = irandom(0, 4);
-}
-
-
-void init_game() {
-    // Reset the main game control structure
-    game.in_play = false;
-    game.show_reticule = false;
-    game.is_firing = false;
-    game.can_teleport = false;
-    game.is_joystick_centred = true;
-    game.level_score = 0;
-    game.audio_range = 4;
-    game.phantoms = 0;
-    game.level = 1;
-    game.zap_time = 0;
-    game.debounce_count_press = 0;
-    game.debounce_count_release = 0;
-    game.tele_x = ERROR_CONDITION;
-    game.tele_y = ERROR_CONDITION;
 }
 
 
@@ -286,19 +295,16 @@ void game_loop() {
         }
 
         if (!is_dead) {
-            // Draw the world
+            // Manage and draw the world
             update_world(time_us_32());
 
-            // Check the new location for audio - is a phantom nearby?
-
-
+            // Check for a laser burst
             if (game.is_firing) {
-                // Fire!
                 fire_laser();
                 game.is_firing = false;
             }
         } else {
-            // Player killed by a phantom
+            // Player killed by some means
             game.in_play = false;
             death();
             break;
@@ -390,11 +396,12 @@ void update_world(uint32_t now) {
  */
 void move_phantoms() {
     // Move each phantom toward the player
-    for (uint8_t i = 0 ; i < 3 ; ++i) {
+    bool need_spawns = false;
+    for (uint8_t i = 0 ; i < game.phantoms ; ++i) {
         Phantom* p = &phantoms[i];
         if (p->x != ERROR_CONDITION) {
-            uint8_t ox = p->x;
-            uint8_t oy = p->y;
+            uint8_t old_x = p->x;
+            uint8_t old_y = p->y;
 
             int8_t dx = p->x - player_x;
             int8_t dy = p->y - player_y;
@@ -413,7 +420,7 @@ void move_phantoms() {
             }
 
             if (dx == 0 || get_square_contents(p->x, p->y) == MAP_TILE_WALL) {
-                p->x = ox;
+                p->x = old_x;
 
                 if (dy > 0) {
                     p->y -= 1;
@@ -422,11 +429,11 @@ void move_phantoms() {
                 }
 
                 if (dy == 0 || get_square_contents(p->x, p->y) == MAP_TILE_WALL) {
-                    p->y = oy;
+                    p->y = old_y;
                 }
             }
 
-            if (p->y == oy && p->x == ox) {
+            if (p->y == old_y && p->x == old_x) {
                 // Phantom can't move towards player so move elsewhere
                 if (p->x > 0 && get_square_contents(p->x - 1, p->y) != MAP_TILE_WALL) {
                     p->x -= 1;
@@ -448,7 +455,13 @@ void move_phantoms() {
                     continue;
                 }
             }
+        } else {
+            need_spawns = true;
         }
+    }
+
+    if (need_spawns) {
+        // Generate more phantoms
     }
 }
 
@@ -688,6 +701,7 @@ void tone(unsigned int frequency, unsigned long duration, unsigned long post) {
 
 void play_intro() {
 
+    // Display the opening titles
     int8_t final_y = 0;
     bool sstate = true;
 
@@ -729,8 +743,8 @@ int main() {
 
     // Play the game
     while (1) {
-        // Set up a new round...
-        //play_intro();
+        // Start a new game
+        play_intro();
 
         // Set up the environment
         init_game();
@@ -740,13 +754,11 @@ int main() {
         ssd1306_clear();
         show_map(8);
         ssd1306_draw();
-        ssd1306_inverse(false);
         sleep_ms(10000);
 
         // Show the world...
         ssd1306_inverse(true);
         update_world(time_us_32());
-        check_senses();
 
         // ...and start play
         game_loop();
