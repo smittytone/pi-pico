@@ -26,6 +26,7 @@
 #include "map.h"
 #include "ssd1306.h"
 #include "gfx.h"
+#include "phantoms.h"
 //#include "sprites.h"
 
 
@@ -43,6 +44,7 @@ typedef struct {
     uint8_t x;
     uint8_t y;
     uint8_t hp;
+    uint8_t hits;
     uint8_t direction;
     uint8_t rev;
 } Phantom;
@@ -59,6 +61,7 @@ typedef struct {
     uint8_t audio_range;
     uint8_t tele_x;
     uint8_t tele_y;
+    uint8_t level_kills;
 
     uint16_t level;
     uint16_t level_score;
@@ -89,10 +92,6 @@ void fire_laser();
 
 void death();
 void win();
-
-void move_phantoms();
-uint8_t get_facing_phantom(uint8_t range);
-uint8_t locate_phantom(uint8_t x, uint8_t y);
 
 int irandom(int start, int max);
 void inkey();
@@ -175,6 +174,8 @@ Game game;
 uint32_t last_draw;
 uint32_t last_phantom_move;
 bool chase_mode;
+uint16_t high_score;
+
 
 // _PHANTOMS_MAIN_HEADER_
 #endif

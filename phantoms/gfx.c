@@ -34,22 +34,8 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
             // Facing north, so left = West, right = Eest
             // Run through squares from current to map limit
             for (uint8_t i = y ; i >= 0 ; --i) {
-                if (get_square_contents(x, i) == MAP_TILE_TELEPORTER) {
-                    draw_teleporter(squares);
-                }
-
-                // Draw in the current walls
-                draw_left_wall(squares, (get_view_distance(x, i, DIRECTION_WEST) > 0));
-                draw_right_wall(squares, (get_view_distance(x, i, DIRECTION_EAST) > 0));
-
-                // Got to the end?
-                if (squares == max_squares) {
-                    draw_far_wall(squares);
-                    break;
-                }
-
-                draw_floor_line(squares);
-                squares++;
+                bool done = draw_section(x, i, DIRECTION_WEST, DIRECTION_EAST, squares, max_squares);
+                if (!done) squares++;
             }
 
             for (uint8_t i = y ; i > y - squares ; --i) {
@@ -57,22 +43,11 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
             }
 
             break;
+
         case DIRECTION_EAST:
             for (uint8_t i = x ; i < 20 ; ++i) {
-                if (get_square_contents(i, y) == MAP_TILE_TELEPORTER) {
-                    draw_teleporter(squares);
-                }
-
-                draw_left_wall(squares, (get_view_distance(i, y, DIRECTION_NORTH) > 0));
-                draw_right_wall(squares, (get_view_distance(i, y, DIRECTION_SOUTH) > 0));
-
-                if (squares == max_squares) {
-                    draw_far_wall(squares);
-                    break;
-                }
-
-                draw_floor_line(squares);
-                squares++;
+                bool done = draw_section(i, y, DIRECTION_NORTH, DIRECTION_SOUTH, squares, max_squares);
+                if (!done) squares++;
             }
 
             for (uint8_t i = x ; i < x + squares ; ++i) {
@@ -80,22 +55,11 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
             }
 
             break;
+
         case DIRECTION_SOUTH:
             for (uint8_t i = y ; i < 20 ; ++i) {
-                if (get_square_contents(x, i) == MAP_TILE_TELEPORTER) {
-                    draw_teleporter(squares);
-                }
-
-                draw_left_wall(squares, (get_view_distance(x, i, DIRECTION_EAST) > 0));
-                draw_right_wall(squares, (get_view_distance(x, i, DIRECTION_WEST) > 0));
-
-                if (squares == max_squares) {
-                    draw_far_wall(squares);
-                    break;
-                }
-
-                draw_floor_line(squares);
-                squares++;
+                bool done = draw_section(x, i, DIRECTION_EAST, DIRECTION_WEST, squares, max_squares);
+                if (!done) squares++;
             }
 
             for (uint8_t i = y ; i < y + squares ; ++i) {
@@ -103,22 +67,11 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
             }
 
             break;
+
         default:
             for (uint8_t i = x ; i >= 0 ; --i) {
-                if (get_square_contents(i, y) == MAP_TILE_TELEPORTER) {
-                    draw_teleporter(squares);
-                }
-
-                draw_left_wall(squares, (get_view_distance(i, y, DIRECTION_SOUTH) > 0));
-                draw_right_wall(squares, (get_view_distance(i, y, DIRECTION_NORTH) > 0));
-
-                if (squares == max_squares) {
-                    draw_far_wall(squares);
-                    break;
-                }
-
-                draw_floor_line(squares);
-                squares++;
+                bool done = draw_section(i, y, DIRECTION_SOUTH, DIRECTION_NORTH, squares, max_squares);
+                if (!done) squares++;
             }
 
             for (uint8_t i = x ; i > x - squares ; --i) {
@@ -130,9 +83,29 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
 }
 
 
+bool draw_section(uint8_t x, uint8_t y, uint8_t left, uint8_t right, uint8_t squares, uint8_t max_squares) {
+    // Refactor out common code from 'draw_screen()'
+    // Return 'true' when we've got to the end wall, 'false' otherwise
+    if (get_square_contents(x, y) == MAP_TILE_TELEPORTER) {
+        draw_teleporter(squares);
+    }
+
+    draw_left_wall(squares, (get_view_distance(x, y, left) > 0));
+    draw_right_wall(squares, (get_view_distance(x, y, right) > 0));
+
+    if (squares == max_squares) {
+        draw_far_wall(squares);
+        return true;
+    }
+
+    draw_floor_line(squares);
+    return false;
+}
+
+
 void draw_floor_line(uint8_t square) {
     // Draw a grid line on the floor -- this is all
-    // we do to create the floow
+    // we do to create the floor
     Rect r = rects[square + 1];
     ssd1306_line(r.origin_x - 1, r.origin_y + r.height, r.origin_x + r.width + 1, r.origin_y + r.height, 1, 1);
 }

@@ -87,7 +87,7 @@ void init_game() {
     game.is_joystick_centred = true;
     game.level_score = 0;
     game.audio_range = 4;
-    game.phantoms = 0;
+    game.phantoms = 1;
     game.level = 1;
     game.zap_time = 0;
     game.debounce_count_press = 0;
@@ -106,6 +106,7 @@ void init_phantoms() {
         p->x = ERROR_CONDITION;
         p->y = ERROR_CONDITION;
         p->hp = 1;
+        p->hits = 1;
         p->direction = 0;
         p->rev = false;
     }
@@ -118,24 +119,15 @@ void create_world() {
     // each level. A level jump is triggered when all the
     // current phantoms have beebn dispatched
 
-    if (game.in_play) {
-        game.level++;
-        game.phantoms = 0;
-    } else {
-        // Reset the game
-        if (game.level > 0) init_game();
-        game.in_play = true;
-    }
+    // Reset the game
+    if (game.level > 0) init_game();
+    game.in_play = true;
 
     // Initialise the current map
     map_init();
     last_draw = 0;
 
-    // Generate phantoms
-    game.phantoms = game.level;
-    if (game.phantoms > 3) game.phantoms = 3;
-
-    // Reset the the phant
+    // Reset the the phantoms data
     init_phantoms();
 
     // Add the phantoms to the map, everywhere but empty
@@ -191,12 +183,9 @@ void create_world() {
 
 
 void game_loop() {
-    // Read the current joystick position.
-    // If it's not in the deadzone, then determine
-    // which direction it's in (up, down, left or right).
-    // If it's in the deadzone, check if the player is trying
-    // to fire an arrow.
-
+    // Loop while we're in play on one game
+    // Death will cause us to break out to the main
+    // game-to-game loop
     while (game.in_play) {
         bool is_dead = false;
 
@@ -301,10 +290,11 @@ void game_loop() {
         } else {
             // Player killed by some means
             game.in_play = false;
-            death();
-            break;
         }
     }
+
+    // Show the death view
+    death();
 }
 
 
@@ -400,159 +390,12 @@ void update_world(uint32_t now) {
 
 
 /*
- * Phantom Control
- */
-void move_phantoms() {
-    // Move each phantom toward the player
-    uint8_t phantom_spawns = 0;
-    for (uint8_t i = 0 ; i < game.phantoms ; ++i) {
-        Phantom* p = &phantoms[i];
-        if (p->x != ERROR_CONDITION) {
-            uint8_t old_x = p->x;
-            uint8_t old_y = p->y;
-            int8_t dx = p->x - player_x;
-            int8_t dy = p->y - player_y;
-
-            if (p->rev == 0) {
-                // Make a standard move
-                // Caught the player?
-                if (dx == 0 && dy == 0) {
-                    game.in_play = false;
-                    death();
-                    break;
-                }
-
-                // Move the phantom in the x axis first
-                if (dx > 0) {
-                    p->x -= 1;
-                } else if (dx < 0) {
-                    p->x += 1;
-                }
-
-                // If we can't move in the x-axis, try the y-axis
-                if (dx == 0 || get_square_contents(p->x, p->y) == MAP_TILE_WALL) {
-                    p->x = old_x;
-
-                    if (dy > 0) {
-                        p->y -= 1;
-                    } else if (dy < 0) {
-                        p->y += 1;
-                    }
-
-                    if (dy == 0 || get_square_contents(p->x, p->y) == MAP_TILE_WALL) {
-                        p->y = old_y;
-                    } else {
-                        p->direction = dy > 0 ? DIRECTION_SOUTH : DIRECTION_NORTH;
-                    }
-                } else {
-                    p->direction = dx > 0 ? DIRECTION_EAST : DIRECTION_WEST;
-                }
-            } else {
-                // Make a non-standard move
-                if (p->y > 0 && get_square_contents(p->x, p->y - 1) != MAP_TILE_WALL) {
-                    p->y += 1;
-                } else if (p->y < 19  && get_square_contents(p->x, p->y + 1) != MAP_TILE_WALL) {
-                    p->y += 1;
-                } else if (p->x < 19  && get_square_contents(p->x + 1, p->y) != MAP_TILE_WALL) {
-                    p->x += 1;
-                } else if (p->x > 0 && get_square_contents(p->x - 1, p->y) != MAP_TILE_WALL) {
-                    p->x -= 1;
-                }
-
-                --p->rev;
-            }
-
-            if (p->y == old_y && p->x == old_x) {
-                // Phantom can't move towards player so move elsewhere
-                // for 2-4 steps
-                p->rev = irandom(2, 3);
-            }
-        } else {
-            ++phantom_spawns;
-        }
-    }
-
-    uint8_t i = 0;
-    while (phantom_spawns > 0) {
-        // Generate more phantoms if we need to
-        Phantom* p = &phantoms[i];
-        if (p->x == ERROR_CONDITION) {
-            --phantom_spawns;
-            while (true) {
-                uint8_t x = irandom(0, 20);
-                uint8_t y = irandom(0, 20);
-                if (get_square_contents(x, y) == MAP_TILE_CLEAR) {
-                    p->x = x;
-                    p->y = y;
-                    p->hp = game.level;
-                    p->rev = 0;
-                    break;
-                }
-            }
-        }
-
-        ++i;
-    }
-}
-
-
-uint8_t get_facing_phantom(uint8_t range) {
-    // Return the index of the closest facing phantom
-    // in the 'phantoms' array -- or ERROR_CONDITION
-    uint8_t phantom = ERROR_CONDITION;
-
-    switch(player_direction) {
-        case DIRECTION_NORTH:
-            if (player_y - range < 0) range = player_y;
-            for (uint8_t i = player_y ; i >= player_y - range ; --i) {
-                phantom = locate_phantom(player_x, i);
-                if (phantom != ERROR_CONDITION) return phantom;
-            }
-            break;
-        case DIRECTION_EAST:
-            if (player_x + range > 19) range = 20 - player_x;
-            for (uint8_t i = player_x ; i < player_y + range ; ++i) {
-                phantom = locate_phantom(i, player_y);
-                if (phantom != ERROR_CONDITION) return phantom;
-            }
-            break;
-        case DIRECTION_SOUTH:
-            if (player_y + range > 19) range = 20 - player_y;
-            for (uint8_t i = player_y ; i < player_y + range ; ++i) {
-                phantom = locate_phantom(player_x, i);
-                if (phantom != ERROR_CONDITION) return phantom;
-            }
-            break;
-        default:
-            if (player_x - range < 0) range = player_x;
-            for (uint8_t i = player_x ; i >= player_x - range ; --i) {
-                phantom = locate_phantom(i, player_y);
-                if (phantom != ERROR_CONDITION) return phantom;
-            }
-            break;
-    }
-
-    return phantom;
-}
-
-
-uint8_t locate_phantom(uint8_t x, uint8_t y) {
-    // Return index of the phantom at (x,y) -- or ERROR_CONDITION
-    for (uint8_t i = 0 ; i < game.phantoms ; i++) {
-        Phantom p = phantoms[i];
-        if (x == p.x && y == p.y) return i;
-    }
-    return ERROR_CONDITION;
-}
-
-
-/*
  *  Actions
  */
 void check_senses() {
     // Scan around the player for nearby phantoms
-    int8_t dx = player_x - 5;
-    int8_t dy = player_y - 5;
+    int8_t dx = player_x - game.audio_range;
+    int8_t dy = player_y - game.audio_range;
 
     for (int8_t i = dx ; i < dx + 10 ; ++i) {
         if (i < 0) continue;
@@ -561,6 +404,7 @@ void check_senses() {
             if (j < 0) continue;
             if (j > 19) break;
             if (locate_phantom(i, j) != ERROR_CONDITION) {
+                // Flash the LED for now
                 gpio_put(PIN_LED, true);
                 sleep_ms(5);
                 gpio_put(PIN_LED, false);
@@ -624,7 +468,8 @@ void fire_laser() {
         if (p->hp == 0) {
             // One dead phantom
             p->x = ERROR_CONDITION;
-            ++game.level_score;
+            game.level_score += p->hits;
+            ++game.level_kills;
 
             // Briefly invert the screen
             ssd1306_inverse(false);
@@ -636,21 +481,11 @@ void fire_laser() {
             ssd1306_inverse(true);
 
             // PLAY SOUND
-
-            uint8_t count = 0;
-            for (uint8_t i = 0 ; i < game.phantoms ; ++i) {
-                Phantom* p = &phantoms[i];
-                if (p->x == ERROR_CONDITION) {
-                    ++count;
-                    if (count == game.phantoms) {
-                        // Level complete -- add a phantom, up to 3
-                        ++game.level;
-                        if (game.level < 4) game.phantoms = game.level;
-                    }
-                }
-            }
         }
     }
+
+    // Update phantoms list
+    manage_phantoms();
 }
 
 
@@ -660,22 +495,29 @@ void fire_laser() {
 void death() {
     // The player has died -- show the map and the score
     ssd1306_clear();
-    ssd1306_inverse(false);
     ssd1306_text(0, 0, "SCORE", false, false);
     ssd1306_text(98, 0, "HIGH", false, false);
     ssd1306_text(98, 8, "SCORE", false, false);
-    // TODO
+
     // Show the score
-    char score_string[] = "000";
+    char score_string[5] = "00000";
+    sprintf(score_string, "%d", game.level_score);
     ssd1306_text(0, 8, score_string, false, false);
+
+    if (high_score < game.level_score) high_score = game.level_score;
+    sprintf(score_string, "00000");
+    sprintf(score_string, "%d", high_score);
     ssd1306_text(98, 16, score_string, false, false);
 
+    // Show the map
     show_map(0, true);
     ssd1306_draw();
+    ssd1306_inverse(false);
 
-    sleep_ms(20000);
-    // TODO
-    // Exit on button press OR timer
+    // Wait for a key press
+    inkey();
+
+
 }
 
 
@@ -763,7 +605,7 @@ void play_intro() {
         ssd1306_clear();
         ssd1306_text(10, final_y, "THE PHANTOM SLAYER", false, false);
         ssd1306_text(26, i, "BY TONY SMITH", false, false);
-        ssd1306_text(22, i + 10, "AND KEN KALISH", false, false);
+        ssd1306_text(22, i + 10, "& KEN KALISH", false, false);
         ssd1306_draw();
         sleep_ms(25);
     }
@@ -792,7 +634,7 @@ int main() {
         // Start a new game
         //play_intro();
 
-        // Set up the environment
+        // Set up the environment, once per game
         init_game();
         create_world();
 
