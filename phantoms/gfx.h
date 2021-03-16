@@ -14,7 +14,7 @@
 /*
  * PROTOTYPES
  */
-void draw_screen();
+void draw_screen(uint8_t x, uint8_t y, uint8_t direction);
 void draw_floor_line(uint8_t inset);
 void draw_teleporter(uint8_t inset);
 void draw_left_wall(uint8_t steps, bool left_open);

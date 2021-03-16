@@ -22,25 +22,25 @@ const char angles[2][13] = {
 /*
  * GRAPHICS FUNCTIONS
  */
-void draw_screen() {
+void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
     // Render a single frame:
     // Progressively draw in walls, square by square, in the
     // direction of the player’s viewpoint, in to out
-    uint8_t max_squares = get_view_distance(player_x, player_y, player_direction);
+    uint8_t max_squares = get_view_distance(x, y, direction);
     uint8_t squares = 0;
 
-    switch(player_direction) {
+    switch(direction) {
         case DIRECTION_NORTH:
             // Facing north, so left = West, right = Eest
             // Run through squares from current to map limit
-            for (uint8_t i = player_y ; i >= 0 ; --i) {
-                if (get_square_contents(player_x, i) == MAP_TILE_TELEPORTER) {
+            for (uint8_t i = y ; i >= 0 ; --i) {
+                if (get_square_contents(x, i) == MAP_TILE_TELEPORTER) {
                     draw_teleporter(squares);
                 }
 
                 // Draw in the current walls
-                draw_left_wall(squares, (get_view_distance(player_x, i, DIRECTION_WEST) > 0));
-                draw_right_wall(squares, (get_view_distance(player_x, i, DIRECTION_EAST) > 0));
+                draw_left_wall(squares, (get_view_distance(x, i, DIRECTION_WEST) > 0));
+                draw_right_wall(squares, (get_view_distance(x, i, DIRECTION_EAST) > 0));
 
                 // Got to the end?
                 if (squares == max_squares) {
@@ -52,19 +52,19 @@ void draw_screen() {
                 squares++;
             }
 
-            for (uint8_t i = player_y ; i > player_y - squares ; --i) {
-                draw_phantom(player_x, i, player_y - i);
+            for (uint8_t i = y ; i > y - squares ; --i) {
+                draw_phantom(x, i, y - i);
             }
 
             break;
         case DIRECTION_EAST:
-            for (uint8_t i = player_x ; i < 20 ; ++i) {
-                if (get_square_contents(i, player_y) == MAP_TILE_TELEPORTER) {
+            for (uint8_t i = x ; i < 20 ; ++i) {
+                if (get_square_contents(i, y) == MAP_TILE_TELEPORTER) {
                     draw_teleporter(squares);
                 }
 
-                draw_left_wall(squares, (get_view_distance(i, player_y, DIRECTION_NORTH) > 0));
-                draw_right_wall(squares, (get_view_distance(i, player_y, DIRECTION_SOUTH) > 0));
+                draw_left_wall(squares, (get_view_distance(i, y, DIRECTION_NORTH) > 0));
+                draw_right_wall(squares, (get_view_distance(i, y, DIRECTION_SOUTH) > 0));
 
                 if (squares == max_squares) {
                     draw_far_wall(squares);
@@ -75,19 +75,19 @@ void draw_screen() {
                 squares++;
             }
 
-            for (uint8_t i = player_x ; i < player_x + squares ; ++i) {
-                draw_phantom(i, player_y, i - player_x);
+            for (uint8_t i = x ; i < x + squares ; ++i) {
+                draw_phantom(i, y, i - x);
             }
 
             break;
         case DIRECTION_SOUTH:
-            for (uint8_t i = player_y ; i < 20 ; ++i) {
-                if (get_square_contents(player_x, i) == MAP_TILE_TELEPORTER) {
+            for (uint8_t i = y ; i < 20 ; ++i) {
+                if (get_square_contents(x, i) == MAP_TILE_TELEPORTER) {
                     draw_teleporter(squares);
                 }
 
-                draw_left_wall(squares, (get_view_distance(player_x, i, DIRECTION_EAST) > 0));
-                draw_right_wall(squares, (get_view_distance(player_x, i, DIRECTION_WEST) > 0));
+                draw_left_wall(squares, (get_view_distance(x, i, DIRECTION_EAST) > 0));
+                draw_right_wall(squares, (get_view_distance(x, i, DIRECTION_WEST) > 0));
 
                 if (squares == max_squares) {
                     draw_far_wall(squares);
@@ -98,19 +98,19 @@ void draw_screen() {
                 squares++;
             }
 
-            for (uint8_t i = player_y ; i < player_y + squares ; ++i) {
-                draw_phantom(player_x, i, i - player_y);
+            for (uint8_t i = y ; i < y + squares ; ++i) {
+                draw_phantom(x, i, i - y);
             }
 
             break;
         default:
-            for (uint8_t i = player_x ; i >= 0 ; --i) {
-                if (get_square_contents(i, player_y) == MAP_TILE_TELEPORTER) {
+            for (uint8_t i = x ; i >= 0 ; --i) {
+                if (get_square_contents(i, y) == MAP_TILE_TELEPORTER) {
                     draw_teleporter(squares);
                 }
 
-                draw_left_wall(squares, (get_view_distance(i, player_y, DIRECTION_SOUTH) > 0));
-                draw_right_wall(squares, (get_view_distance(i, player_y, DIRECTION_NORTH) > 0));
+                draw_left_wall(squares, (get_view_distance(i, y, DIRECTION_SOUTH) > 0));
+                draw_right_wall(squares, (get_view_distance(i, y, DIRECTION_NORTH) > 0));
 
                 if (squares == max_squares) {
                     draw_far_wall(squares);
@@ -121,15 +121,12 @@ void draw_screen() {
                 squares++;
             }
 
-            for (uint8_t i = player_x ; i > player_x - squares ; --i) {
-                draw_phantom(i, player_y, player_x - i);
+            for (uint8_t i = x ; i > x - squares ; --i) {
+                draw_phantom(i, y, x - i);
             }
 
             break;
     }
-
-    // Draw the facing wall (or infinity)
-
 }
 
 
@@ -236,9 +233,9 @@ void draw_phantom(uint8_t x, uint8_t y, uint8_t c) {
     // distant square up to the player
     if (locate_phantom(x, y) != ERROR_CONDITION) {
         Rect r = rects[c];
-        ssd1306_rect(59, r.origin_y + 2, 10, r.height - 3, 1, false);
-        ssd1306_rect(60, r.origin_y + 3, 8, r.height - 5, 0, true);
-        ssd1306_rect(62, r.origin_y + 5, 4, 6, 1, true);
+        ssd1306_rect(58, r.origin_y + 2, 12, r.height - 3, 1, false);
+        ssd1306_rect(59, r.origin_y + 3, 10, r.height - 5, 0, true);
+        ssd1306_rect(61, r.origin_y + 5, 6, 6, 1, true);
     }
 }
 

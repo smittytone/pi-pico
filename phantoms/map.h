@@ -15,7 +15,7 @@
  * PROTOTYPES
  */
 void map_init();
-void show_map(uint8_t y_delta);
+void show_map(uint8_t y_delta, bool show_entities);
 
 uint8_t get_view_distance(uint8_t x, uint8_t y, uint8_t direction);
 uint8_t get_square_contents(uint8_t x, uint8_t y);

@@ -43,11 +43,14 @@ typedef struct {
     uint8_t x;
     uint8_t y;
     uint8_t hp;
+    uint8_t direction;
+    uint8_t rev;
 } Phantom;
 
 typedef struct {
     bool in_play;
     bool show_reticule;
+    bool can_fire;
     bool is_firing;
     bool can_teleport;
     bool is_joystick_centred;
@@ -171,6 +174,7 @@ Game game;
 
 uint32_t last_draw;
 uint32_t last_phantom_move;
+bool chase_mode;
 
 // _PHANTOMS_MAIN_HEADER_
 #endif

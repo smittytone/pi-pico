@@ -94,6 +94,8 @@ void init_game() {
     game.debounce_count_release = 0;
     game.tele_x = ERROR_CONDITION;
     game.tele_y = ERROR_CONDITION;
+
+    chase_mode = false;
 }
 
 
@@ -104,6 +106,8 @@ void init_phantoms() {
         p->x = ERROR_CONDITION;
         p->y = ERROR_CONDITION;
         p->hp = 1;
+        p->direction = 0;
+        p->rev = false;
     }
 }
 
@@ -128,41 +132,47 @@ void create_world() {
     last_draw = 0;
 
     // Generate phantoms
-    game.phantoms = irandom(1, 3);
+    game.phantoms = game.level;
+    if (game.phantoms > 3) game.phantoms = 3;
 
     // Reset the the phant
     init_phantoms();
 
     // Add the phantoms to the map, everywhere but empty
     uint8_t empty_quad = irandom(0, 4);
-    uint8_t count = 0;
+    uint8_t phantom_quad = irandom(0, 4);
     for (uint8_t i = 0 ; i < game.phantoms ; ++i) {
         Phantom* p = &phantoms[i];
-        while(1) {
+        while (true) {
+            // Pick a random co-ordinate
             uint8_t x = irandom(0, 6);
             uint8_t y = irandom(0, 6);
 
-            if (count == empty_quad) ++count;
+            // Make sure the phantom's not in the fourth quadrant
+            if (phantom_quad == empty_quad) ++phantom_quad;
+            if (phantom_quad > 3) phantom_quad = 0;
 
-            if (count == 2) {
+            // Adjust (x,y) to outer part of quadrant
+            if (phantom_quad == 1) {
                 x = 19 - x;
-            } else if (count == 3) {
+            } else if (phantom_quad == 2) {
                 x = 19 - x;
                 y = 19 - y;
-            } else if (count == 4) {
+            } else if (phantom_quad == 3) {
                 y = 19 - y;
             }
 
+            // If the chosen square is valid, use it
             if (get_square_contents(x, y) == MAP_TILE_CLEAR) {
                 p->x = x;
                 p->y = y;
                 break;
             }
+
+            // Move to the next quad
+            ++phantom_quad;
         }
     }
-
-    //phantoms[0].x = 10;
-    //phantoms[0].y = 0;
 
     // Place the player near the centre
     uint8_t x = 9;
@@ -189,19 +199,6 @@ void game_loop() {
 
     while (game.in_play) {
         bool is_dead = false;
-        if (game.zap_time != 0) {
-            if (time_us_32() - game.zap_time > 3000000) {
-                // Laser trigger held too long
-                game.show_reticule = false;
-                game.is_firing = true;
-                game.zap_time = 0;
-            }
-        } else {
-            if (game.is_firing) {
-                // Always hit front phantom
-                game.is_firing = false;
-            }
-        }
 
         // Read joystick analog output
         adc_select_input(0);
@@ -210,7 +207,7 @@ void game_loop() {
         uint16_t y = adc_read();
 
         // Can't move with reticule showing
-        if (!game.show_reticule && check_joystick(x,y)) {
+        if (!game.show_reticule && !game.is_firing && check_joystick(x,y)) {
             // Joystick is pointing in a direction, so
             // get the direction the player has chosen
             // 0 = forward
@@ -247,31 +244,32 @@ void game_loop() {
         uint32_t now = time_us_32();
 
         if (gpio_get(PIN_FIRE_BUTTON)) {
-            // Button pressed: debounce it
-            if (game.debounce_count_press == 0) {
-                // Set debounce timer
-                game.debounce_count_press = now;
-            } else if (now - game.debounce_count_press > DEBOUNCE_TIME_US) {
-                // Prime the laser if it's unprimed
-                if (!game.show_reticule) {
-                    game.show_reticule = true;
-                    game.zap_time = now;
-                    game.debounce_count_press = 0;
+            if (game.can_fire) {
+                // Button pressed: debounce it
+                if (game.debounce_count_press == 0) {
+                    // Set debounce timer
+                    game.debounce_count_press = now;
+                } else if (now - game.debounce_count_press > DEBOUNCE_TIME_US) {
+                    // Prime the laser if it's unprimed
+                    if (!game.show_reticule) {
+                        game.show_reticule = true;
+                        game.debounce_count_press = 0;
+                    }
                 }
             }
         } else {
             // Button released: check it was previously
             // pressed down, ie. 'game.show_reticule' is true
             if (game.show_reticule) {
-                // Clear debounce timer
                 if (game.debounce_count_release == 0) {
+                    // Set debounce timer
                     game.debounce_count_release = now;
                 } else if (now - game.debounce_count_release > DEBOUNCE_TIME_US) {
                     // Fire the laser
                     game.debounce_count_release == 0;
                     game.show_reticule = false;
                     game.is_firing = true;
-                    game.zap_time = 0;
+                    game.can_fire = false;
                 }
             }
         }
@@ -280,15 +278,12 @@ void game_loop() {
             // Player can only teleport if they have walked over the teleport square
             // and they are not firing the laser
             if (!game.show_reticule && game.can_teleport) {
-                uint32_t now = time_us_32();
                 if (game.debounce_count_press == 0) {
                     // Set debounce timer
                     game.debounce_count_press = now;
                 } else if (now - game.debounce_count_press > DEBOUNCE_TIME_US) {
-                    // Clear debounce timer
-                    game.debounce_count_press == 0;
-
                     // Teleport
+                    game.debounce_count_press == 0;
                     do_teleport();
                 }
             }
@@ -300,8 +295,8 @@ void game_loop() {
 
             // Check for a laser burst
             if (game.is_firing) {
-                fire_laser();
                 game.is_firing = false;
+                fire_laser();
             }
         } else {
             // Player killed by some means
@@ -360,6 +355,7 @@ bool check_hazard(uint8_t x, uint8_t y) {
         set_square_contents(x, y, MAP_TILE_CLEAR);
     }
 
+    // Return 'true' on a bad square, false in a good one
     return !(sc == MAP_TILE_CLEAR || sc == MAP_TILE_TELEPORTER);
 }
 
@@ -369,7 +365,13 @@ void update_world(uint32_t now) {
     // Draw the graphics and animate the phantoms
     if (now - last_draw > ANIM_TIME_US) {
         ssd1306_clear();
-        draw_screen();
+
+        if (chase_mode) {
+            draw_screen(phantoms[0].x, phantoms[0].y, phantoms[0].direction);
+        } else {
+            draw_screen(player_x, player_y, player_direction);
+        }
+
 
         if (game.show_reticule) {
             ssd1306_rect(64, 26, 2, 5, 1, false);
@@ -388,6 +390,12 @@ void update_world(uint32_t now) {
         move_phantoms();
         check_senses();
     }
+
+    // Check for laser recharge
+    if (now - game.zap_time > 2100000) {
+        game.zap_time = 0;
+        game.can_fire = true;
+    }
 }
 
 
@@ -396,72 +404,94 @@ void update_world(uint32_t now) {
  */
 void move_phantoms() {
     // Move each phantom toward the player
-    bool need_spawns = false;
+    uint8_t phantom_spawns = 0;
     for (uint8_t i = 0 ; i < game.phantoms ; ++i) {
         Phantom* p = &phantoms[i];
         if (p->x != ERROR_CONDITION) {
             uint8_t old_x = p->x;
             uint8_t old_y = p->y;
-
             int8_t dx = p->x - player_x;
             int8_t dy = p->y - player_y;
 
-            if (dx == 0 && dy == 0) {
-                game.in_play = false;
-                death();
-                break;
-            }
+            if (p->rev == 0) {
+                // Make a standard move
+                // Caught the player?
+                if (dx == 0 && dy == 0) {
+                    game.in_play = false;
+                    death();
+                    break;
+                }
 
-            // Move the phantom in the x axis
-            if (dx > 0) {
-                p->x -= 1;
-            } else if (dx < 0) {
-                p->x += 1;
-            }
+                // Move the phantom in the x axis first
+                if (dx > 0) {
+                    p->x -= 1;
+                } else if (dx < 0) {
+                    p->x += 1;
+                }
 
-            if (dx == 0 || get_square_contents(p->x, p->y) == MAP_TILE_WALL) {
-                p->x = old_x;
+                // If we can't move in the x-axis, try the y-axis
+                if (dx == 0 || get_square_contents(p->x, p->y) == MAP_TILE_WALL) {
+                    p->x = old_x;
 
-                if (dy > 0) {
-                    p->y -= 1;
-                } else if (dy < 0) {
+                    if (dy > 0) {
+                        p->y -= 1;
+                    } else if (dy < 0) {
+                        p->y += 1;
+                    }
+
+                    if (dy == 0 || get_square_contents(p->x, p->y) == MAP_TILE_WALL) {
+                        p->y = old_y;
+                    } else {
+                        p->direction = dy > 0 ? DIRECTION_SOUTH : DIRECTION_NORTH;
+                    }
+                } else {
+                    p->direction = dx > 0 ? DIRECTION_EAST : DIRECTION_WEST;
+                }
+            } else {
+                // Make a non-standard move
+                if (p->y > 0 && get_square_contents(p->x, p->y - 1) != MAP_TILE_WALL) {
                     p->y += 1;
+                } else if (p->y < 19  && get_square_contents(p->x, p->y + 1) != MAP_TILE_WALL) {
+                    p->y += 1;
+                } else if (p->x < 19  && get_square_contents(p->x + 1, p->y) != MAP_TILE_WALL) {
+                    p->x += 1;
+                } else if (p->x > 0 && get_square_contents(p->x - 1, p->y) != MAP_TILE_WALL) {
+                    p->x -= 1;
                 }
 
-                if (dy == 0 || get_square_contents(p->x, p->y) == MAP_TILE_WALL) {
-                    p->y = old_y;
-                }
+                --p->rev;
             }
 
             if (p->y == old_y && p->x == old_x) {
                 // Phantom can't move towards player so move elsewhere
-                if (p->x > 0 && get_square_contents(p->x - 1, p->y) != MAP_TILE_WALL) {
-                    p->x -= 1;
-                    continue;
-                }
-
-                if (p->y > 0 && get_square_contents(p->x, p->y - 1) != MAP_TILE_WALL) {
-                    p->y -= 1;
-                    continue;
-                }
-
-                if (p->x < 19  && get_square_contents(p->x + 1, p->y) != MAP_TILE_WALL) {
-                    p->x += 1;
-                    continue;
-                }
-
-                if (p->y < 19  && get_square_contents(p->x, p->y + 1) != MAP_TILE_WALL) {
-                    p->y += 1;
-                    continue;
-                }
+                // for 2-4 steps
+                p->rev = irandom(2, 3);
             }
         } else {
-            need_spawns = true;
+            ++phantom_spawns;
         }
     }
 
-    if (need_spawns) {
-        // Generate more phantoms
+    uint8_t i = 0;
+    while (phantom_spawns > 0) {
+        // Generate more phantoms if we need to
+        Phantom* p = &phantoms[i];
+        if (p->x == ERROR_CONDITION) {
+            --phantom_spawns;
+            while (true) {
+                uint8_t x = irandom(0, 20);
+                uint8_t y = irandom(0, 20);
+                if (get_square_contents(x, y) == MAP_TILE_CLEAR) {
+                    p->x = x;
+                    p->y = y;
+                    p->hp = game.level;
+                    p->rev = 0;
+                    break;
+                }
+            }
+        }
+
+        ++i;
     }
 }
 
@@ -508,7 +538,7 @@ uint8_t get_facing_phantom(uint8_t range) {
 
 uint8_t locate_phantom(uint8_t x, uint8_t y) {
     // Return index of the phantom at (x,y) -- or ERROR_CONDITION
-    for (uint8_t i = 0 ; i < 3 ; i++) {
+    for (uint8_t i = 0 ; i < game.phantoms ; i++) {
         Phantom p = phantoms[i];
         if (x == p.x && y == p.y) return i;
     }
@@ -601,11 +631,24 @@ void fire_laser() {
             sleep_ms(200);
 
             // Draw without the front phantom
-            draw_screen();
+            draw_screen(player_x, player_y, player_direction);
             ssd1306_draw();
             ssd1306_inverse(true);
 
             // PLAY SOUND
+
+            uint8_t count = 0;
+            for (uint8_t i = 0 ; i < game.phantoms ; ++i) {
+                Phantom* p = &phantoms[i];
+                if (p->x == ERROR_CONDITION) {
+                    ++count;
+                    if (count == game.phantoms) {
+                        // Level complete -- add a phantom, up to 3
+                        ++game.level;
+                        if (game.level < 4) game.phantoms = game.level;
+                    }
+                }
+            }
         }
     }
 }
@@ -617,15 +660,17 @@ void fire_laser() {
 void death() {
     // The player has died -- show the map and the score
     ssd1306_clear();
+    ssd1306_inverse(false);
     ssd1306_text(0, 0, "SCORE", false, false);
-    ssd1306_text(64, 0, "HI-SCORE", false, false);
+    ssd1306_text(98, 0, "HIGH", false, false);
+    ssd1306_text(98, 8, "SCORE", false, false);
     // TODO
     // Show the score
     char score_string[] = "000";
-    ssd1306_text(33, 0, score_string, false, false);
-    ssd1306_text(110, 0, score_string, false, false);
+    ssd1306_text(0, 8, score_string, false, false);
+    ssd1306_text(98, 16, score_string, false, false);
 
-    show_map(4);
+    show_map(0, true);
     ssd1306_draw();
 
     sleep_ms(20000);
@@ -648,7 +693,7 @@ void help() {
     ssd1306_text(0, 24, "is inhabited by evil", false, false);
     ssd1306_text(0, 32, "phantoms which can", false, false);
     ssd1306_text(0, 40, "destroy you with a", false, false);
-    ssd1306_text(0, 48, "single touch!", fealse, false);
+    ssd1306_text(0, 48, "single touch!", false, false);
     ssd1306_text(24, 56, "PRESS A KEY", false, false);
 }
 
@@ -657,7 +702,8 @@ void help() {
  *  Misc Functions
  */
 int irandom(int start, int max) {
-    // Generate a PRG between start and max
+    // Generate a PRG between 0 and max-1 then add start
+    // Eg. 10, 20 -> range 10-29
     return (rand() % max + start);
 }
 
@@ -744,7 +790,7 @@ int main() {
     // Play the game
     while (1) {
         // Start a new game
-        play_intro();
+        //play_intro();
 
         // Set up the environment
         init_game();
@@ -752,7 +798,7 @@ int main() {
 
         // Clear the screen and present the current map
         ssd1306_clear();
-        show_map(8);
+        show_map(0, false);
         ssd1306_draw();
         sleep_ms(10000);
 

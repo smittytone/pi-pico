@@ -63,7 +63,6 @@ void map_init() {
     // Load initial map
     // TODO Randomly generate a map
     uint8_t map = irandom(0,2);
-    map = 0;
     switch(map) {
         case 0:
             current_map[0] = base_map_00;
@@ -112,31 +111,56 @@ void map_init() {
 }
 
 
-void show_map(uint8_t y_delta) {
+void show_map(uint8_t y_delta, bool show_entities) {
     // Draw the current map on the screen buffer, centred but
     // vertically adjusted according to 'y_delta'
 
     // Put a Box around the map
-    ssd1306_rect(40, 8 + y_delta, 48, 48, 1, false);
+    ssd1306_rect(32, 0 + y_delta, 64, 64, 1, false);
 
     // Draw the map
-    uint8_t x = 44;
-    uint8_t y = 12 + y_delta;
+    uint8_t x = 34;
+    uint8_t y = 2 + y_delta;
 
     for (uint8_t i = 0 ; i < 20 ; ++i) {
         char *line = current_map[i];
         for (uint8_t j = 0 ; j < 20 ; ++j) {
             uint8_t pixel = line[j];
             if (pixel != MAP_TILE_WALL) {
-                ssd1306_plot(x + j * 2, y + i * 2, 1);
-                ssd1306_plot(x + j * 2 + 1, y + i * 2, 1);
-                ssd1306_plot(x + j * 2, y + i * 2 + 1, 1);
-                ssd1306_plot(x + j * 2 + 1, y + i * 2 + 1, 1);
+                ssd1306_plot(x + j * 3,     y + i * 3, 1);
+                ssd1306_plot(x + j * 3 + 1, y + i * 3, 1);
+                ssd1306_plot(x + j * 3 + 2, y + i * 3, 1);
+
+                ssd1306_plot(x + j * 3,     y + i * 3 + 1, 1);
+                ssd1306_plot(x + j * 3 + 1, y + i * 3 + 1, 1);
+                ssd1306_plot(x + j * 3 + 2, y + i * 3 + 1, 1);
+
+                ssd1306_plot(x + j * 3,     y + i * 3 + 2, 1);
+                ssd1306_plot(x + j * 3 + 1, y + i * 3 + 2, 1);
+                ssd1306_plot(x + j * 3 + 2, y + i * 3 + 2, 1);
             }
 
             if (pixel == MAP_TILE_TELEPORTER) {
-                ssd1306_plot(x + j * 2 + 1, y + i * 2, 0);
-                ssd1306_plot(x + j * 2, y + i * 2 + 1, 0);
+                ssd1306_plot(x + j * 3 + 1, y + i * 3, 0);
+                ssd1306_plot(x + j * 3,     y + i * 3 + 1, 0);
+                ssd1306_plot(x + j * 3 + 2, y + i * 3 + 1, 0);
+                ssd1306_plot(x + j * 3 + 1, y + i * 3 + 2, 0);
+            }
+
+            if (show_entities) {
+                if (j == player_x && i == player_y) {
+                    ssd1306_plot(x + j * 3,     y + i * 3 + 1, 0);
+                    ssd1306_plot(x + j * 3 + 1, y + i * 3 + 1, 0);
+                    ssd1306_plot(x + j * 3 + 2, y + i * 3 + 1, 0);
+                }
+
+                for (uint8_t i = 0 ; i < game.phantoms; ++i) {
+                    if (j == phantoms[i].x && i == phantoms[i].y) {
+                        ssd1306_plot(x + j * 3 + 1, y + i * 3, 0);
+                        ssd1306_plot(x + j * 3 + 1, y + i * 3 + 1, 0);
+                        ssd1306_plot(x + j * 3 + 1, y + i * 3 + 2, 0);
+                    }
+                }
             }
         }
     }
