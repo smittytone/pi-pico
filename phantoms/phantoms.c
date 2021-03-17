@@ -13,28 +13,28 @@
 /*
  * Basic Level Data
  */
-uint8_t level_data[] = {
-    1,1,1,0,
-    1,2,1,0,
-    1,3,1,0,
-    1,4,0,0,
-    1,5,0,0,
-    1,6,0,0,
-    2,6,0,0,
-    2,6,0,0,
-    2,6,0,0,
-    3,6,0,1,
-    3,6,0,1,
-    3,6,0,1,
-    4,6,0,1,
-    4,6,0,1,
-    4,6,0,1,
-    4,8,0,2,
-    4,8,0,2,
-    4,8,0,2,
-    5,9,0,2,
-    5,9,0,2,
-    5,9,0,2
+const uint8_t level_data[84] = {
+    1,1,1,0,        // 1
+    1,2,1,0,        // 2
+    1,3,1,0,        // 3
+    1,4,0,0,        // 4
+    1,5,0,0,        // 5
+    1,6,0,0,        // 6
+    2,6,0,0,        // 7
+    2,6,0,0,        // 8
+    2,6,0,0,        // 9
+    3,6,0,1,        // 10
+    3,6,0,1,        // 11
+    3,6,0,1,        // 12
+    4,6,0,1,        // 13
+    4,6,0,1,        // 14
+    4,6,0,1,        // 15
+    4,8,0,2,        // 16
+    4,8,0,2,        // 17
+    4,8,0,2,        // 18
+    5,9,0,2,        // 19
+    5,9,0,2,        // 20
+    5,9,0,2         // 21
 };
 
 
@@ -88,23 +88,37 @@ void move_phantoms() {
                 }
             } else {
                 // Make a non-standard move
-                if (p->y > 0 && get_square_contents(p->x, p->y - 1) != MAP_TILE_WALL) {
-                    p->y += 1;
-                } else if (p->y < 19  && get_square_contents(p->x, p->y + 1) != MAP_TILE_WALL) {
-                    p->y += 1;
-                } else if (p->x < 19  && get_square_contents(p->x + 1, p->y) != MAP_TILE_WALL) {
-                    p->x += 1;
-                } else if (p->x > 0 && get_square_contents(p->x - 1, p->y) != MAP_TILE_WALL) {
-                    p->x -= 1;
+                int8_t dir = irandom(1, 4);
+                switch(dir) {
+                    case 0:
+                        if (p->y > 0 && get_square_contents(p->x, p->y - 1) != MAP_TILE_WALL) {
+                            p->y -= 1;
+                            break;
+                        }
+                    case 1:
+                        if (p->y < 19 && get_square_contents(p->x, p->y + 1) != MAP_TILE_WALL) {
+                            p->y += 1;
+                            break;
+                        }
+                    case 2:
+                        if (p->x < 19 && get_square_contents(p->x + 1, p->y) != MAP_TILE_WALL) {
+                            p->x += 1;
+                            break;
+                        }
+                    default:
+                        if (p->x > 0 && get_square_contents(p->x - 1, p->y) != MAP_TILE_WALL) {
+                            p->x -= 1;
+                        }
                 }
 
+                // Decrement the number of backward movoes
                 --p->rev;
             }
 
             if (p->y == old_y && p->x == old_x) {
                 // Phantom can't move towards player so move elsewhere
-                // for 2-4 steps
-                p->rev = irandom(2, 3);
+                // for 2-6 steps
+                p->rev = irandom(2, 5);
             }
         } else {
             ++phantom_spawns;
@@ -198,7 +212,8 @@ void manage_phantoms() {
         }
     }
 
-    game.phantom_speed = ((PHANTOM_MOVE_TIME_US << level_data[game.level + 1]) >> level_data[game.level + 2]);
+    uint8_t index = (game.level - 1) * 4;
+    game.phantom_speed = ((PHANTOM_MOVE_TIME_US << level_data[index + 2]) >> level_data[index + 3]);
 
     for (uint8_t i = 0 ; i < game.phantoms ; ++i) {
         Phantom *p = &phantoms[i];
@@ -209,11 +224,12 @@ void manage_phantoms() {
 
 }
 
-void roll_new_phantom(uint8_t index) {
+void roll_new_phantom(uint8_t phantom_index) {
 
-    Phantom *p = &phantoms[index];
-    uint8_t min = level_data[game.level - 1];
-    uint8_t max = level_data[game.level];
+    Phantom *p = &phantoms[phantom_index];
+    uint8_t index = (game.level - 1) * 4;
+    uint8_t min = level_data[index];
+    uint8_t max = level_data[index + 1];
     p->hp = irandom(min, max);
     p->hits = p->hp;
     p->rev = 0;
@@ -225,6 +241,7 @@ void roll_new_phantom(uint8_t index) {
         if (get_square_contents(x, y) == MAP_TILE_CLEAR && x != player_x && y != player_y) {
             p->x = x;
             p->y = y;
+            break;
         }
     }
 }

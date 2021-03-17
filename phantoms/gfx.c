@@ -26,6 +26,7 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
     // Render a single frame:
     // Progressively draw in walls, square by square, in the
     // direction of the player’s viewpoint, in to out
+    // (x,y) is the player's current square
     uint8_t max_squares = get_view_distance(x, y, direction);
     uint8_t squares = 0;
 
@@ -35,7 +36,8 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
             // Run through squares from current to map limit
             for (uint8_t i = y ; i >= 0 ; --i) {
                 bool done = draw_section(x, i, DIRECTION_WEST, DIRECTION_EAST, squares, max_squares);
-                if (!done) squares++;
+                if (done) break;
+                squares++;
             }
 
             for (uint8_t i = y ; i > y - squares ; --i) {
@@ -47,7 +49,8 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
         case DIRECTION_EAST:
             for (uint8_t i = x ; i < 20 ; ++i) {
                 bool done = draw_section(i, y, DIRECTION_NORTH, DIRECTION_SOUTH, squares, max_squares);
-                if (!done) squares++;
+                if (done) break;
+                squares++;
             }
 
             for (uint8_t i = x ; i < x + squares ; ++i) {
@@ -59,7 +62,8 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
         case DIRECTION_SOUTH:
             for (uint8_t i = y ; i < 20 ; ++i) {
                 bool done = draw_section(x, i, DIRECTION_EAST, DIRECTION_WEST, squares, max_squares);
-                if (!done) squares++;
+                if (done) break;
+                squares++;
             }
 
             for (uint8_t i = y ; i < y + squares ; ++i) {
@@ -71,7 +75,8 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
         default:
             for (uint8_t i = x ; i >= 0 ; --i) {
                 bool done = draw_section(i, y, DIRECTION_SOUTH, DIRECTION_NORTH, squares, max_squares);
-                if (!done) squares++;
+                if (done) break;
+                squares++;
             }
 
             for (uint8_t i = x ; i > x - squares ; --i) {
@@ -116,7 +121,7 @@ void draw_teleporter(uint8_t frame_index) {
     // teleport location -- after stepping on this,
     // the play can beam heat at any time, but only once
     // per level
-    Rect r = rects[frame_index + 1];
+    Rect r = rects[frame_index];
     bool dot_state = true;
 
     for (uint8_t y = r.origin_y + r.height -  4; y < r.origin_y + r.height ; ++y) {
@@ -206,9 +211,26 @@ void draw_phantom(uint8_t x, uint8_t y, uint8_t c) {
     // distant square up to the player
     if (locate_phantom(x, y) != ERROR_CONDITION) {
         Rect r = rects[c];
-        ssd1306_rect(58, r.origin_y + 2, 12, r.height - 3, 1, false);
-        ssd1306_rect(59, r.origin_y + 3, 10, r.height - 5, 0, true);
+        // Body
+        ssd1306_rect(58, r.origin_y + 3, 12, r.height - 3, 1, false);
+        ssd1306_rect(59, r.origin_y + 4, 10, r.height - 5, 0, true);
+
+        // Face
         ssd1306_rect(61, r.origin_y + 5, 6, 6, 1, true);
+
+        // Left Side
+        ssd1306_line(58, r.origin_y + 11, 58, r.height - 8, 0, 1);
+        ssd1306_line(57, r.origin_y + 11, 57, r.height - 8, 1, 1);
+
+        // Right Side
+        ssd1306_line(69, r.origin_y + 11, 69, r.height - 8, 0, 1);
+        ssd1306_line(70, r.origin_y + 11, 70, r.height - 8, 1, 1);
+
+        // Cowl top
+        ssd1306_line(60, r.origin_y + 3, 68, r.origin_y + 2, 0, 1);
+        ssd1306_line(59, r.origin_y + 2, 69, r.origin_y + 1, 1, 1);
+        ssd1306_line(62, r.origin_y + 2, 64, r.origin_y + 2, 0, 1);
+        ssd1306_line(61, r.origin_y + 1, 65, r.origin_y + 1, 1, 1);
     }
 }
 

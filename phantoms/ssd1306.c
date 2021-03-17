@@ -13,103 +13,103 @@
 /*
  * Ascii Text Character Set
  */
-const char CHARSET[128][6] = {
-    "\x00\x00\x00",              // space - Ascii 32
-    "\x5F\x00",                  // !
-    "\xc0\x00\xc0\x00",          // "
-    "\x24\x7e\x24\x7e\x24\x00",  // #
-    "\x24\xd4\x56\x48\x00",      // $
-    "\xc6\xc8\x10\x26\xc6\x00",  // %
-    "\x6c\x92\x6a\x04\x0a\x00",  // &
-    "\xc0\x00",                  // '
-    "\x7c\x82\x00",              // (
-    "\x82\x7c\x00",              // )
-    "\x10\x7c\x38\x7c\x10\x00",  // *
-    "\x10\x10\x7c\x10\x10\x00",  // +
-    "\x06\x07\x00",              // ,
-    "\x10\x10\x10\x10\x00",      // -
-    "\x06\x06\x00",              // .
-    "\x04\x08\x10\x20\x40\x00",  // /
-    "\x3E\x51\x49\x45\x3E\x00",  // 0 - Ascii 48
-    "\x42\x7F\x40\x00",          // 1
-    "\x62\x51\x49\x49\x46\x00",  // 2
-    "\x22\x49\x49\x49\x36\x00",  // 3
-    "\x18\x14\x12\x7F\x10\x00",  // 4
-    "\x2F\x49\x49\x49\x31\x00",  // 5
-    "\x3C\x4A\x49\x49\x31\x00",  // 6
-    "\x01\x71\x09\x05\x03\x00",  // 7
-    "\x36\x49\x49\x49\x36\x00",  // 8
-    "\x06\x49\x49\x29\x1E\x00",  // 9
-    "\x36\x36\x00",              // : - Ascii 58
-    "\x36\x37\x00",              //
-    "\x10\x28\x44\x82\x00",      // <
-    "\x24\x24\x24\x24\x24\x00",  // =
-    "\x82\x44\x28\x10\x00",      // >
-    "\x60\x80\x9a\x90\x60\x00",  // ?
-    "\x7c\x82\xba\xaa\x78\x00",  // @
-    "\x7e\x90\x90\x90\x7e\x00",  // A - Ascii 65
-    "\xfe\x92\x92\x92\x6c\x00",  // B
-    "\x7c\x82\x82\x82\x44\x00",  // C
-    "\xfe\x82\x82\x82\x7c\x00",  // D
-    "\xfe\x92\x92\x92\x82\x00",  // E
-    "\xfe\x90\x90\x90\x80\x00",  // F
-    "\x7c\x82\x92\x92\x5c\x00",  // G
-    "\xfe\x10\x10\x10\xfe\x00",  // H
-    "\x82\xfe\x82\x00",          // I
-    "\x0c\x02\x02\x02\xfc\x00",  // J
-    "\xfe\x10\x28\x44\x82\x00",  // K
-    "\xfe\x02\x02\x02\x00",      // L
-    "\xfe\x40\x20\x40\xfe\x00",  // M
-    "\xfe\x40\x20\x10\xfe\x00",  // N
-    "\x7c\x82\x82\x82\x7c\x00",  // O
-    "\xfe\x90\x90\x90\x60\x00",  // P
-    "\x7c\x82\x92\x8c\x7a\x00",  // Q
-    "\xfe\x90\x90\x98\x66\x00",  // R
-    "\x64\x92\x92\x92\x4c\x00",  // S
-    "\x80\x80\xfe\x80\x80\x00",  // T
-    "\xfc\x02\x02\x02\xfc\x00",  // U
-    "\xf8\x04\x02\x04\xf8\x00",  // V
-    "\xfc\x02\x3c\x02\xfc\x00",  // W
-    "\xc6\x28\x10\x28\xc6\x00",  // X
-    "\xe0\x10\x0e\x10\xe0\x00",  // Y
-    "\x86\x8a\x92\xa2\xc2\x00",  // Z - Ascii 90
-    "\xfe\x82\x82\x00",          // [
-    "\x40\x20\x10\x08\x04\x00",  // forward slash
-    "\x82\x82\xfe\x00",          // ]
-    "\x20\x40\x80\x40\x20\x00",  // ^
-    "\x02\x02\x02\x02\x02\x00",  // _
-    "\xc0\xe0\x00",              // '
-    "\x04\x2a\x2a\x1e\x00",      // a - Ascii 97
-    "\xfe\x22\x22\x1c\x00",      // b
-    "\x1c\x22\x22\x22\x00",      // c
-    "\x1c\x22\x22\xfc\x00",      // d
-    "\x1c\x2a\x2a\x10\x00",      // e
-    "\x10\x7e\x90\x80\x00",      // f
-    "\x18\x25\x25\x3e\x00",      // g
-    "\xfe\x20\x20\x1e\x00",      // h
-    "\xbc\x02\x00",              // i
-    "\x02\x01\x21\xbe\x00",      // j
-    "\xfe\x08\x14\x22\x00",      // k
-    "\xfc\x02\x00",              // l
-    "\x3e\x20\x18\x20\x1e\x00",  // m
-    "\x3e\x20\x20 \x1e\x00",     // n
-    "\x1c\x22\x22\x1c\x00",      // o
-    "\x3f\x22\x22\x1c\x00",      // p
-    "\x1c\x22\x22\x3f\x00",      // q
-    "\x22\x1e\x20\x10\x00",      // r
-    "\x12\x2a\x2a\x04\x00",      // s
-    "\x20\x7c\x22\x04\x00",      // t
-    "\x3c\x02\x02\x3e\x00",      // u
-    "\x38\x04\x02\x04\x38\x00",  // v
-    "\x3c\x06\x0c\x06\x3c\x00",  // w
-    "\x22\x14\x08\x14\x22\x00",  // x
-    "\x39\x05\x06\x3c\x00",      // y
-    "\x26\x2a\x2a\x32\x00",      // z - Ascii 122
-    "\x10\x7c\x82\x82\x00",      //
-    "\xee\x00",                  // |
-    "\x82\x82\x7c\x10\x00",      //
-    "\x40\x80\x40\x80\x00",      // ~
-    "\x60\x90\x90\x60\x00"       // Degrees sign - Ascii 127
+const char CHARSET[128][5] = {
+    "\x00\x00",              // space - Ascii 32
+    "\x5F",                  // !
+    "\xc0\x00\xc0",          // "
+    "\x24\x7e\x24\x7e\x24",  // #
+    "\x24\xd4\x56\x48",      // $
+    "\xc6\xc8\x10\x26\xc6",  // %
+    "\x6c\x92\x6a\x04\x0a",  // &
+    "\xc0",                  // '
+    "\x7c\x82",              // (
+    "\x82\x7c",              // )
+    "\x10\x7c\x38\x7c\x10",  // *
+    "\x10\x10\x7c\x10\x10",  // +
+    "\x06\x07",              // ,
+    "\x10\x10\x10\x10",      // -
+    "\x06\x06",              // .
+    "\x04\x08\x10\x20\x40",  // /
+    "\x7C\x8A\x92\xA2\x7C",  // 0 - Ascii 48
+    "\x42\xFE\x02",          // 1
+    "\x46\x8A\x92\x92\x62",  // 2
+    "\x44\x92\x92\x92\x6C",  // 3
+    "\x18\x28\x48\xFE\x08",  // 4
+    "\xF4\x92\x92\x92\x8C",  // 5
+    "\x3C\x52\x92\x92\x8C",  // 6
+    "\x80\x8E\x90\xA0\xC0",  // 7
+    "\x6C\x92\x92\x92\x6C",  // 8
+    "\x60\x92\x92\x94\x78",  // 9
+    "\x36\x36",              // : - Ascii 58
+    "\x36\x37",              //
+    "\x10\x28\x44\x82",      // <
+    "\x24\x24\x24\x24\x24",  // =
+    "\x82\x44\x28\x10",      // >
+    "\x60\x80\x9a\x90\x60",  // ?
+    "\x7c\x82\xba\xaa\x78",  // @
+    "\x7e\x90\x90\x90\x7e",  // A - Ascii 65
+    "\xfe\x92\x92\x92\x6c",  // B
+    "\x7c\x82\x82\x82\x44",  // C
+    "\xfe\x82\x82\x82\x7c",  // D
+    "\xfe\x92\x92\x92\x82",  // E
+    "\xfe\x90\x90\x90\x80",  // F
+    "\x7c\x82\x92\x92\x5c",  // G
+    "\xfe\x10\x10\x10\xfe",  // H
+    "\x82\xfe\x82",          // I
+    "\x0c\x02\x02\x02\xfc",  // J
+    "\xfe\x10\x28\x44\x82",  // K
+    "\xfe\x02\x02\x02",      // L
+    "\xfe\x40\x20\x40\xfe",  // M
+    "\xfe\x40\x20\x10\xfe",  // N
+    "\x7c\x82\x82\x82\x7c",  // O
+    "\xfe\x90\x90\x90\x60",  // P
+    "\x7c\x82\x92\x8c\x7a",  // Q
+    "\xfe\x90\x90\x98\x66",  // R
+    "\x64\x92\x92\x92\x4c",  // S
+    "\x80\x80\xfe\x80\x80",  // T
+    "\xfc\x02\x02\x02\xfc",  // U
+    "\xf8\x04\x02\x04\xf8",  // V
+    "\xfc\x02\x3c\x02\xfc",  // W
+    "\xc6\x28\x10\x28\xc6",  // X
+    "\xe0\x10\x0e\x10\xe0",  // Y
+    "\x86\x8a\x92\xa2\xc2",  // Z - Ascii 90
+    "\xfe\x82\x82",          // [
+    "\x40\x20\x10\x08\x04",  // forward slash
+    "\x82\x82\xfe",          // ]
+    "\x20\x40\x80\x40\x20",  // ^
+    "\x02\x02\x02\x02\x02",  // _
+    "\xc0\xe0",              // '
+    "\x04\x2a\x2a\x1e",      // a - Ascii 97
+    "\xfe\x22\x22\x1c",      // b
+    "\x1c\x22\x22\x22",      // c
+    "\x1c\x22\x22\xfc",      // d
+    "\x1c\x2a\x2a\x10",      // e
+    "\x10\x7e\x90\x80",      // f
+    "\x18\x25\x25\x3e",      // g
+    "\xfe\x20\x20\x1e",      // h
+    "\xbc\x02",              // i
+    "\x02\x01\x21\xbe",      // j
+    "\xfe\x08\x14\x22",      // k
+    "\xfc\x02",              // l
+    "\x3e\x20\x18\x20\x1e",  // m
+    "\x3e\x20\x20\x1e",     // n
+    "\x1c\x22\x22\x1c",      // o
+    "\x3f\x22\x22\x1c",      // p
+    "\x1c\x22\x22\x3f",      // q
+    "\x22\x1e\x20\x10",      // r
+    "\x12\x2a\x2a\x04",      // s
+    "\x20\x7c\x22\x04",      // t
+    "\x3c\x02\x02\x3e",      // u
+    "\x38\x04\x02\x04\x38",  // v
+    "\x3c\x06\x0c\x06\x3c",  // w
+    "\x22\x14\x08\x14\x22",  // x
+    "\x39\x05\x06\x3c",      // y
+    "\x26\x2a\x2a\x32",      // z - Ascii 122
+    "\x10\x7c\x82\x82",      //
+    "\xee",                  // |
+    "\x82\x82\x7c\x10",      //
+    "\x40\x80\x40\x80",      // ~
+    "\x60\x90\x90\x60"       // Degrees sign - Ascii 127
 };
 
 
@@ -148,6 +148,7 @@ void i2c_write_byte(uint8_t byte) {
     // Convenience function to write a single byte to the matrix
     i2c_write_blocking(I2C_PORT, oled_i2c_addr, &byte, 1, false);
 }
+
 
 void i2c_write_block(uint8_t *data, uint16_t count) {
     // Convenience function to write 'count' bytes to the matrix
@@ -260,12 +261,14 @@ void ssd1306_init(uint8_t pixel_width, uint8_t pixel_height) {
     ssd1306_draw();
 }
 
+
 void ssd1306_inverse(bool do_invert) {
     // Invert the display using SSD1306 setting
     uint8_t data = do_invert ? SSD1306_INVERTDISPLAY : SSD1306_NORMALDISPLAY;
     oled_inverted = do_invert;
     ssd1306_write(true, &data, 1);
 }
+
 
 void ssd1306_plot(uint8_t x, uint8_t y, uint8_t colour) {
 
@@ -289,6 +292,7 @@ void ssd1306_plot(uint8_t x, uint8_t y, uint8_t colour) {
     // Write the altered byte back to the buffer
     oled_buffer[byte_index] = value;
 }
+
 
 void ssd1306_line(uint8_t x, uint8_t y, uint8_t tox, uint8_t toy, uint8_t colour, uint8_t thick) {
     // Draw a line of thickness 'thick' between (x,y) and (tox,toy)
@@ -354,6 +358,7 @@ void ssd1306_rect(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t c
     }
 }
 
+
 void ssd1306_circle(uint8_t x, uint8_t y, uint8_t radius, uint8_t colour, bool fill) {
     // Draw a circle with its centre on the specified co-ordinates and of the
     // required radius
@@ -386,6 +391,7 @@ void ssd1306_circle(uint8_t x, uint8_t y, uint8_t radius, uint8_t colour, bool f
     }
 }
 
+
 void ssd1306_text(int8_t x, int8_t y, const char *the_string, bool do_wrap, bool do_double) {
 
     uint8_t space_size = do_double ? 4 : 1;
@@ -394,11 +400,15 @@ void ssd1306_text(int8_t x, int8_t y, const char *the_string, bool do_wrap, bool
     for (size_t i = 0 ; i < strlen(the_string) ; ++i) {
         uint8_t asc_val = the_string[i] - 32;
         size_t s = sizeof(CHARSET[asc_val]);
-        size_t glyph_len = s;
+        size_t glyph_len = s + 1;
 
         char glyph[6];
         for (size_t j = 0 ; j < glyph_len ; ++j) {
-            glyph[j] = CHARSET[asc_val][j];
+            if (j == glyph_len - 1) {
+                glyph[j] = 0x00;
+            } else {
+                glyph[j] = CHARSET[asc_val][j];
+            }
         }
 
         char col_0 = ssd1306_text_flip(glyph[0]);
@@ -434,7 +444,7 @@ void ssd1306_text(int8_t x, int8_t y, const char *the_string, bool do_wrap, bool
                 col_1_right = ssd1306_text_stretch(col_1);
                 col_1_left = col_1_right;
 
-                for (uint8_t a = 6 ; a >=0 ; --a) {
+                for (uint8_t a = 6 ; a >= 0 ; --a) {
                     for (uint8_t b = 1 ; b < 3 ; b++) {
                         if ((col_0 >> a & 3 == 3 - b) && (col_1 >> a & 3 == b)) {
                             col_0_right |= (1 << ((a * 2) + b));
@@ -479,6 +489,7 @@ void ssd1306_text(int8_t x, int8_t y, const char *the_string, bool do_wrap, bool
         }
     }
 }
+
 
 void ssd1306_clear() {
     // Clear the buffer

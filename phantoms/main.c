@@ -131,39 +131,54 @@ void create_world() {
     // Reset the the phantoms data
     init_phantoms();
 
-    // Add the phantoms to the map, everywhere but empty
+    // Add the first phantom to the map, everywhere but empty
     uint8_t empty_quad = irandom(0, 4);
     uint8_t phantom_quad = irandom(0, 4);
-    for (uint8_t i = 0 ; i < game.phantoms ; ++i) {
-        Phantom* p = &phantoms[i];
-        while (true) {
-            // Pick a random co-ordinate
-            uint8_t x = irandom(0, 6);
-            uint8_t y = irandom(0, 6);
+    while (true) {
+        // Pick a random co-ordinate
+        uint8_t x = irandom(0, 6);
+        uint8_t y = irandom(0, 6);
 
-            // Make sure the phantom's not in the fourth quadrant
-            if (phantom_quad == empty_quad) ++phantom_quad;
-            if (phantom_quad > 3) phantom_quad = 0;
+        // Make sure the phantom's not in the fourth quadrant
+        if (phantom_quad == empty_quad) ++phantom_quad;
+        if (phantom_quad > 3) phantom_quad = 0;
 
-            // Adjust (x,y) to outer part of quadrant
-            if (phantom_quad == 1) {
-                x = 19 - x;
-            } else if (phantom_quad == 2) {
-                x = 19 - x;
-                y = 19 - y;
-            } else if (phantom_quad == 3) {
-                y = 19 - y;
-            }
+        // Adjust (x,y) to outer part of quadrant
+        if (phantom_quad == 1) {
+            x = 19 - x;
+        } else if (phantom_quad == 2) {
+            x = 19 - x;
+            y = 19 - y;
+        } else if (phantom_quad == 3) {
+            y = 19 - y;
+        }
 
-            // If the chosen square is valid, use it
-            if (get_square_contents(x, y) == MAP_TILE_CLEAR) {
-                p->x = x;
-                p->y = y;
-                break;
-            }
+        // If the chosen square is valid, use it
+        if (get_square_contents(x, y) == MAP_TILE_CLEAR) {
+            phantoms[0].x = x;
+            phantoms[0].y = y;
+            break;
+        }
+    }
 
-            // Move to the next quad
-            ++phantom_quad;
+    // Set the teleport
+    while (true) {
+        // Pick a random co-ordinate
+        uint8_t x = irandom(0, 6);
+        uint8_t y = irandom(0, 6);
+
+        if (empty_quad == 1) {
+            x = 19 - x;
+        } else if (empty_quad == 2) {
+            x = 19 - x;
+            y = 19 - y;
+        } else if (empty_quad == 3) {
+            y = 19 - y;
+        }
+
+        if (get_square_contents(x, y) == MAP_TILE_CLEAR) {
+            set_square_contents(x, y, MAP_TILE_TELEPORTER);
+            break;
         }
     }
 
@@ -180,6 +195,8 @@ void create_world() {
     player_x = x;
     player_y = y;
     player_direction = irandom(0, 4);
+    game.tele_x = x;
+    game.tele_y = y;
 }
 
 
@@ -215,7 +232,7 @@ void game_loop() {
                 if (player_direction == DIRECTION_EAST) nx += (dir == MOVE_FORWARD ? 1 : -1);
                 if (player_direction == DIRECTION_WEST) nx += (dir == MOVE_FORWARD ? -1 : 1);
 
-                if (ny < 20 && nx < 20 && !check_hazard(nx, ny)) {
+                if (ny < 20 && nx < 20 && get_square_contents(nx, ny) != MAP_TILE_WALL) {
                     player_x = nx;
                     player_y = ny;
                 }
@@ -283,6 +300,9 @@ void game_loop() {
             // Manage and draw the world
             update_world(time_us_32());
 
+            // What are we standing on?
+            check_hazard(player_x, player_y);
+
             // Check for a laser burst
             if (game.is_firing) {
                 game.is_firing = false;
@@ -332,22 +352,11 @@ uint8_t get_direction(uint16_t x, uint16_t y) {
 }
 
 
-bool check_hazard(uint8_t x, uint8_t y) {
+void check_hazard(uint8_t x, uint8_t y) {
     // Check the kind of square the player is standing on
     // and action accordingly -- only teleport squares for now
     uint8_t sc = get_square_contents(x, y);
-
-    if (sc == MAP_TILE_TELEPORTER) {
-        // Player has walked on the teleport square - record it
-        // and clear the map location
-        game.tele_x = x;
-        game.tele_y = y;
-        game.can_teleport = true;
-        set_square_contents(x, y, MAP_TILE_CLEAR);
-    }
-
-    // Return 'true' on a bad square, false in a good one
-    return !(sc == MAP_TILE_CLEAR || sc == MAP_TILE_TELEPORTER);
+    game.can_teleport = (sc == MAP_TILE_TELEPORTER);
 }
 
 
@@ -362,7 +371,6 @@ void update_world(uint32_t now) {
         } else {
             draw_screen(player_x, player_y, player_direction);
         }
-
 
         if (game.show_reticule) {
             ssd1306_rect(64, 26, 2, 5, 1, false);
@@ -448,14 +456,15 @@ void fire_laser() {
 
     // Animate the zap
     uint8_t radii[] = {20, 16, 10, 4};
-    uint8_t temp_buf[oled_buffer_size];
-    memcpy(&temp_buf[0], oled_buffer, oled_buffer_size);
+    memcpy(&temp_buffer[0], oled_buffer, oled_buffer_size);
 
     for (uint8_t i = 0 ; i < 4 ; ++i) {
-        ssd1306_circle(64, 32, radii[i], 1, true);
+        // Laser shot is a white circle with a black fill
+        ssd1306_circle(64, 32, radii[i], 0, false);
+        ssd1306_circle(64, 32, radii[i] - 1, 1, true);
         ssd1306_draw();
-        sleep_ms(100);
-        memcpy(&oled_buffer[0], temp_buf, oled_buffer_size);
+        sleep_ms(90);
+        memcpy(&oled_buffer[0], temp_buffer, oled_buffer_size);
     }
 
     // Draw the bulletless view
@@ -469,6 +478,7 @@ void fire_laser() {
         if (p->hp == 0) {
             // One dead phantom
             p->x = ERROR_CONDITION;
+            p->y = ERROR_CONDITION;
             game.level_score += p->hits;
             ++game.level_kills;
 
@@ -477,6 +487,7 @@ void fire_laser() {
             sleep_ms(200);
 
             // Draw without the front phantom
+            ssd1306_clear();
             draw_screen(player_x, player_y, player_direction);
             ssd1306_draw();
             ssd1306_inverse(true);
@@ -496,19 +507,28 @@ void fire_laser() {
 void death() {
     // The player has died -- show the map and the score
     ssd1306_clear();
-    ssd1306_text(0, 0, "SCORE", false, false);
-    ssd1306_text(98, 0, "HIGH", false, false);
-    ssd1306_text(98, 8, "SCORE", false, false);
+    ssd1306_text(0, 0, "YOU", false, false);
+    ssd1306_text(0, 8, "WERE", false, false);
+    ssd1306_text(0, 16, "KILLED", false, false);
 
     // Show the score
     char score_string[5] = "00000";
+    ssd1306_text(98, 0, "SCORE", false, false);
     sprintf(score_string, "%d", game.level_score);
-    ssd1306_text(0, 8, score_string, false, false);
+    ssd1306_text(98, 8, score_string, false, false);
+
+    /// Show the high score
+    ssd1306_text(98, 24, "HIGH", false, false);
+    ssd1306_text(98, 32, "SCORE", false, false);
 
     if (high_score < game.level_score) high_score = game.level_score;
     sprintf(score_string, "00000");
     sprintf(score_string, "%d", high_score);
-    ssd1306_text(98, 16, score_string, false, false);
+    ssd1306_text(98, 40, score_string, false, false);
+
+    ssd1306_text(0, 40, "PRESS", false, false);
+    ssd1306_text(0, 48, "ANY", false, false);
+    ssd1306_text(0, 56, "KEY", false, false);
 
     // Show the map
     show_map(0, true);
@@ -606,7 +626,7 @@ void play_intro() {
         ssd1306_clear();
         ssd1306_text(10, final_y, "THE PHANTOM SLAYER", false, false);
         ssd1306_text(26, i, "BY TONY SMITH", false, false);
-        ssd1306_text(22, i + 10, "& KEN KALISH", false, false);
+        ssd1306_text(29, i + 10, "& KEN KALISH", false, false);
         ssd1306_draw();
         sleep_ms(25);
     }
@@ -640,14 +660,27 @@ int main() {
         create_world();
 
         // Clear the screen and present the current map
-        ssd1306_clear();
-        show_map(0, false);
-        ssd1306_draw();
-        sleep_ms(10000);
+        char count_string[5] = "0";
+        for (uint8_t i = 5 ; i > 0 ; --i) {
+            ssd1306_clear();
+            ssd1306_text(13, 0, "NEW", false, false);
+            ssd1306_text(7, 8, "GAME", false, false);
+            ssd1306_text(98, 0, "LEVEL", false, false);
+            ssd1306_text(98, 8, "ONE", false, false);
+
+            sprintf(count_string, "%d", i);
+            ssd1306_text(0, 48, count_string, false, false);
+
+            show_map(0, false);
+            ssd1306_draw();
+            sleep_ms(1000);
+        }
+
+        //sleep_ms(10000);
 
         // Show the world...
-        ssd1306_inverse(true);
         update_world(time_us_32());
+        ssd1306_inverse(true);
 
         // ...and start play
         game_loop();

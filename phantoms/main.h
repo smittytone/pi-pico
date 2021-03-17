@@ -11,6 +11,7 @@
 #define _PHANTOMS_MAIN_HEADER_
 
 
+// Standard, Pico includes
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -22,16 +23,15 @@
 #include "hardware/i2c.h"
 #include "hardware/adc.h"
 
-// Game headers
+// Game includes
 #include "map.h"
 #include "ssd1306.h"
 #include "gfx.h"
 #include "phantoms.h"
-//#include "sprites.h"
 
 
 /*
- * STRUCTURES
+ * STRUCTURE DEFINITIONS
  */
 typedef struct {
     uint8_t origin_x;
@@ -84,7 +84,8 @@ void init_game();
 void game_loop();
 bool check_joystick(uint16_t x, uint16_t y) ;
 uint8_t get_direction(uint16_t x, uint16_t y);
-bool check_hazard(uint8_t x, uint8_t y);
+
+void check_hazard(uint8_t x, uint8_t y);
 void check_senses();
 void update_world(uint32_t now);
 
@@ -98,6 +99,7 @@ int irandom(int start, int max);
 void inkey();
 void tone(unsigned int frequency, unsigned long duration, unsigned long post);
 
+
 /*
  *  CONSTANTS
  */
@@ -109,10 +111,10 @@ void tone(unsigned int frequency, unsigned long duration, unsigned long post);
 
 #define PIN_SDA                                         8
 #define PIN_SCL                                         9
-#define SSD1306_RST_PIN                                 16
+#define SSD1306_RST_PIN                                 19
 #define PIN_SPEAKER                                     4
-#define PIN_TELE_BUTTON                                 18
-#define PIN_FIRE_BUTTON                                 17
+#define PIN_TELE_BUTTON                                 17
+#define PIN_FIRE_BUTTON                                 16
 #define PIN_LED                                         25
 #define PIN_X                                           26
 #define PIN_Y                                           27
@@ -138,7 +140,7 @@ void tone(unsigned int frequency, unsigned long duration, unsigned long post);
 #define PHANTOM_MOVE_TIME_US                            1000000
 
 // Map square types
-#define MAP_TILE_WALL                                   0x00
+#define MAP_TILE_WALL                                   0xEE
 #define MAP_TILE_CLEAR                                  0xFF
 #define MAP_TILE_TELEPORTER                             0xAA
 #define MAX_VIEW_RANGE                                  6
@@ -156,8 +158,9 @@ bool     oled_inverted;
 
 // Graphics buffer
 uint8_t  oled_buffer[1024];
-uint16_t oled_buffer_size;
+uint8_t  temp_buffer[1024];
 uint8_t  i2c_tx_buffer[1025];
+uint16_t oled_buffer_size;
 uint16_t i2c_tx_buffer_size;
 
 // Player
