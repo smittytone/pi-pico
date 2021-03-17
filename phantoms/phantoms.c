@@ -14,7 +14,27 @@
  * Basic Level Data
  */
 uint8_t level_data[] = {
-    1,1,1,2,1,3,1,4,1,5,1,6,2,6,2,6,2,6,3,6,3,6,3,6,4,6,4,6,4,6,4,8,4,8,4,8,5,9,5,9,5,9
+    1,1,1,0,
+    1,2,1,0,
+    1,3,1,0,
+    1,4,0,0,
+    1,5,0,0,
+    1,6,0,0,
+    2,6,0,0,
+    2,6,0,0,
+    2,6,0,0,
+    3,6,0,1,
+    3,6,0,1,
+    3,6,0,1,
+    4,6,0,1,
+    4,6,0,1,
+    4,6,0,1,
+    4,8,0,2,
+    4,8,0,2,
+    4,8,0,2,
+    5,9,0,2,
+    5,9,0,2,
+    5,9,0,2
 };
 
 
@@ -177,6 +197,8 @@ void manage_phantoms() {
             ++game.level;
         }
     }
+
+    game.phantom_speed = ((PHANTOM_MOVE_TIME_US << level_data[game.level + 1]) >> level_data[game.level + 2]);
 
     for (uint8_t i = 0 ; i < game.phantoms ; ++i) {
         Phantom *p = &phantoms[i];

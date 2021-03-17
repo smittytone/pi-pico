@@ -94,6 +94,7 @@ void init_game() {
     game.debounce_count_release = 0;
     game.tele_x = ERROR_CONDITION;
     game.tele_y = ERROR_CONDITION;
+    game.phantom_speed = PHANTOM_MOVE_TIME_US << 1;
 
     chase_mode = false;
 }
@@ -375,7 +376,7 @@ void update_world(uint32_t now) {
     }
 
     // Move the phantoms periodically
-    if (now - last_phantom_move > PHANTOM_MOVE_TIME_US) {
+    if (now - last_phantom_move > game.phantom_speed) {
         last_phantom_move = now;
         move_phantoms();
         check_senses();

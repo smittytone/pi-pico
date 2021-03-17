@@ -69,6 +69,7 @@ typedef struct {
     uint32_t zap_time;
     uint32_t debounce_count_press;
     uint32_t debounce_count_release;
+    uint32_t phantom_speed;
 } Game;
 
 
