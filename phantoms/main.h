@@ -130,11 +130,12 @@ void tone(unsigned int frequency, unsigned long duration, unsigned long post);
 #define MOVE_BACKWARD                                   2
 #define TURN_LEFT                                       3
 
-#define DEADZONE                                        400
+// Joystick
 #define UPPER_LIMIT                                     2448
 #define LOWER_LIMIT                                     1648
 #define JOY_MAX                                         4096
 
+// Timer limits
 #define DEBOUNCE_TIME_US                                5000
 #define ANIM_TIME_US                                    22000
 #define PHANTOM_MOVE_TIME_US                            1000000
@@ -145,6 +146,7 @@ void tone(unsigned int frequency, unsigned long duration, unsigned long post);
 #define MAP_TILE_TELEPORTER                             0xAA
 #define MAX_VIEW_RANGE                                  6
 
+#define MAX_PHANTOMS                                    3
 #define ERROR_CONDITION                                 99
 
 

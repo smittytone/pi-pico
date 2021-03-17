@@ -200,32 +200,43 @@ uint8_t locate_phantom(uint8_t x, uint8_t y) {
 
 
 void manage_phantoms() {
-
-    if (game.level < 4) {
+    
+    bool level_up = false;
+    
+    if (game.level < MAX_PHANTOMS) {
         if (game.level_kills == game.level) {
             ++game.level;
+            level_up = true;
+            game.level_kills = 0;
             ++game.phantoms;
         }
     } else {
-        if (game.level_kills == 3) {
+        if (game.level_kills == MAX_PHANTOMS) {
             ++game.level;
+            game.level_kills = 0;
+            level_up = true;
         }
     }
-
-    uint8_t index = (game.level - 1) * 4;
-    game.phantom_speed = ((PHANTOM_MOVE_TIME_US << level_data[index + 2]) >> level_data[index + 3]);
-
+    
+    if (game.phantoms > MAX_PHANTOMS) game.phantoms = MAX_PHANTOMS;
+    
+    if (level_up) {
+        uint8_t index = (game.level - 1) * 4;
+        game.phantom_speed = ((PHANTOM_MOVE_TIME_US << level_data[index + 2]) >> level_data[index + 3]);
+    }
+    
+    // Do we need to roll a phantom?
     for (uint8_t i = 0 ; i < game.phantoms ; ++i) {
         Phantom *p = &phantoms[i];
         if (i < game.level && p->x == ERROR_CONDITION) {
             roll_new_phantom(i);
         }
     }
-
 }
 
 void roll_new_phantom(uint8_t phantom_index) {
-
+    
+    if (phantom_index > 2) return;
     Phantom *p = &phantoms[phantom_index];
     uint8_t index = (game.level - 1) * 4;
     uint8_t min = level_data[index];
