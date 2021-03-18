@@ -28,6 +28,7 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
     // from (x,y) in the specified direction
     uint8_t max_squares = get_view_distance(x, y, direction);
     uint8_t squares = 0;
+    uint8_t phantom_count = 0;
 
     switch(direction) {
         case DIRECTION_NORTH:
@@ -42,8 +43,11 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
 
             // Run from the furthest square to the closest
             // to draw in any phantoms the viewer can see
-            for (uint8_t i = y ; i > y - squares ; --i) {
-                draw_phantom(x, i, y - i);
+            phantom_count = count_facing_phantoms(MAX_VIEW_RANGE);
+            if (phantom_count > 0) {
+                for (uint8_t i = y ; i > y - squares ; --i) {
+                    draw_phantom(x, i, y - i);
+                }
             }
 
             break;
@@ -55,8 +59,11 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
                 squares++;
             }
 
-            for (uint8_t i = x ; i < x + squares ; ++i) {
-                draw_phantom(i, y, i - x);
+            phantom_count = count_facing_phantoms(MAX_VIEW_RANGE);
+            if (phantom_count > 0) {
+                for (uint8_t i = x ; i < x + squares ; ++i) {
+                    draw_phantom(i, y, i - x);
+                }
             }
 
             break;
@@ -68,8 +75,11 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
                 squares++;
             }
 
-            for (uint8_t i = y ; i < y + squares ; ++i) {
-                draw_phantom(x, i, i - y);
+            phantom_count = count_facing_phantoms(MAX_VIEW_RANGE);
+            if (phantom_count > 0) {
+                for (uint8_t i = y ; i < y + squares ; ++i) {
+                    draw_phantom(x, i, i - y);
+                }
             }
 
             break;
@@ -81,8 +91,11 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
                 squares++;
             }
 
-            for (uint8_t i = x ; i > x - squares ; --i) {
-                draw_phantom(i, y, x - i);
+            phantom_count = count_facing_phantoms(MAX_VIEW_RANGE);
+            if (phantom_count > 0) {
+                for (uint8_t i = x ; i > x - squares ; --i) {
+                    draw_phantom(i, y, x - i);
+                }
             }
 
             break;
@@ -227,6 +240,7 @@ void draw_phantom(uint8_t x, uint8_t y, uint8_t frame_index) {
     //      (three max) appear side by side
     if (locate_phantom(x, y) != ERROR_CONDITION) {
         Rect r = rects[frame_index];
+
         // Body
         ssd1306_rect(58, r.origin_y + 3, 12, r.height - 3, 1, false);
         ssd1306_rect(59, r.origin_y + 4, 10, r.height - 5, 0, true);
@@ -247,5 +261,29 @@ void draw_phantom(uint8_t x, uint8_t y, uint8_t frame_index) {
         ssd1306_line(59, r.origin_y + 2, 69, r.origin_y + 1, 1, 1);
         ssd1306_line(62, r.origin_y + 2, 64, r.origin_y + 2, 0, 1);
         ssd1306_line(61, r.origin_y + 1, 65, r.origin_y + 1, 1, 1);
+    }
+}
+
+
+void animate_turn(bool is_left) {
+    // Animate slide (left or right) from the current view
+    // to a pre-rendered side-view buffer
+    for (uint8_t n = 1 ; n < 128 ; ++n) {
+        // Send a frame: run through the rows
+        for (uint8_t y = 0 ; y < 8 ; ++y) {
+            // Write out a line of left-buffer bytes followed by
+            // some right-buffer bytes
+            if (is_left) {
+                i2c_write_partial_block(&side_buffer[y * 8 + 128 - n], n, true);
+                i2c_write_partial_block(&oled_buffer[y * 8], 128 - n, false);
+            } else {
+                for (uint8_t x = n ; x < 128 ; ++x) {
+                i2c_write_partial_block(&oled_buffer[y * 8 + n], 128 - n, true);
+                i2c_write_partial_block(&side_buffer[y * 8], n, false);
+            }
+        }
+
+        // Pause between frames
+        sleep_ms(10);
     }
 }

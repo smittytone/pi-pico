@@ -421,9 +421,9 @@ void check_senses() {
             if (j < 0) continue;
             if (j > 19) break;
             if (locate_phantom(i, j) != ERROR_CONDITION) {
-                // Flash the LED for now
+                // Flash the LED, sound a tone
                 gpio_put(PIN_LED, true);
-                sleep_ms(5);
+                tone(300, 10, 0);
                 gpio_put(PIN_LED, false);
 
                 // Only play one beep, no matter
@@ -471,7 +471,8 @@ void fire_laser() {
         ssd1306_circle(64, 32, radii[i], 0, false);
         ssd1306_circle(64, 32, radii[i] - 1, 1, true);
         ssd1306_draw();
-        sleep_ms(90);
+        //sleep_ms(90);
+        tone(1500, 90, 0);
         memcpy(&oled_buffer[0], temp_buffer, oled_buffer_size);
     }
 
@@ -612,7 +613,7 @@ void tone(unsigned int frequency, unsigned long duration, unsigned long post) {
     };
 
     // Apply a post-tone delay
-    sleep_ms(post);
+    if (post > 0) sleep_ms(post);
 }
 
 

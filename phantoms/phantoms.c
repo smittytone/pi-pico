@@ -232,7 +232,7 @@ uint8_t get_facing_phantom(uint8_t range) {
 }
 
 
-uint8_t count_facing_phantom(uint8_t range) {
+uint8_t count_facing_phantoms(uint8_t range) {
     // Return the index of the closest facing phantom
     // in the 'phantoms' array -- or ERROR_CONDITION.
     // 'range' is the number of squares we'll iterate

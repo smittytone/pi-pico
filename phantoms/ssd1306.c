@@ -157,6 +157,13 @@ void i2c_write_block(uint8_t *data, uint16_t count) {
 }
 
 
+void i2c_write_partial_block(uint8_t *data, uint16_t count, bool do_continue) {
+    // Convenience function to write 'count' bytes to the matrix
+    uint16_t r = i2c_write_blocking(I2C_PORT, oled_i2c_addr, data, count, do_continue);
+    if (r != count) printf("(I2C err: %i", r);
+}
+
+
 /*
  * SSD1306 Functions
  */
