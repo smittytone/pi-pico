@@ -271,7 +271,7 @@ void ssd1306_inverse(bool do_invert) {
 
 
 void ssd1306_plot(uint8_t x, uint8_t y, uint8_t colour) {
-
+    // Plot a pixel of the specified colour (1 or 0) at (x,y)
     // Get the buffer byte holding the pixel
     uint16_t byte_index = ssd1306_coords_to_index(x, y);
     uint8_t value = oled_buffer[byte_index];
@@ -296,6 +296,7 @@ void ssd1306_plot(uint8_t x, uint8_t y, uint8_t colour) {
 
 void ssd1306_line(uint8_t x, uint8_t y, uint8_t tox, uint8_t toy, uint8_t colour, uint8_t thick) {
     // Draw a line of thickness 'thick' between (x,y) and (tox,toy)
+    // Colour is 1 or 0
     if (thick < 1) thick = 1;
 
     // Look for vertical and horizontal lines
@@ -343,9 +344,10 @@ void ssd1306_line(uint8_t x, uint8_t y, uint8_t tox, uint8_t toy, uint8_t colour
     }
 }
 
+
 void ssd1306_rect(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t colour, bool fill) {
     // Draw a rectangle with top left at (x,y) and of the specified width and height
-    // (including the 1px border if 'fill' is false
+    // (including the 1px border if 'fill' is false. Colour is 1 or 0
     if (x + width > oled_width) width = oled_width - x;
     if (y + height > oled_height) height = oled_height - y;
     if (colour != 0 && colour != 1) colour = 1;
@@ -393,7 +395,8 @@ void ssd1306_circle(uint8_t x, uint8_t y, uint8_t radius, uint8_t colour, bool f
 
 
 void ssd1306_text(int8_t x, int8_t y, const char *the_string, bool do_wrap, bool do_double) {
-
+    // Print the supplied string at (x,y) (top-left co-ordinate), wrapping to the next line
+    // if required. 'do_double' selects double-height output (currently not working)
     uint8_t space_size = do_double ? 4 : 1;
     uint8_t bit_max = do_double ? 16 : 8;
 
@@ -433,10 +436,10 @@ void ssd1306_text(int8_t x, int8_t y, const char *the_string, bool do_wrap, bool
                 col_1 = ssd1306_text_flip(glyph[j]);
             }
 
-            char col_0_right = 0;
-            char col_1_right = 0;
-            char col_0_left = 0;
-            char col_1_left = 0;
+            uint16_t col_0_right = 0;
+            uint16_t col_1_right = 0;
+            uint16_t col_0_left = 0;
+            uint16_t col_1_left = 0;
 
             if (do_double) {
                 col_0_right = ssd1306_text_stretch(col_0);
@@ -464,9 +467,9 @@ void ssd1306_text(int8_t x, int8_t y, const char *the_string, bool do_wrap, bool
                 }
 
                 if (do_double) {
-                    if (x < oled_width) ssd1306_char_plot(x, y, k, col_0_left, z);
+                    if (x < oled_width)     ssd1306_char_plot(x,     y, k, col_0_left,  z);
                     if (x + 1 < oled_width) ssd1306_char_plot(x + 1, y, k, col_0_right, z);
-                    if (x + 2 < oled_width) ssd1306_char_plot(x + 2, y, k, col_1_left, z);
+                    if (x + 2 < oled_width) ssd1306_char_plot(x + 2, y, k, col_1_left,  z);
                     if (x + 3 < oled_width) ssd1306_char_plot(x + 3, y, k, col_1_right, z);
                 } else {
                     if (x < oled_width) ssd1306_char_plot(x, y, k, col_0, z);
@@ -537,7 +540,7 @@ uint8_t ssd1306_text_flip(uint8_t value) {
 }
 
 
-uint8_t ssd1306_text_stretch(uint8_t x) {
+uint16_t ssd1306_text_stretch(uint8_t x) {
     // Pixel-doubles an 8-bit value to 16 bits
     x = (x & 0xF0) << 4 | (x & 0x0F);
     x = (x << 2 | x) & 0x3333;
@@ -547,7 +550,7 @@ uint8_t ssd1306_text_stretch(uint8_t x) {
 }
 
 
-void ssd1306_char_plot(int8_t x, int8_t y, uint8_t char_bit, uint8_t char_byte, uint8_t byte_bit) {
+void ssd1306_char_plot(int8_t x, int8_t y, uint8_t char_bit, uint16_t char_byte, uint8_t byte_bit) {
     // Write a line from a character glyph to the buffer
     if (x < 0 || x >= oled_width) return;
     if (y + char_bit < 0 || y + char_bit >= oled_height) return;

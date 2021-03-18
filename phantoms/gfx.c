@@ -23,23 +23,25 @@ const char angles[2][13] = {
  * GRAPHICS FUNCTIONS
  */
 void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
-    // Render a single frame:
-    // Progressively draw in walls, square by square, in the
-    // direction of the player’s viewpoint, in to out
-    // (x,y) is the player's current square
+    // Render a single viewpoint frame at the specified square.
+    // Progressively draw in walls, square by square, moving away
+    // from (x,y) in the specified direction
     uint8_t max_squares = get_view_distance(x, y, direction);
     uint8_t squares = 0;
 
     switch(direction) {
         case DIRECTION_NORTH:
-            // Facing north, so left = West, right = Eest
-            // Run through squares from current to map limit
+            // Viewer is facing north, so left = West, right = East
+            // Run through the squares from current to the view limit
             for (uint8_t i = y ; i >= 0 ; --i) {
+                // Draw in the walls, floor and, if necessary, the facing wall
                 bool done = draw_section(x, i, DIRECTION_WEST, DIRECTION_EAST, squares, max_squares);
                 if (done) break;
                 squares++;
             }
 
+            // Run from the furthest square to the closest
+            // to draw in any phantoms the viewer can see
             for (uint8_t i = y ; i > y - squares ; --i) {
                 draw_phantom(x, i, y - i);
             }
@@ -90,37 +92,44 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
 
 bool draw_section(uint8_t x, uint8_t y, uint8_t left, uint8_t right, uint8_t squares, uint8_t max_squares) {
     // Refactor out common code from 'draw_screen()'
-    // Return 'true' when we've got to the end wall, 'false' otherwise
+    // Return 'true' when we've got to the furthest rendered square,
+    // 'false' otherwise
+
+    // Is the square a teleporter?
     if (get_square_contents(x, y) == MAP_TILE_TELEPORTER) {
         draw_teleporter(squares);
     }
 
+    // Draw in left and right wall segments
+    // NOTE Second argument is true or false: wall section is
+    //      open or closed, respectively
     draw_left_wall(squares, (get_view_distance(x, y, left) > 0));
     draw_right_wall(squares, (get_view_distance(x, y, right) > 0));
 
+    // Have we reached the furthest square the viewer can see?
     if (squares == max_squares) {
         draw_far_wall(squares);
         return true;
     }
 
+    // Draw a line on the floor
     draw_floor_line(squares);
     return false;
 }
 
 
-void draw_floor_line(uint8_t square) {
+void draw_floor_line(uint8_t frame_index) {
     // Draw a grid line on the floor -- this is all
-    // we do to create the floor
-    Rect r = rects[square + 1];
+    // we do to create the floor (ceiling has no line)
+    Rect r = rects[frame_index + 1];
     ssd1306_line(r.origin_x - 1, r.origin_y + r.height, r.origin_x + r.width + 1, r.origin_y + r.height, 1, 1);
 }
 
 
 void draw_teleporter(uint8_t frame_index) {
-    // Draw a grey floor to indicate the Escape
-    // teleport location -- after stepping on this,
-    // the play can beam heat at any time, but only once
-    // per level
+    // Draw a grey floor tile o indicate the Escape
+    // teleport location -- when stepping on this,
+    // the play can beam heat to their start point
     Rect r = rects[frame_index];
     bool dot_state = true;
 
@@ -134,15 +143,18 @@ void draw_teleporter(uint8_t frame_index) {
 
 
 void draw_left_wall(uint8_t frame_index, bool is_open) {
-    // Draw main left-side rect
+    // Render a left-side wall section for the current square
+    // NOTE 'is_open' is true if there is no wall -- we're at
+    //      a junction point
     Rect i = rects[frame_index + 1];
     Rect o = rects[frame_index];
 
-    // Draw an open left wall
+    // Draw an open left wall, ie. the facing wall of the
+    // adjoining corridor, and then return
     ssd1306_rect(o.origin_x, i.origin_y, i.origin_x - o.origin_x - 1, i.height, 1, true);
     if (is_open) return;
 
-    // Add upper and lower triangles for a closed wall
+    // Add upper and lower triangles to present a wall section
     uint8_t byte = 0;
     for (uint8_t k = 0 ; k < i.origin_x - 1 - o.origin_x ; ++k) {
         // Upper triangle
@@ -165,14 +177,19 @@ void draw_left_wall(uint8_t frame_index, bool is_open) {
 
 
 void draw_right_wall(uint8_t frame_index, bool is_open) {
-    // Draw main right-side rect
+    // Render a right-side wall section for the current square
+    // NOTE 'is_open' is true if there is no wall -- we're at
+    //      a junction point
     Rect i = rects[frame_index + 1];
     Rect o = rects[frame_index];
+
+    // Draw an open left wall, ie. the facing wall of the
+    // adjoining corridor, and then return
     uint8_t xd = i.width + i.origin_x;
     ssd1306_rect(xd + 1, i.origin_y, (o.width + o.origin_x) - xd - 1, i.height, 1, true);
     if (is_open) return;
 
-    // Add upper and lower triangles for a closed wall
+    // Add upper and lower triangles to present a wall section
     uint8_t byte = 0;
     uint8_t max = (o.width + o.origin_x) - xd - 1;
     for (uint8_t k = 0 ; k < max ; ++k) {
@@ -196,7 +213,7 @@ void draw_right_wall(uint8_t frame_index, bool is_open) {
 
 
 void draw_far_wall(uint8_t squares) {
-    // Draw the wall facing the player, or for long distances,
+    // Draw the wall facing the viewer, or for long distances,
     // an 'infinity' view
     if (squares > MAX_VIEW_RANGE) return;
     Rect i = rects[squares > MAX_VIEW_RANGE - 2 ? MAX_VIEW_RANGE : squares + 1];
@@ -204,13 +221,12 @@ void draw_far_wall(uint8_t squares) {
 }
 
 
-void draw_phantom(uint8_t x, uint8_t y, uint8_t c) {
-    // Run through the list of phantoms to see if
-    // the player is facing any of them
-    // 'x' and 'y' are iterated co-ordinates from the most
-    // distant square up to the player
+void draw_phantom(uint8_t x, uint8_t y, uint8_t frame_index) {
+    // If there is a phantom at (x, y)? If so, draw it
+    // TODO Allow an x-axis shift so that multiple phantoms
+    //      (three max) appear side by side
     if (locate_phantom(x, y) != ERROR_CONDITION) {
-        Rect r = rects[c];
+        Rect r = rects[frame_index];
         // Body
         ssd1306_rect(58, r.origin_y + 3, 12, r.height - 3, 1, false);
         ssd1306_rect(59, r.origin_y + 4, 10, r.height - 5, 0, true);
@@ -231,29 +247,5 @@ void draw_phantom(uint8_t x, uint8_t y, uint8_t c) {
         ssd1306_line(59, r.origin_y + 2, 69, r.origin_y + 1, 1, 1);
         ssd1306_line(62, r.origin_y + 2, 64, r.origin_y + 2, 0, 1);
         ssd1306_line(61, r.origin_y + 1, 65, r.origin_y + 1, 1, 1);
-    }
-}
-
-
-void draw_dir_arrow() {
-    // Debug route - draw a direction indication arrow
-    if (player_direction == 0 || player_direction == 2) {
-        ssd1306_line(64,0,64,4,1,1);
-        if (player_direction == 0) {
-            ssd1306_plot(63,1,1);
-            ssd1306_plot(65,1,1);
-        } else {
-            ssd1306_plot(63,3,1);
-            ssd1306_plot(65,3,1);
-        }
-    } else {
-        ssd1306_line(62,2,66,2,1,1);
-        if (player_direction == 3) {
-            ssd1306_plot(63,1,1);
-            ssd1306_plot(63,3,1);
-        } else {
-            ssd1306_plot(64,1,1);
-            ssd1306_plot(64,3,1);
-        }
     }
 }

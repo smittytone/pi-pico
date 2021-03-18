@@ -314,7 +314,8 @@ void game_loop() {
         }
     }
 
-    // Show the death view
+    // Show the death view when the
+    // game loop exits (ie. game.in_play is false)
     death();
 }
 
@@ -470,7 +471,7 @@ void fire_laser() {
     // Draw the bulletless view
     ssd1306_draw();
 
-    uint8_t n = get_facing_phantom(5);
+    uint8_t n = get_facing_phantom(MAX_VIEW_RANGE);
     if (n != ERROR_CONDITION) {
         // A hit! A palpable hit!
         Phantom* p = &phantoms[n];

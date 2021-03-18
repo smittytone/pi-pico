@@ -46,19 +46,19 @@ void move_phantoms() {
     uint8_t phantom_spawns = 0;
     for (uint8_t i = 0 ; i < game.phantoms ; ++i) {
         Phantom* p = &phantoms[i];
+        // Only move phantoms that are in the maze
         if (p->x != ERROR_CONDITION) {
             uint8_t old_x = p->x;
             uint8_t old_y = p->y;
             int8_t dx = p->x - player_x;
             int8_t dy = p->y - player_y;
 
-            if (p->rev == 0) {
-                // Make a standard move
-                // Caught the player?
+            if (p->back_steps == 0) {
+                // Make a standard move toward the player
+                // Has the phantom caught the player?
                 if (dx == 0 && dy == 0) {
                     game.in_play = false;
-                    death();
-                    break;
+                    return;
                 }
 
                 // Move the phantom in the x axis first
@@ -87,9 +87,9 @@ void move_phantoms() {
                     p->direction = dx > 0 ? DIRECTION_EAST : DIRECTION_WEST;
                 }
             } else {
-                // Make a non-standard move
-                int8_t dir = irandom(1, 4);
-                switch(dir) {
+                // Make a non-standard move in a random direction
+                int8_t direction = irandom(0, 4);
+                switch(direction) {
                     case 0:
                         if (p->y > 0 && get_square_contents(p->x, p->y - 1) != MAP_TILE_WALL) {
                             p->y -= 1;
@@ -111,47 +111,90 @@ void move_phantoms() {
                         }
                 }
 
-                // Decrement the number of backward movoes
-                --p->rev;
+                // Decrement the number of non-standard steps
+                --p->back_steps;
             }
 
             if (p->y == old_y && p->x == old_x) {
                 // Phantom can't move towards player so move elsewhere
-                // for 2-6 steps
-                p->rev = irandom(2, 5);
+                // for 4-9 steps
+                p->back_steps = irandom(4, 5);
             }
-        } else {
-            ++phantom_spawns;
+        }
+    }
+}
+
+
+void manage_phantoms() {
+    // Check whether we need to increase the number of phantoms
+    // on the board or increase their speed -- all caused by a
+    // level-up. We up the level if all the level's phantoms have
+    // been zapped
+    bool level_up = false;
+
+    if (game.level < MAX_PHANTOMS) {
+        if (game.level_kills == game.level) {
+            ++game.level;
+            level_up = true;
+            game.level_kills = 0;
+            ++game.phantoms;
+        }
+    } else {
+        if (game.level_kills == MAX_PHANTOMS) {
+            ++game.level;
+            level_up = true;
+            game.level_kills = 0;
         }
     }
 
-    uint8_t count = 0;
-    while (phantom_spawns > 0) {
-        // Generate more phantoms if we need to
-        Phantom* p = &phantoms[count];
-        if (p->x == ERROR_CONDITION) {
-            --phantom_spawns;
-            while (true) {
-                uint8_t x = irandom(0, 20);
-                uint8_t y = irandom(0, 20);
-                if (get_square_contents(x, y) == MAP_TILE_CLEAR) {
-                    p->x = x;
-                    p->y = y;
-                    p->hp = game.level;
-                    p->rev = 0;
-                    break;
-                }
-            }
-        }
+    // Just in case...
+    if (game.phantoms > MAX_PHANTOMS) game.phantoms = MAX_PHANTOMS;
 
-        ++count;
+    // Did we level-up? Is so, set the phantom movement speed
+    if (level_up) {
+        uint8_t index = (game.level - 1) * 4;
+        game.phantom_speed = ((PHANTOM_MOVE_TIME_US << level_data[index + 2]) >> level_data[index + 3]);
+    }
+
+    // Do we need to add any new phantoms to the board?
+    for (uint8_t i = 0 ; i < game.phantoms ; ++i) {
+        if (phantoms[i].x == ERROR_CONDITION) roll_new_phantom(i);
+    }
+}
+
+
+void roll_new_phantom(uint8_t phantom_index) {
+    // Generate a new phantom at the specified index of the
+    // 'phantoms' data array
+    if (phantom_index > MAX_PHANTOMS - 1) return;
+    Phantom *p = &phantoms[phantom_index];
+    uint8_t level_index = (game.level - 1) * 4;
+    uint8_t min = level_data[level_index];
+    uint8_t max = level_data[level_index + 1];
+    p->hp = irandom(min, max);
+    p->hp_max = p->hp;
+    p->back_steps = 0;
+    p->direction = 0;
+
+    // Place the phantom randomly at any empty
+    // square on the board
+    while (true) {
+        uint8_t x = irandom(0, 20);
+        uint8_t y = irandom(0, 20);
+        if (get_square_contents(x, y) == MAP_TILE_CLEAR && x != player_x && y != player_y) {
+            p->x = x;
+            p->y = y;
+            break;
+        }
     }
 }
 
 
 uint8_t get_facing_phantom(uint8_t range) {
     // Return the index of the closest facing phantom
-    // in the 'phantoms' array -- or ERROR_CONDITION
+    // in the 'phantoms' array -- or ERROR_CONDITION.
+    // 'range' is the number of squares we'll iterate
+    // over
     uint8_t phantom = ERROR_CONDITION;
 
     switch(player_direction) {
@@ -189,70 +232,49 @@ uint8_t get_facing_phantom(uint8_t range) {
 }
 
 
+uint8_t count_facing_phantom(uint8_t range) {
+    // Return the index of the closest facing phantom
+    // in the 'phantoms' array -- or ERROR_CONDITION.
+    // 'range' is the number of squares we'll iterate
+    // over
+    uint8_t count = 0;
+
+    switch(player_direction) {
+        case DIRECTION_NORTH:
+            if (player_y - range < 0) range = player_y;
+            for (uint8_t i = player_y ; i >= player_y - range ; --i) {
+                count += (locate_phantom(player_x, i) > 0 ? 1 : 0);
+            }
+            break;
+        case DIRECTION_EAST:
+            if (player_x + range > 19) range = 20 - player_x;
+            for (uint8_t i = player_x ; i < player_y + range ; ++i) {
+                count += (locate_phantom(player_x, i) > 0 ? 1 : 0);
+            }
+            break;
+        case DIRECTION_SOUTH:
+            if (player_y + range > 19) range = 20 - player_y;
+            for (uint8_t i = player_y ; i < player_y + range ; ++i) {
+                count += (locate_phantom(player_x, i) > 0 ? 1 : 0);
+            }
+            break;
+        default:
+            if (player_x - range < 0) range = player_x;
+            for (uint8_t i = player_x ; i >= player_x - range ; --i) {
+                count += (locate_phantom(player_x, i) > 0 ? 1 : 0);
+            }
+            break;
+    }
+
+    return count;
+}
+
+
 uint8_t locate_phantom(uint8_t x, uint8_t y) {
-    // Return index of the phantom at (x,y) -- or ERROR_CONDITION
-    for (uint8_t i = 0 ; i < game.phantoms ; i++) {
-        Phantom p = phantoms[i];
-        if (x == p.x && y == p.y) return i;
+    // Return the index of the phantom at (x,y) -- or ERROR_CONDITION
+    // of there is no phantom at that location
+    for (uint8_t i = 0 ; i < game.phantoms ; ++i) {
+        if (x == phantoms[i].x && y == phantoms[i].y) return i;
     }
     return ERROR_CONDITION;
-}
-
-
-void manage_phantoms() {
-    
-    bool level_up = false;
-    
-    if (game.level < MAX_PHANTOMS) {
-        if (game.level_kills == game.level) {
-            ++game.level;
-            level_up = true;
-            game.level_kills = 0;
-            ++game.phantoms;
-        }
-    } else {
-        if (game.level_kills == MAX_PHANTOMS) {
-            ++game.level;
-            game.level_kills = 0;
-            level_up = true;
-        }
-    }
-    
-    if (game.phantoms > MAX_PHANTOMS) game.phantoms = MAX_PHANTOMS;
-    
-    if (level_up) {
-        uint8_t index = (game.level - 1) * 4;
-        game.phantom_speed = ((PHANTOM_MOVE_TIME_US << level_data[index + 2]) >> level_data[index + 3]);
-    }
-    
-    // Do we need to roll a phantom?
-    for (uint8_t i = 0 ; i < game.phantoms ; ++i) {
-        Phantom *p = &phantoms[i];
-        if (i < game.level && p->x == ERROR_CONDITION) {
-            roll_new_phantom(i);
-        }
-    }
-}
-
-void roll_new_phantom(uint8_t phantom_index) {
-    
-    if (phantom_index > 2) return;
-    Phantom *p = &phantoms[phantom_index];
-    uint8_t index = (game.level - 1) * 4;
-    uint8_t min = level_data[index];
-    uint8_t max = level_data[index + 1];
-    p->hp = irandom(min, max);
-    p->hits = p->hp;
-    p->rev = 0;
-    p->direction = 0;
-
-    while (true) {
-        uint8_t x = irandom(0, 20);
-        uint8_t y = irandom(0, 20);
-        if (get_square_contents(x, y) == MAP_TILE_CLEAR && x != player_x && y != player_y) {
-            p->x = x;
-            p->y = y;
-            break;
-        }
-    }
 }

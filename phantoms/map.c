@@ -112,7 +112,10 @@ void map_init() {
 
 void show_map(uint8_t y_delta, bool show_entities) {
     // Draw the current map on the screen buffer, centred but
-    // vertically adjusted according to 'y_delta'
+    // vertically adjusted according to 'y_delta'. If 'show_entities'
+    // is true, the player and phantom locations are plotted in.
+    // NOTE With the map now drawn on 3x3 blocks, 'y_delta'
+    //      has s very limited range of useable values
 
     // Put a Box around the map
     ssd1306_rect(32, 0 + y_delta, 64, 64, 1, false);
@@ -139,6 +142,7 @@ void show_map(uint8_t y_delta, bool show_entities) {
                 ssd1306_plot(x + j * 3 + 2, y + i * 3 + 2, 1);
             }
 
+            // Show the teleport square
             if (pixel == MAP_TILE_TELEPORTER) {
                 ssd1306_plot(x + j * 3 + 1, y + i * 3, 0);
                 ssd1306_plot(x + j * 3,     y + i * 3 + 1, 0);
@@ -147,12 +151,14 @@ void show_map(uint8_t y_delta, bool show_entities) {
             }
 
             if (show_entities) {
+                // Show the player at the current square
                 if (j == player_x && i == player_y) {
                     ssd1306_plot(x + j * 3,     y + i * 3 + 1, 0);
                     ssd1306_plot(x + j * 3 + 1, y + i * 3 + 1, 0);
                     ssd1306_plot(x + j * 3 + 2, y + i * 3 + 1, 0);
                 }
 
+                // Show any phantoms at the current square
                 for (uint8_t k = 0 ; k < game.phantoms; ++k) {
                     if (j == phantoms[k].x && i == phantoms[k].y) {
                         ssd1306_plot(x + j * 3 + 1, y + i * 3, 0);
@@ -167,8 +173,7 @@ void show_map(uint8_t y_delta, bool show_entities) {
 
 
 uint8_t get_square_contents(uint8_t x, uint8_t y) {
-    // Return the contents of the current map
-    // specified grid reference
+    // Return the contents of the specified grid reference
     if (x > 19 || y > 19) return MAP_TILE_WALL;
     char *line = current_map[y];
     return line[x];
@@ -176,8 +181,8 @@ uint8_t get_square_contents(uint8_t x, uint8_t y) {
 
 
 bool set_square_contents(uint8_t x, uint8_t y, uint8_t value) {
-    // Return the contents of the current map specified
-    // grid reference and return true, otherwise false
+    // Set the contents of the specified grid reference,
+    // and return true, otherwise false on error
     if (x > 19 || y > 19) return false;
     char *line = current_map[y];
     line[x] = value;
@@ -186,14 +191,16 @@ bool set_square_contents(uint8_t x, uint8_t y, uint8_t value) {
 
 
 uint8_t get_view_distance(uint8_t x, uint8_t y, uint8_t direction) {
-    // Return the number of square the player can see
+    // Return the number of squares the player (at x,y) can see
     // ahead of them in the direction they are facing
     uint8_t count = 0;
-    if (x > 19 || y > 19 || direction > 3) return count;
+    if (x == 0 && direction == DIRECTION_WEST) return count;
+    if (x > 18 && direction == DIRECTION_EAST) return count;
+    if (y == 0 && direction == DIRECTION_NORTH) return count;
+    if (y > 18 && direction == DIRECTION_SOUTH) return count;
 
     switch(direction) {
         case DIRECTION_NORTH:
-            if (y == 0) return count;
             for (uint8_t i = y - 1 ; i >= 0 ; --i) {
                 if (get_square_contents(x, i) != MAP_TILE_WALL) {
                     count++;
@@ -221,7 +228,6 @@ uint8_t get_view_distance(uint8_t x, uint8_t y, uint8_t direction) {
             }
             break;
         default:
-            if (x == 0) return count;
             for (uint8_t i = x - 1 ; i >= 0 ; --i) {
                 if (get_square_contents(i, y) != MAP_TILE_WALL) {
                     count++;
@@ -231,6 +237,6 @@ uint8_t get_view_distance(uint8_t x, uint8_t y, uint8_t direction) {
             }
     }
 
-    if (count > 5) count = 5;
+    if (count > MAX_VIEW_RANGE) count = MAX_VIEW_RANGE;
     return count;
 }

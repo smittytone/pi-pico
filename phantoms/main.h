@@ -44,9 +44,9 @@ typedef struct {
     uint8_t x;
     uint8_t y;
     uint8_t hp;
-    uint8_t hits;
+    uint8_t hp_max;
     uint8_t direction;
-    uint8_t rev;
+    uint8_t back_steps;
 } Phantom;
 
 typedef struct {
@@ -144,7 +144,7 @@ void tone(unsigned int frequency, unsigned long duration, unsigned long post);
 #define MAP_TILE_WALL                                   0xEE
 #define MAP_TILE_CLEAR                                  0xFF
 #define MAP_TILE_TELEPORTER                             0xAA
-#define MAX_VIEW_RANGE                                  6
+#define MAX_VIEW_RANGE                                  5
 
 #define MAX_PHANTOMS                                    3
 #define ERROR_CONDITION                                 99
