@@ -447,9 +447,10 @@ void ssd1306_text(int8_t x, int8_t y, const char *the_string, bool do_wrap, bool
                 col_1_right = ssd1306_text_stretch(col_1);
                 col_1_left = col_1_right;
 
-                for (uint8_t a = 6 ; a >= 0 ; --a) {
+                for (int8_t a = 6 ; a >= 0 ; --a) {
+                    printf("ss");
                     for (uint8_t b = 1 ; b < 3 ; b++) {
-                        if ((col_0 >> a & 3 == 3 - b) && (col_1 >> a & 3 == b)) {
+                        if ((((col_0 >> a) & 3) == 3 - b) && (((col_1 >> a) & 3) == b)) {
                             col_0_right |= (1 << ((a * 2) + b));
                             col_1_left |= (1 << ((a * 2) + 3 - b));
                         }
@@ -542,11 +543,11 @@ uint8_t ssd1306_text_flip(uint8_t value) {
 
 uint16_t ssd1306_text_stretch(uint8_t x) {
     // Pixel-doubles an 8-bit value to 16 bits
-    x = (x & 0xF0) << 4 | (x & 0x0F);
-    x = (x << 2 | x) & 0x3333;
-    x = (x << 1 | x) & 0x5555;
-    x = x | x << 1;
-    return x;
+    uint16_t v = (x & 0xF0) << 4 | (x & 0x0F);
+    v = (v << 2 | v) & 0x3333;
+    v = (v << 1 | v) & 0x5555;
+    v |= (v << 1);
+    return v;
 }
 
 

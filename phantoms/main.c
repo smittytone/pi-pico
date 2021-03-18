@@ -107,9 +107,9 @@ void init_phantoms() {
         p->x = ERROR_CONDITION;
         p->y = ERROR_CONDITION;
         p->hp = 1;
-        p->hits = 1;
+        p->hp_max = 1;
         p->direction = 0;
-        p->rev = false;
+        p->back_steps = false;
     }
 }
 
@@ -374,10 +374,17 @@ void update_world(uint32_t now) {
         }
 
         if (game.show_reticule) {
-            ssd1306_rect(64, 26, 2, 5, 1, false);
-            ssd1306_rect(64, 33, 2, 5, 1, false);
-            ssd1306_rect(58, 32, 5, 2, 1, false);
-            ssd1306_rect(65, 32, 5, 2, 1, false);
+            // White outline
+            ssd1306_rect(62, 24, 4, 7, 0, false);
+            ssd1306_rect(62, 33, 4, 7, 0, false);
+            ssd1306_rect(55, 30, 7, 4, 0, false);
+            ssd1306_rect(66, 30, 7, 4, 0, false);
+
+            // Black cross
+            ssd1306_rect(63, 25, 2, 5, 1, false);
+            ssd1306_rect(63, 34, 2, 5, 1, false);
+            ssd1306_rect(56, 31, 5, 2, 1, false);
+            ssd1306_rect(67, 31, 5, 2, 1, false);
         }
 
         ssd1306_draw();
@@ -480,7 +487,7 @@ void fire_laser() {
             // One dead phantom
             p->x = ERROR_CONDITION;
             p->y = ERROR_CONDITION;
-            game.level_score += p->hits;
+            game.level_score += p->hp_max;
             ++game.level_kills;
 
             // Briefly invert the screen
@@ -513,19 +520,19 @@ void death() {
     ssd1306_text(0, 16, "KILLED", false, false);
 
     // Show the score
-    char score_string[5] = "00000";
+    char score_string[5] = "000";
     ssd1306_text(98, 0, "SCORE", false, false);
     sprintf(score_string, "%d", game.level_score);
-    ssd1306_text(98, 8, score_string, false, false);
+    ssd1306_text(98, 8, score_string, false, true);
 
     /// Show the high score
     ssd1306_text(98, 24, "HIGH", false, false);
     ssd1306_text(98, 32, "SCORE", false, false);
 
     if (high_score < game.level_score) high_score = game.level_score;
-    sprintf(score_string, "00000");
+    sprintf(score_string, "000");
     sprintf(score_string, "%d", high_score);
-    ssd1306_text(98, 40, score_string, false, false);
+    ssd1306_text(98, 40, score_string, false, true);
 
     ssd1306_text(0, 40, "PRESS", false, false);
     ssd1306_text(0, 48, "ANY", false, false);
@@ -654,23 +661,23 @@ int main() {
     // Play the game
     while (1) {
         // Start a new game
-        //play_intro();
+        play_intro();
 
         // Set up the environment, once per game
         init_game();
         create_world();
 
         // Clear the screen and present the current map
-        char count_string[5] = "0";
+        char count_string[2] = "00";
         for (uint8_t i = 5 ; i > 0 ; --i) {
             ssd1306_clear();
             ssd1306_text(13, 0, "NEW", false, false);
             ssd1306_text(7, 8, "GAME", false, false);
             ssd1306_text(98, 0, "LEVEL", false, false);
-            ssd1306_text(98, 8, "ONE", false, false);
+            ssd1306_text(108, 8, "1", false, true);
 
             sprintf(count_string, "%d", i);
-            ssd1306_text(0, 48, count_string, false, false);
+            ssd1306_text(10, 48, count_string, false, true);
 
             show_map(0, false);
             ssd1306_draw();

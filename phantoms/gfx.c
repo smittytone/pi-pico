@@ -215,8 +215,8 @@ void draw_right_wall(uint8_t frame_index, bool is_open) {
 void draw_far_wall(uint8_t squares) {
     // Draw the wall facing the viewer, or for long distances,
     // an 'infinity' view
-    if (squares > MAX_VIEW_RANGE) return;
-    Rect i = rects[squares > MAX_VIEW_RANGE - 2 ? MAX_VIEW_RANGE : squares + 1];
+    //if (squares > MAX_VIEW_RANGE + 1) return;
+    Rect i = rects[squares >= MAX_VIEW_RANGE ? MAX_VIEW_RANGE + 1 : squares + 1];
     ssd1306_rect(i.origin_x, i.origin_y, i.width, i.height, 1, true);
 }
 
