@@ -17,7 +17,6 @@
 // I2C Functions
 void     i2c_write_byte(uint8_t byte);
 void     i2c_write_block(uint8_t *data, uint16_t count);
-void     i2c_write_partial_block(uint8_t *data, uint16_t count, bool do_continue);
 
 // Display Primary Functions
 void     ssd1306_init(uint8_t pixel_width, uint8_t pixel_height);

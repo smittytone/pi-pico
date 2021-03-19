@@ -13,103 +13,103 @@
 /*
  * Ascii Text Character Set
  */
-const char CHARSET[128][5] = {
-    "\x00\x00",              // space - Ascii 32
-    "\x5F",                  // !
-    "\xc0\x00\xc0",          // "
-    "\x24\x7e\x24\x7e\x24",  // #
-    "\x24\xd4\x56\x48",      // $
-    "\xc6\xc8\x10\x26\xc6",  // %
-    "\x6c\x92\x6a\x04\x0a",  // &
-    "\xc0",                  // '
-    "\x7c\x82",              // (
-    "\x82\x7c",              // )
-    "\x10\x7c\x38\x7c\x10",  // *
-    "\x10\x10\x7c\x10\x10",  // +
-    "\x06\x07",              // ,
-    "\x10\x10\x10\x10",      // -
-    "\x06\x06",              // .
-    "\x04\x08\x10\x20\x40",  // /
-    "\x7C\x8A\x92\xA2\x7C",  // 0 - Ascii 48
-    "\x42\xFE\x02",          // 1
-    "\x46\x8A\x92\x92\x62",  // 2
-    "\x44\x92\x92\x92\x6C",  // 3
-    "\x18\x28\x48\xFE\x08",  // 4
-    "\xF4\x92\x92\x92\x8C",  // 5
-    "\x3C\x52\x92\x92\x8C",  // 6
-    "\x80\x8E\x90\xA0\xC0",  // 7
-    "\x6C\x92\x92\x92\x6C",  // 8
-    "\x60\x92\x92\x94\x78",  // 9
-    "\x36\x36",              // : - Ascii 58
-    "\x36\x37",              //
-    "\x10\x28\x44\x82",      // <
-    "\x24\x24\x24\x24\x24",  // =
-    "\x82\x44\x28\x10",      // >
-    "\x60\x80\x9a\x90\x60",  // ?
-    "\x7c\x82\xba\xaa\x78",  // @
-    "\x7e\x90\x90\x90\x7e",  // A - Ascii 65
-    "\xfe\x92\x92\x92\x6c",  // B
-    "\x7c\x82\x82\x82\x44",  // C
-    "\xfe\x82\x82\x82\x7c",  // D
-    "\xfe\x92\x92\x92\x82",  // E
-    "\xfe\x90\x90\x90\x80",  // F
-    "\x7c\x82\x92\x92\x5c",  // G
-    "\xfe\x10\x10\x10\xfe",  // H
-    "\x82\xfe\x82",          // I
-    "\x0c\x02\x02\x02\xfc",  // J
-    "\xfe\x10\x28\x44\x82",  // K
-    "\xfe\x02\x02\x02",      // L
-    "\xfe\x40\x20\x40\xfe",  // M
-    "\xfe\x40\x20\x10\xfe",  // N
-    "\x7c\x82\x82\x82\x7c",  // O
-    "\xfe\x90\x90\x90\x60",  // P
-    "\x7c\x82\x92\x8c\x7a",  // Q
-    "\xfe\x90\x90\x98\x66",  // R
-    "\x64\x92\x92\x92\x4c",  // S
-    "\x80\x80\xfe\x80\x80",  // T
-    "\xfc\x02\x02\x02\xfc",  // U
-    "\xf8\x04\x02\x04\xf8",  // V
-    "\xfc\x02\x3c\x02\xfc",  // W
-    "\xc6\x28\x10\x28\xc6",  // X
-    "\xe0\x10\x0e\x10\xe0",  // Y
-    "\x86\x8a\x92\xa2\xc2",  // Z - Ascii 90
-    "\xfe\x82\x82",          // [
-    "\x40\x20\x10\x08\x04",  // forward slash
-    "\x82\x82\xfe",          // ]
-    "\x20\x40\x80\x40\x20",  // ^
-    "\x02\x02\x02\x02\x02",  // _
-    "\xc0\xe0",              // '
-    "\x04\x2a\x2a\x1e",      // a - Ascii 97
-    "\xfe\x22\x22\x1c",      // b
-    "\x1c\x22\x22\x22",      // c
-    "\x1c\x22\x22\xfc",      // d
-    "\x1c\x2a\x2a\x10",      // e
-    "\x10\x7e\x90\x80",      // f
-    "\x18\x25\x25\x3e",      // g
-    "\xfe\x20\x20\x1e",      // h
-    "\xbc\x02",              // i
-    "\x02\x01\x21\xbe",      // j
-    "\xfe\x08\x14\x22",      // k
-    "\xfc\x02",              // l
-    "\x3e\x20\x18\x20\x1e",  // m
-    "\x3e\x20\x20\x1e",     // n
-    "\x1c\x22\x22\x1c",      // o
-    "\x3f\x22\x22\x1c",      // p
-    "\x1c\x22\x22\x3f",      // q
-    "\x22\x1e\x20\x10",      // r
-    "\x12\x2a\x2a\x04",      // s
-    "\x20\x7c\x22\x04",      // t
-    "\x3c\x02\x02\x3e",      // u
-    "\x38\x04\x02\x04\x38",  // v
-    "\x3c\x06\x0c\x06\x3c",  // w
-    "\x22\x14\x08\x14\x22",  // x
-    "\x39\x05\x06\x3c",      // y
-    "\x26\x2a\x2a\x32",      // z - Ascii 122
-    "\x10\x7c\x82\x82",      //
-    "\xee",                  // |
-    "\x82\x82\x7c\x10",      //
-    "\x40\x80\x40\x80",      // ~
-    "\x60\x90\x90\x60"       // Degrees sign - Ascii 127
+const char CHARSET[128][6] = {
+    "\x02x00\x00",              // space - Ascii 32
+    "\x01\x5F",                  // !
+    "\x03\xc0\x00\xc0",          // "
+    "\x05\x24\x7e\x24\x7e\x24",  // #
+    "\x04\x24\xd4\x56\x48",      // $
+    "\x05\xc6\xc8\x10\x26\xc6",  // %
+    "\x05\x6c\x92\x6a\x04\x0a",  // &
+    "\x01\xc0",                  // '
+    "\x02\x7c\x82",              // (
+    "\x02\x82\x7c",              // )
+    "\x05\x10\x7c\x38\x7c\x10",  // *
+    "\x05\x10\x10\x7c\x10\x10",  // +
+    "\x02\x06\x07",              // ,
+    "\x04\x10\x10\x10\x10",      // -
+    "\x02\x06\x06",              // .
+    "\x05\x04\x08\x10\x20\x40",  // /
+    "\x05\x7C\x8A\x92\xA2\x7C",  // 0 - Ascii 48
+    "\x03\x42\xFE\x02",          // 1
+    "\x05\x46\x8A\x92\x92\x62",  // 2
+    "\x05\x44\x92\x92\x92\x6C",  // 3
+    "\x05\x18\x28\x48\xFE\x08",  // 4
+    "\x05\xF4\x92\x92\x92\x8C",  // 5
+    "\x05\x3C\x52\x92\x92\x8C",  // 6
+    "\x05\x80\x8E\x90\xA0\xC0",  // 7
+    "\x05\x6C\x92\x92\x92\x6C",  // 8
+    "\x05\x60\x92\x92\x94\x78",  // 9
+    "\x02\x36\x36",              // : - Ascii 58
+    "\x02\x36\x37",              //
+    "\x04\x10\x28\x44\x82",      // <
+    "\x05\x24\x24\x24\x24\x24",  // =
+    "\x04\x82\x44\x28\x10",      // >
+    "\x05\x60\x80\x9a\x90\x60",  // ?
+    "\x05\x7c\x82\xba\xaa\x78",  // @
+    "\x05\x7e\x90\x90\x90\x7e",  // A - Ascii 65
+    "\x05\xfe\x92\x92\x92\x6c",  // B
+    "\x05\x7c\x82\x82\x82\x44",  // C
+    "\x05\xfe\x82\x82\x82\x7c",  // D
+    "\x05\xfe\x92\x92\x92\x82",  // E
+    "\x05\xfe\x90\x90\x90\x80",  // F
+    "\x05\x7c\x82\x92\x92\x5c",  // G
+    "\x05\xfe\x10\x10\x10\xfe",  // H
+    "\x03\x82\xfe\x82",          // I
+    "\x05\x0c\x02\x02\x02\xfc",  // J
+    "\x05\xfe\x10\x28\x44\x82",  // K
+    "\x04\xfe\x02\x02\x02",      // L
+    "\x05\xfe\x40\x20\x40\xfe",  // M
+    "\x05\xfe\x40\x20\x10\xfe",  // N
+    "\x05\x7c\x82\x82\x82\x7c",  // O
+    "\x05\xfe\x90\x90\x90\x60",  // P
+    "\x05\x7c\x82\x92\x8c\x7a",  // Q
+    "\x05\xfe\x90\x90\x98\x66",  // R
+    "\x05\x64\x92\x92\x92\x4c",  // S
+    "\x05\x80\x80\xfe\x80\x80",  // T
+    "\x05\xfc\x02\x02\x02\xfc",  // U
+    "\x05\xf8\x04\x02\x04\xf8",  // V
+    "\x05\xfc\x02\x3c\x02\xfc",  // W
+    "\x05\xc6\x28\x10\x28\xc6",  // X
+    "\x05\xe0\x10\x0e\x10\xe0",  // Y
+    "\x05\x86\x8a\x92\xa2\xc2",  // Z - Ascii 90
+    "\x03\xfe\x82\x82",          // [
+    "\x05\x40\x20\x10\x08\x04",  // forward slash
+    "\x03\x82\x82\xfe",          // ]
+    "\x05\x20\x40\x80\x40\x20",  // ^
+    "\x05\x02\x02\x02\x02\x02",  // _
+    "\x02\xc0\xe0",              // '
+    "\x04\x04\x2a\x2a\x1e",      // a - Ascii 97
+    "\x04\xfe\x22\x22\x1c",      // b
+    "\x04\x1c\x22\x22\x22",      // c
+    "\x04\x1c\x22\x22\xfc",      // d
+    "\x04\x1c\x2a\x2a\x10",      // e
+    "\x04\x10\x7e\x90\x80",      // f
+    "\x04\x18\x25\x25\x3e",      // g
+    "\x04\xfe\x20\x20\x1e",      // h
+    "\x02\xbc\x02",              // i
+    "\x04\x02\x01\x21\xbe",      // j
+    "\x04\xfe\x08\x14\x22",      // k
+    "\x02\xfc\x02",              // l
+    "\x05\x3e\x20\x18\x20\x1e",  // m
+    "\x04\x3e\x20\x20\x1e",     // n
+    "\x04\x1c\x22\x22\x1c",      // o
+    "\x04\x3f\x22\x22\x1c",      // p
+    "\x04\x1c\x22\x22\x3f",      // q
+    "\x04\x22\x1e\x20\x10",      // r
+    "\x04\x12\x2a\x2a\x04",      // s
+    "\x04\x20\x7c\x22\x04",      // t
+    "\x04\x3c\x02\x02\x3e",      // u
+    "\x05\x38\x04\x02\x04\x38",  // v
+    "\x05\x3c\x06\x0c\x06\x3c",  // w
+    "\x05\x22\x14\x08\x14\x22",  // x
+    "\x04\x39\x05\x06\x3c",      // y
+    "\x04\x26\x2a\x2a\x32",      // z - Ascii 122
+    "\x04\x10\x7c\x82\x82",      //
+    "\x01\xee",                  // |
+    "\x04\x82\x82\x7c\x10",      //
+    "\x04\x40\x80\x40\x80",      // ~
+    "\x04\x60\x90\x90\x60"       // Degrees sign - Ascii 127
 };
 
 
@@ -153,13 +153,6 @@ void i2c_write_byte(uint8_t byte) {
 void i2c_write_block(uint8_t *data, uint16_t count) {
     // Convenience function to write 'count' bytes to the matrix
     uint16_t r = i2c_write_blocking(I2C_PORT, oled_i2c_addr, data, count, false);
-    if (r != count) printf("(I2C err: %i", r);
-}
-
-
-void i2c_write_partial_block(uint8_t *data, uint16_t count, bool do_continue) {
-    // Convenience function to write 'count' bytes to the matrix
-    uint16_t r = i2c_write_blocking(I2C_PORT, oled_i2c_addr, data, count, do_continue);
     if (r != count) printf("(I2C err: %i", r);
 }
 
@@ -281,7 +274,7 @@ void ssd1306_plot(uint8_t x, uint8_t y, uint8_t colour) {
     // Plot a pixel of the specified colour (1 or 0) at (x,y)
     // Get the buffer byte holding the pixel
     uint16_t byte_index = ssd1306_coords_to_index(x, y);
-    uint8_t value = oled_buffer[byte_index];
+    uint8_t value = draw_buffer[byte_index];
 
     if ((x > oled_width - 1) || (y > oled_height - 1)) return;
 
@@ -297,7 +290,7 @@ void ssd1306_plot(uint8_t x, uint8_t y, uint8_t colour) {
     }
 
     // Write the altered byte back to the buffer
-    oled_buffer[byte_index] = value;
+    draw_buffer[byte_index] = value;
 }
 
 
@@ -409,15 +402,14 @@ void ssd1306_text(int8_t x, int8_t y, const char *the_string, bool do_wrap, bool
 
     for (size_t i = 0 ; i < strlen(the_string) ; ++i) {
         uint8_t asc_val = the_string[i] - 32;
-        size_t s = sizeof(CHARSET[asc_val]);
-        size_t glyph_len = s + 1;
+        ssize_t glyph_len = CHARSET[asc_val][0] + 1;
 
         char glyph[6];
         for (size_t j = 0 ; j < glyph_len ; ++j) {
             if (j == glyph_len - 1) {
                 glyph[j] = 0x00;
             } else {
-                glyph[j] = CHARSET[asc_val][j];
+                glyph[j] = CHARSET[asc_val][j + 1];
             }
         }
 
@@ -506,14 +498,14 @@ void ssd1306_clear() {
     // Clear the buffer
     // NOTE Array's first byte is the command indicator
     for (uint16_t i = 0 ; i < oled_buffer_size; i++) {
-        oled_buffer[i] = 0x00;
+        draw_buffer[i] = 0x00;
     }
 }
 
 
 void ssd1306_draw() {
     // Write the buffer out to the display
-    ssd1306_write(false, oled_buffer, oled_buffer_size);
+    ssd1306_write(false, draw_buffer, oled_buffer_size);
 }
 
 
@@ -563,5 +555,5 @@ void ssd1306_char_plot(int8_t x, int8_t y, uint8_t char_bit, uint16_t char_byte,
     if (x < 0 || x >= oled_width) return;
     if (y + char_bit < 0 || y + char_bit >= oled_height) return;
     uint16_t byte = ssd1306_coords_to_index(x, y + char_bit);
-    if ((char_byte & (1 << char_bit)) != 0) oled_buffer[byte]  |= (1 << byte_bit);
+    if ((char_byte & (1 << char_bit)) != 0) draw_buffer[byte]  |= (1 << byte_bit);
 }

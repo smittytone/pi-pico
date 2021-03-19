@@ -46,7 +46,7 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
             phantom_count = count_facing_phantoms(MAX_VIEW_RANGE);
             if (phantom_count > 0) {
                 for (uint8_t i = y ; i > y - squares ; --i) {
-                    draw_phantom(x, i, y - i);
+                    draw_phantom(x, i, y - i, &phantom_count);
                 }
             }
 
@@ -62,7 +62,7 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
             phantom_count = count_facing_phantoms(MAX_VIEW_RANGE);
             if (phantom_count > 0) {
                 for (uint8_t i = x ; i < x + squares ; ++i) {
-                    draw_phantom(i, y, i - x);
+                    draw_phantom(i, y, i - x, &phantom_count);
                 }
             }
 
@@ -78,7 +78,7 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
             phantom_count = count_facing_phantoms(MAX_VIEW_RANGE);
             if (phantom_count > 0) {
                 for (uint8_t i = y ; i < y + squares ; ++i) {
-                    draw_phantom(x, i, i - y);
+                    draw_phantom(x, i, i - y, &phantom_count);
                 }
             }
 
@@ -94,7 +94,7 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
             phantom_count = count_facing_phantoms(MAX_VIEW_RANGE);
             if (phantom_count > 0) {
                 for (uint8_t i = x ; i > x - squares ; --i) {
-                    draw_phantom(i, y, x - i);
+                    draw_phantom(i, y, x - i, &phantom_count);
                 }
             }
 
@@ -109,7 +109,7 @@ bool draw_section(uint8_t x, uint8_t y, uint8_t left, uint8_t right, uint8_t squ
     // 'false' otherwise
 
     // Is the square a teleporter?
-    if (get_square_contents(x, y) == MAP_TILE_TELEPORTER) {
+    if (x == game.tele_x && y == game.tele_y) {
         draw_teleporter(squares);
     }
 
@@ -234,27 +234,30 @@ void draw_far_wall(uint8_t squares) {
 }
 
 
-void draw_phantom(uint8_t x, uint8_t y, uint8_t frame_index) {
+void draw_phantom(uint8_t x, uint8_t y, uint8_t frame_index, uint8_t *count) {
     // If there is a phantom at (x, y)? If so, draw it
     // TODO Allow an x-axis shift so that multiple phantoms
     //      (three max) appear side by side
     if (locate_phantom(x, y) != ERROR_CONDITION) {
         Rect r = rects[frame_index];
+        uint8_t dx = 0;
 
         // Body
         ssd1306_rect(58, r.origin_y + 3, 12, r.height - 3, 1, false);
         ssd1306_rect(59, r.origin_y + 4, 10, r.height - 5, 0, true);
 
         // Face
-        ssd1306_rect(61, r.origin_y + 5, 6, 6, 1, true);
+        ssd1306_rect(61, r.origin_y + 5, 6, 7 - frame_index, 1, true);
 
-        // Left Side
-        ssd1306_line(58, r.origin_y + 11, 58, r.height - 8, 0, 1);
-        ssd1306_line(57, r.origin_y + 11, 57, r.height - 8, 1, 1);
+        if (frame_index < 5) {
+            // Left Side
+            ssd1306_line(58, r.origin_y + 11, 58, r.origin_y + r.height - 8, 0, 1);
+            ssd1306_line(57, r.origin_y + 11, 57, r.origin_y + r.height - 8, 1, 1);
 
-        // Right Side
-        ssd1306_line(69, r.origin_y + 11, 69, r.height - 8, 0, 1);
-        ssd1306_line(70, r.origin_y + 11, 70, r.height - 8, 1, 1);
+            // Right Side
+            ssd1306_line(69, r.origin_y + 11, 69, r.origin_y + r.height - 8, 0, 1);
+            ssd1306_line(70, r.origin_y + 11, 70, r.origin_y + r.height - 8, 1, 1);
+        }
 
         // Cowl top
         ssd1306_line(60, r.origin_y + 3, 68, r.origin_y + 2, 0, 1);
@@ -268,22 +271,41 @@ void draw_phantom(uint8_t x, uint8_t y, uint8_t frame_index) {
 void animate_turn(bool is_left) {
     // Animate slide (left or right) from the current view
     // to a pre-rendered side-view buffer
-    for (uint8_t n = 1 ; n < 128 ; ++n) {
-        // Send a frame: run through the rows
+
+    // Draw the side view - the view the player will see next -
+    // to the side buffer
+    draw_buffer = &side_buffer[0];
+    ssd1306_clear();
+    draw_screen(player_x, player_y, player_direction);
+
+    // Set the drawing buffer to the temp view
+    draw_buffer = &temp_buffer[0];
+
+    // Slide across from the current view (in 'oled_buffer')
+    // to the next view (in 'side_buffer') by copying the
+    // key segments to the temporary buffer (the current drawing buffer)
+    for (uint8_t n = 1 ; n < 128 ; n += 16) {
+        // Draw row by row
         for (uint8_t y = 0 ; y < 8 ; ++y) {
             // Write out a line of left-buffer bytes followed by
             // some right-buffer bytes
             if (is_left) {
-                i2c_write_partial_block(&side_buffer[y * 8 + 128 - n], n, true);
-                i2c_write_partial_block(&oled_buffer[y * 8], 128 - n, false);
+                memcpy(&temp_buffer[y << 7], &side_buffer[(y << 7) + 128 - n], n);
+                memcpy(&temp_buffer[(y << 7) + n], &oled_buffer[y << 7], 128 - n);
             } else {
-                for (uint8_t x = n ; x < 128 ; ++x) {
-                i2c_write_partial_block(&oled_buffer[y * 8 + n], 128 - n, true);
-                i2c_write_partial_block(&side_buffer[y * 8], n, false);
+                memcpy(&temp_buffer[y << 7], &oled_buffer[y * 128 + n], 128 - n);
+                memcpy(&temp_buffer[(y << 7) + 127 - n], &side_buffer[y << 7], n);
             }
         }
 
+        // Present the animation frame
+        // NOTE takes approx. 20.5ms
+        ssd1306_draw();
+
         // Pause between frames
-        sleep_ms(10);
+        //sleep_ms(10);
     }
+
+    // Set the drawing buffer back to the main buffer
+    draw_buffer = &oled_buffer[0];
 }

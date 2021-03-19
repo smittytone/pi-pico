@@ -6,10 +6,11 @@ project(phantoms VERSION 1.0.0)
 
 add_executable(phantoms
     main.c
-    map.c
-    ssd1306.c
+    audio.c
     gfx.c
+    map.c
     phantoms.c
+    ssd1306.c
 )
 
 pico_sdk_init()

@@ -59,13 +59,13 @@ void setup() {
 
     // Make the graphic frame rects
     // NOTE These are pixel values
-    uint8_t coords[] = {0,0,128,64,
+    uint8_t coords[] = {0,0,128,64,     // Outer LED frame
                         11,5,106,54,
                         24,10,80,44,
                         36,15,56,34,
                         47,20,34,24,
                         55,25,18,14,
-                        61,27,6,10};
+                        61,27,6,10};    // 'End wall' for distant views
 
     for (uint8_t i = 0 ; i < sizeof(coords) ; i += 4) {
         Rect a_rect;
@@ -75,6 +75,8 @@ void setup() {
         a_rect.height = coords[i + 3];
         rects[i >> 2] = a_rect;
     }
+
+    draw_buffer = &oled_buffer[0];
 }
 
 
@@ -92,8 +94,10 @@ void init_game() {
     game.zap_time = 0;
     game.debounce_count_press = 0;
     game.debounce_count_release = 0;
-    game.tele_x = ERROR_CONDITION;
-    game.tele_y = ERROR_CONDITION;
+    game.tele_x = 0;
+    game.tele_y = 0;
+    game.start_x = 0;
+    game.start_y = 0;
     game.phantom_speed = PHANTOM_MOVE_TIME_US << 1;
 
     chase_mode = false;
@@ -177,7 +181,8 @@ void create_world() {
         }
 
         if (get_square_contents(x, y) == MAP_TILE_CLEAR) {
-            set_square_contents(x, y, MAP_TILE_TELEPORTER);
+            game.tele_x = x;
+            game.tele_y = y;
             break;
         }
     }
@@ -195,8 +200,8 @@ void create_world() {
     player_x = x;
     player_y = y;
     player_direction = irandom(0, 4);
-    game.tele_x = x;
-    game.tele_y = y;
+    game.start_x = x;
+    game.start_y = y;
 }
 
 
@@ -233,17 +238,24 @@ void game_loop() {
                 if (player_direction == DIRECTION_WEST) nx += (dir == MOVE_FORWARD ? -1 : 1);
 
                 if (ny < 20 && nx < 20 && get_square_contents(nx, ny) != MAP_TILE_WALL) {
-                    player_x = nx;
-                    player_y = ny;
+                    // Has the player walked into a Phantom?
+                    if (locate_phantom(nx, ny) != ERROR_CONDITION) {
+                        is_dead = true;
+                    } else {
+                        player_x = nx;
+                        player_y = ny;
+                    }
                 }
             } else if (dir == TURN_RIGHT) {
                 // Turn player right
                 ++player_direction;
                 if (player_direction > DIRECTION_WEST) player_direction = DIRECTION_NORTH;
+                animate_turn(false);
             } else if (dir == TURN_LEFT) {
                 // Turn player left
                 --player_direction;
                 if (player_direction > DIRECTION_WEST) player_direction = DIRECTION_WEST;
+                animate_turn(true);
             }
         }
 
@@ -284,14 +296,16 @@ void game_loop() {
         if (gpio_get(PIN_TELE_BUTTON)) {
             // Player can only teleport if they have walked over the teleport square
             // and they are not firing the laser
-            if (!game.show_reticule && game.can_teleport) {
+            if (!game.show_reticule) {
                 if (game.debounce_count_press == 0) {
                     // Set debounce timer
                     game.debounce_count_press = now;
                 } else if (now - game.debounce_count_press > DEBOUNCE_TIME_US) {
                     // Teleport
                     game.debounce_count_press == 0;
-                    do_teleport();
+                    if (player_x == game.tele_x && player_y == game.tele_y) {
+                        do_teleport();
+                    }
                 }
             }
         }
@@ -299,9 +313,6 @@ void game_loop() {
         if (!is_dead) {
             // Manage and draw the world
             update_world(time_us_32());
-
-            // What are we standing on?
-            check_hazard(player_x, player_y);
 
             // Check for a laser burst
             if (game.is_firing) {
@@ -350,14 +361,6 @@ uint8_t get_direction(uint16_t x, uint16_t y) {
 
     // Just in case
     return ERROR_CONDITION;
-}
-
-
-void check_hazard(uint8_t x, uint8_t y) {
-    // Check the kind of square the player is standing on
-    // and action accordingly -- only teleport squares for now
-    uint8_t sc = get_square_contents(x, y);
-    game.can_teleport = (sc == MAP_TILE_TELEPORTER);
 }
 
 
@@ -423,7 +426,7 @@ void check_senses() {
             if (locate_phantom(i, j) != ERROR_CONDITION) {
                 // Flash the LED, sound a tone
                 gpio_put(PIN_LED, true);
-                tone(300, 10, 0);
+                tone(200, 10, 0);
                 gpio_put(PIN_LED, false);
 
                 // Only play one beep, no matter
@@ -438,22 +441,18 @@ void check_senses() {
 void do_teleport() {
     // Jump back to the teleport sqaure
     // if the player has walked over it
-    // NOTE Only one usage per level
-    if (game.can_teleport) {
-        game.can_teleport = false;
 
-        // Flash the screen
-        bool tstate = false;
-        for (uint8_t i = 0 ; i < 10 ; i++) {
-            ssd1306_inverse(tstate);
-            sleep_ms(40);
-            tstate = !tstate;
-        }
-
-        // Move the player to the stored square
-        player_x = game.tele_x;
-        player_y = game.tele_y;
+    // Flash the screen
+    bool tstate = false;
+    for (uint8_t i = 0 ; i < 10 ; i++) {
+        ssd1306_inverse(tstate);
+        tone((tstate ? 3000 : 100), 100, 0);
+        tstate = !tstate;
     }
+
+    // Move the player to the stored square
+    player_x = game.start_x;
+    player_y = game.start_y;
 }
 
 
@@ -471,8 +470,7 @@ void fire_laser() {
         ssd1306_circle(64, 32, radii[i], 0, false);
         ssd1306_circle(64, 32, radii[i] - 1, 1, true);
         ssd1306_draw();
-        //sleep_ms(90);
-        tone(1500, 90, 0);
+        tone(3200, 40, 40);
         memcpy(&oled_buffer[0], temp_buffer, oled_buffer_size);
     }
 
@@ -493,15 +491,14 @@ void fire_laser() {
 
             // Briefly invert the screen
             ssd1306_inverse(false);
-            sleep_ms(200);
+            tone(1200, 100, 200);
 
             // Draw without the front phantom
             ssd1306_clear();
             draw_screen(player_x, player_y, player_direction);
             ssd1306_draw();
             ssd1306_inverse(true);
-
-            // PLAY SOUND
+            tone(600, 100, 200);
         }
     }
 
@@ -515,6 +512,13 @@ void fire_laser() {
  */
 void death() {
     // The player has died -- show the map and the score
+    for (unsigned int i = 400 ; i > 100 ; i -= 5) {
+        tone(i, 40, 0);
+    }
+
+    sleep_ms(200);
+    tone(2200, 500, 500);
+
     ssd1306_clear();
     ssd1306_text(0, 0, "YOU", false, false);
     ssd1306_text(0, 8, "WERE", false, false);
@@ -523,38 +527,33 @@ void death() {
     // Show the score
     char score_string[5] = "000";
     ssd1306_text(98, 0, "SCORE", false, false);
-    sprintf(score_string, "%d", game.level_score);
-    ssd1306_text(98, 8, score_string, false, true);
+    sprintf(score_string, "%02d", game.level_score);
+    ssd1306_text(98, 9, score_string, false, (game.level_score < 100));
 
     /// Show the high score
-    ssd1306_text(98, 24, "HIGH", false, false);
-    ssd1306_text(98, 32, "SCORE", false, false);
+    ssd1306_text(98, 32, "HIGH", false, false);
+    ssd1306_text(98, 40, "SCORE", false, false);
 
     if (high_score < game.level_score) high_score = game.level_score;
-    sprintf(score_string, "000");
-    sprintf(score_string, "%d", high_score);
-    ssd1306_text(98, 40, score_string, false, true);
-
-    ssd1306_text(0, 40, "PRESS", false, false);
-    ssd1306_text(0, 48, "ANY", false, false);
-    ssd1306_text(0, 56, "KEY", false, false);
+    sprintf(score_string, "%02d", high_score);
+    ssd1306_text(98, 49, score_string, false, (high_score < 100));
 
     // Show the map
     show_map(0, true);
     ssd1306_draw();
     ssd1306_inverse(false);
 
+    // Play the music
+    //play_death_march();
+
+    ssd1306_text(0, 40, "PRESS", false, false);
+    ssd1306_text(0, 48, "ANY", false, false);
+    ssd1306_text(0, 56, "KEY", false, false);
+    ssd1306_draw();
+
     // Wait for a key press
     inkey();
-
-
 }
-
-
-void win() {
-    return;
-}
-
 
 void help() {
 
@@ -627,7 +626,7 @@ void play_intro() {
         ssd1306_clear();
         ssd1306_text(10, i, "THE PHANTOM SLAYER", false, false);
         ssd1306_draw();
-        sleep_ms(25);
+        tone(100 + ((i + 16) << 2), 20, 0);
         final_y = i;
     }
 
@@ -637,7 +636,7 @@ void play_intro() {
         ssd1306_text(26, i, "BY TONY SMITH", false, false);
         ssd1306_text(29, i + 10, "& KEN KALISH", false, false);
         ssd1306_draw();
-        sleep_ms(25);
+        tone(100 + ((64 - i) << 2), 20, 0);
     }
 
     for (int8_t i = 0 ; i < 10 ; ++i) {
@@ -662,7 +661,7 @@ int main() {
     // Play the game
     while (1) {
         // Start a new game
-        play_intro();
+        //play_intro();
 
         // Set up the environment, once per game
         init_game();
@@ -682,6 +681,7 @@ int main() {
 
             show_map(0, false);
             ssd1306_draw();
+            tone(2200, 20, 0);
             sleep_ms(1000);
         }
 

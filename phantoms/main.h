@@ -24,10 +24,11 @@
 #include "hardware/adc.h"
 
 // Game includes
-#include "map.h"
-#include "ssd1306.h"
+#include "audio.h"
 #include "gfx.h"
+#include "map.h"
 #include "phantoms.h"
+#include "ssd1306.h"
 
 
 /*
@@ -61,6 +62,8 @@ typedef struct {
     uint8_t audio_range;
     uint8_t tele_x;
     uint8_t tele_y;
+    uint8_t start_x;
+    uint8_t start_y;
     uint8_t level_kills;
 
     uint16_t level;
@@ -76,28 +79,26 @@ typedef struct {
 /*
  * PROTOTYPES
  */
-void setup();
-void play_intro();
-void create_world();
-void init_game();
+void    setup();
+void    play_intro();
+void    create_world();
+void    init_game();
 
-void game_loop();
-bool check_joystick(uint16_t x, uint16_t y) ;
+void    game_loop();
+bool    check_joystick(uint16_t x, uint16_t y) ;
 uint8_t get_direction(uint16_t x, uint16_t y);
 
-void check_hazard(uint8_t x, uint8_t y);
-void check_senses();
-void update_world(uint32_t now);
+void    update_world(uint32_t now);
+void    check_senses();
 
-void do_teleport();
-void fire_laser();
+void    do_teleport();
+void    fire_laser();
 
-void death();
-void win();
+void    death();
 
-int irandom(int start, int max);
-void inkey();
-void tone(unsigned int frequency, unsigned long duration, unsigned long post);
+int     irandom(int start, int max);
+void    inkey();
+void    tone(unsigned int frequency, unsigned long duration, unsigned long post);
 
 
 /*
@@ -112,7 +113,7 @@ void tone(unsigned int frequency, unsigned long duration, unsigned long post);
 #define PIN_SDA                                         8
 #define PIN_SCL                                         9
 #define SSD1306_RST_PIN                                 19
-#define PIN_SPEAKER                                     4
+#define PIN_SPEAKER                                     20
 #define PIN_TELE_BUTTON                                 17
 #define PIN_FIRE_BUTTON                                 16
 #define PIN_LED                                         25
@@ -161,9 +162,12 @@ bool     oled_inverted;
 // Graphics buffer
 uint8_t  oled_buffer[1024];
 uint8_t  temp_buffer[1024];
+uint8_t  side_buffer[1024];
 uint8_t  i2c_tx_buffer[1025];
 uint16_t oled_buffer_size;
 uint16_t i2c_tx_buffer_size;
+
+uint8_t *draw_buffer;
 
 // Player
 uint8_t player_x;
