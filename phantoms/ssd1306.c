@@ -172,7 +172,7 @@ void ssd1306_init(uint8_t pixel_width, uint8_t pixel_height) {
     // Set the I2C address based on size
     oled_i2c_addr = oled_height > 32 ? SSD1306_ADDRESS_128x64 : SSD1306_ADDRESS_128x32;
 
-    // Iniialize the I2C TX buffer
+    // Initialise the I2C TX buffer
     for (uint16_t i = 0 ; i < i2c_tx_buffer_size; i++) {
         i2c_tx_buffer[i] = 0x00;
     }

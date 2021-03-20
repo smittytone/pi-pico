@@ -62,23 +62,17 @@ void move_phantoms() {
                 }
 
                 // Move the phantom in the x axis first
-                if (dx > 0) {
-                    p->x -= 1;
-                } else if (dx < 0) {
-                    p->x += 1;
-                }
+                if (dx > 0) p->x -= 1;
+                if (dx < 0) p->x += 1;
 
-                // If we can't move in the x-axis, try the y-axis
-                if (dx == 0 || get_square_contents(p->x, p->y) == MAP_TILE_WALL) {
+                if (dx == 0 || get_square_contents(p->x, p->y) == MAP_TILE_WALL || locate_phantom(p->x, p->y) != ERROR_CONDITION) {
+                    // If we can't move in the x-axis, try the y-axis
                     p->x = old_x;
 
-                    if (dy > 0) {
-                        p->y -= 1;
-                    } else if (dy < 0) {
-                        p->y += 1;
-                    }
+                    if (dy > 0) p->y -= 1;
+                    if (dy < 0) p->y += 1;
 
-                    if (dy == 0 || get_square_contents(p->x, p->y) == MAP_TILE_WALL) {
+                    if (dy == 0 || get_square_contents(p->x, p->y) == MAP_TILE_WALL || locate_phantom(p->x, p->y) != ERROR_CONDITION) {
                         p->y = old_y;
                     } else {
                         p->direction = dy > 0 ? DIRECTION_SOUTH : DIRECTION_NORTH;
@@ -112,13 +106,13 @@ void move_phantoms() {
                 }
 
                 // Decrement the number of non-standard steps
-                --p->back_steps;
+                p->back_steps--;
             }
 
-            if (p->y == old_y && p->x == old_x) {
+            if (p->y == old_y && p->x == old_x && p->back_steps == 0) {
                 // Phantom can't move towards player so move elsewhere
-                // for 4-9 steps
-                p->back_steps = irandom(4, 5);
+                // for 4-6 steps
+                p->back_steps = irandom(4, 2);
             }
         }
     }

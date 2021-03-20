@@ -2,6 +2,33 @@
 
 Assorted projects made while playing with the [Raspberry Pi Pico](https://www.raspberrypi.org/documentation/pico/getting-started/).
 
+## Phantoms ##
+
+A retro-style 3D arcade game written in C.
+
+### Requirements ###
+
+* An SSD1306-based 128x64 OLED display; I used [this display](https://www.adafruit.com/product/1049)
+* A piezo speaker
+* Two small buttons
+* A two-way, self-centring analog joystick; there are [lots available on eBay](https://www.ebay.co.uk/itm/New-PSP-2-Axis-Analog-Thumb-GAME-Joystick-Module-3V-5V-For-arduino-PSP/401104248437?hash=item5d63ad1e75:g:HcEAAOSwjqVZNSzw)
+* Wires
+
+### Build ###
+
+<img src="images/phantoms.png" />
+
+* The joystick shown is not the one used, but it gives you the idea. Connect white to the X pin, grey to the Y pin.
+
+### The Game ###
+
+See [this blog post for full details]().
+
+### Credit ###
+
+This games is based on a 1982 original created by Ken Kalish for the Tandy Color Computer. The design is Ken’s; the code is mine, and I’ve taken only a few liberties with certain details.
+
+
 ## Wumpus ##
 
 A sample C project to build a fun game.
@@ -37,19 +64,19 @@ A green light indicates the Wumpus is close. Enter its square and it will eat yo
 
 This version was based on an [Ardiuno version](https://github.com/coreyfaure/HuntTheWumpus-Arduino) created by Corey Faure. This is very much his game, but I have taken a few liberties with a couple of the animations and rewritten the code.
 
-## sensor
+## sensor ##
 
 A sample C project. Requires an HT16K33-based 4-digit, 7-segment LED and an SGP30 TVOC sensor. I used [this sensor](https://shop.pimoroni.com/products/sgp30-air-quality-sensor-breakout) and [this display](https://www.adafruit.com/product/878):
 
 <img src="images/sensor.png" />
 
-## i2c
+## i2c ##
 
 A sample C project. Requires an HT16K33-based 8x8 LED matrix. I used [this display](https://www.adafruit.com/product/1049).
 
 <img src="images/i2c.png" />
 
-## micropython
+## micropython ##
 
 A sample MicroPython project. Requires an HT16K33-based 8x8 LED matrix.
 
@@ -57,9 +84,10 @@ A sample MicroPython project. Requires an HT16K33-based 8x8 LED matrix.
 
 Pico project set up script for Z Shell. Requires Pico C SDK pre-installed.
 
+## Updates ##
 
-## Updates
-
+- *Unreleased*
+    - Add Phantoms 1.0.0
 - *25 February 2021*
     - Bump Wumpus to 1.0.1
         - Tweak sprites.

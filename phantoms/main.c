@@ -69,8 +69,8 @@ void setup() {
 
     for (uint8_t i = 0 ; i < sizeof(coords) ; i += 4) {
         Rect a_rect;
-        a_rect.origin_x = coords[i];
-        a_rect.origin_y = coords[i + 1];
+        a_rect.x = coords[i];
+        a_rect.y = coords[i + 1];
         a_rect.width = coords[i + 2];
         a_rect.height = coords[i + 3];
         rects[i >> 2] = a_rect;
@@ -122,7 +122,7 @@ void create_world() {
     // Generate and populate a new maze which happens
     // at the start of a new game and at the start of
     // each level. A level jump is triggered when all the
-    // current phantoms have beebn dispatched
+    // current phantoms have been dispatched
 
     // Reset the game
     if (game.level > 0) init_game();
@@ -439,7 +439,7 @@ void check_senses() {
 
 
 void do_teleport() {
-    // Jump back to the teleport sqaure
+    // Jump back to the teleport square
     // if the player has walked over it
 
     // Flash the screen
@@ -603,7 +603,7 @@ void tone(unsigned int frequency, unsigned long duration, unsigned long post) {
     // Get the microsecond timer now
     unsigned long start = time_us_64();
 
-    // Loop until duration (ms) in microseconds has elapsed
+    // Loop until duration (milliseconds) in microseconds has elapsed
     while (time_us_64() < start + duration * 1000) {
         gpio_put(PIN_SPEAKER, true);
         sleep_us(0.5 * period);
@@ -617,7 +617,6 @@ void tone(unsigned int frequency, unsigned long duration, unsigned long post) {
 
 
 void play_intro() {
-
     // Display the opening titles
     int8_t final_y = 0;
     bool sstate = true;

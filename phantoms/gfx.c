@@ -45,6 +45,7 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
             // to draw in any phantoms the viewer can see
             phantom_count = count_facing_phantoms(MAX_VIEW_RANGE);
             if (phantom_count > 0) {
+                phantom_count = (phantom_count << 4) | phantom_count;
                 for (uint8_t i = y ; i > y - squares ; --i) {
                     draw_phantom(x, i, y - i, &phantom_count);
                 }
@@ -61,6 +62,7 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
 
             phantom_count = count_facing_phantoms(MAX_VIEW_RANGE);
             if (phantom_count > 0) {
+                phantom_count = (phantom_count << 4) | phantom_count;
                 for (uint8_t i = x ; i < x + squares ; ++i) {
                     draw_phantom(i, y, i - x, &phantom_count);
                 }
@@ -77,6 +79,7 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
 
             phantom_count = count_facing_phantoms(MAX_VIEW_RANGE);
             if (phantom_count > 0) {
+                phantom_count = (phantom_count << 4) | phantom_count;
                 for (uint8_t i = y ; i < y + squares ; ++i) {
                     draw_phantom(x, i, i - y, &phantom_count);
                 }
@@ -93,6 +96,7 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
 
             phantom_count = count_facing_phantoms(MAX_VIEW_RANGE);
             if (phantom_count > 0) {
+                phantom_count = (phantom_count << 4) | phantom_count;
                 for (uint8_t i = x ; i > x - squares ; --i) {
                     draw_phantom(i, y, x - i, &phantom_count);
                 }
@@ -135,7 +139,7 @@ void draw_floor_line(uint8_t frame_index) {
     // Draw a grid line on the floor -- this is all
     // we do to create the floor (ceiling has no line)
     Rect r = rects[frame_index + 1];
-    ssd1306_line(r.origin_x - 1, r.origin_y + r.height, r.origin_x + r.width + 1, r.origin_y + r.height, 1, 1);
+    ssd1306_line(r.x - 1, r.y + r.height, r.x + r.width + 1, r.y + r.height, 1, 1);
 }
 
 
@@ -146,8 +150,8 @@ void draw_teleporter(uint8_t frame_index) {
     Rect r = rects[frame_index];
     bool dot_state = true;
 
-    for (uint8_t y = r.origin_y + r.height -  4; y < r.origin_y + r.height ; ++y) {
-        for (uint8_t i = r.origin_x ; i < r.origin_x + r.width - 2; i += 2) {
+    for (uint8_t y = r.y + r.height -  4; y < r.y + r.height ; ++y) {
+        for (uint8_t i = r.x ; i < r.x + r.width - 2; i += 2) {
             ssd1306_plot(dot_state ? i : i + 1, y, 1);
         }
         dot_state = !dot_state;
@@ -164,17 +168,17 @@ void draw_left_wall(uint8_t frame_index, bool is_open) {
 
     // Draw an open left wall, ie. the facing wall of the
     // adjoining corridor, and then return
-    ssd1306_rect(o.origin_x, i.origin_y, i.origin_x - o.origin_x - 1, i.height, 1, true);
+    ssd1306_rect(o.x, i.y, i.x - o.x - 1, i.height, 1, true);
     if (is_open) return;
 
     // Add upper and lower triangles to present a wall section
     uint8_t byte = 0;
-    for (uint8_t k = 0 ; k < i.origin_x - 1 - o.origin_x ; ++k) {
+    for (uint8_t k = 0 ; k < i.x - 1 - o.x ; ++k) {
         // Upper triangle
         byte =  angles[0][k];
         for (uint8_t j = 0 ; j < 8 ; ++j) {
             if ((byte & (1 << j)) != 0) {
-                ssd1306_plot(o.origin_x + k, o.origin_y + j, 1);
+                ssd1306_plot(o.x + k, o.y + j, 1);
             }
         }
 
@@ -182,7 +186,7 @@ void draw_left_wall(uint8_t frame_index, bool is_open) {
         byte = angles[1][k];
         for (uint8_t j = 0 ; j < 8 ; ++j) {
             if ((byte & (1 << j)) != 0) {
-                ssd1306_plot(o.origin_x + k, o.origin_y + o.height - 9 + j, 1);
+                ssd1306_plot(o.x + k, o.y + o.height - 9 + j, 1);
             }
         }
     }
@@ -198,19 +202,19 @@ void draw_right_wall(uint8_t frame_index, bool is_open) {
 
     // Draw an open left wall, ie. the facing wall of the
     // adjoining corridor, and then return
-    uint8_t xd = i.width + i.origin_x;
-    ssd1306_rect(xd + 1, i.origin_y, (o.width + o.origin_x) - xd - 1, i.height, 1, true);
+    uint8_t xd = i.width + i.x;
+    ssd1306_rect(xd + 1, i.y, (o.width + o.x) - xd - 1, i.height, 1, true);
     if (is_open) return;
 
     // Add upper and lower triangles to present a wall section
     uint8_t byte = 0;
-    uint8_t max = (o.width + o.origin_x) - xd - 1;
+    uint8_t max = (o.width + o.x) - xd - 1;
     for (uint8_t k = 0 ; k < max ; ++k) {
         // Upper triangle
         byte = angles[0][k];
         for (uint8_t j = 0 ; j < 8 ; ++j) {
             if ((byte & (1 << j)) > 0) {
-                ssd1306_plot(o.width + o.origin_x - k - 1, o.origin_y + j, 1);
+                ssd1306_plot(o.width + o.x - k - 1, o.y + j, 1);
             }
         }
 
@@ -218,7 +222,7 @@ void draw_right_wall(uint8_t frame_index, bool is_open) {
         byte = angles[1][k];
         for (uint8_t j = 0 ; j < 8 ; ++j) {
             if ((byte & (1 << j)) > 0) {
-                ssd1306_plot(o.width + o.origin_x - k - 1, o.origin_y + o.height - 9 + j, 1);
+                ssd1306_plot(o.width + o.x - k - 1, o.y + o.height - 9 + j, 1);
             }
         }
     }
@@ -230,7 +234,7 @@ void draw_far_wall(uint8_t squares) {
     // an 'infinity' view
     //if (squares > MAX_VIEW_RANGE + 1) return;
     Rect i = rects[squares >= MAX_VIEW_RANGE ? MAX_VIEW_RANGE + 1 : squares + 1];
-    ssd1306_rect(i.origin_x, i.origin_y, i.width, i.height, 1, true);
+    ssd1306_rect(i.x, i.y, i.width, i.height, 1, true);
 }
 
 
@@ -240,30 +244,42 @@ void draw_phantom(uint8_t x, uint8_t y, uint8_t frame_index, uint8_t *count) {
     //      (three max) appear side by side
     if (locate_phantom(x, y) != ERROR_CONDITION) {
         Rect r = rects[frame_index];
+
         uint8_t dx = 0;
+        if (((*count >> 4) == 3) && ((*count & 0x0F) == 2)) {
+            dx = -10;
+        } else if (((*count >> 4) == 3) && ((*count & 0x0F) == 1)) {
+            dx = 10;
+        } else if (((*count >> 4) == 2) && ((*count & 0x0F) == 2)) {
+            dx = -10;
+        } else if (((*count >> 4) == 2) && ((*count & 0x0F) == 1)) {
+            dx = 10
+        }
 
         // Body
-        ssd1306_rect(58, r.origin_y + 3, 12, r.height - 3, 1, false);
-        ssd1306_rect(59, r.origin_y + 4, 10, r.height - 5, 0, true);
+        ssd1306_rect(58 + dx, r.y + 3, 12, r.height - 3, 1, false);
+        ssd1306_rect(59 + dx, r.y + 4, 10, r.height - 5, 0, true);
 
         // Face
-        ssd1306_rect(61, r.origin_y + 5, 6, 7 - frame_index, 1, true);
+        ssd1306_rect(61 + dx, r.y + 5, 6, 7 - frame_index, 1, true);
 
         if (frame_index < 5) {
             // Left Side
-            ssd1306_line(58, r.origin_y + 11, 58, r.origin_y + r.height - 8, 0, 1);
-            ssd1306_line(57, r.origin_y + 11, 57, r.origin_y + r.height - 8, 1, 1);
+            ssd1306_line(58 + dx, r.y + 11, 58 + dx, r.y + r.height - 8, 0, 1);
+            ssd1306_line(57 + dx, r.y + 11, 57 + dx, r.y + r.height - 8, 1, 1);
 
             // Right Side
-            ssd1306_line(69, r.origin_y + 11, 69, r.origin_y + r.height - 8, 0, 1);
-            ssd1306_line(70, r.origin_y + 11, 70, r.origin_y + r.height - 8, 1, 1);
+            ssd1306_line(69 + dx, r.y + 11, 69 + dx, r.y + r.height - 8, 0, 1);
+            ssd1306_line(70 + dx, r.y + 11, 70 + dx, r.y + r.height - 8, 1, 1);
         }
 
         // Cowl top
-        ssd1306_line(60, r.origin_y + 3, 68, r.origin_y + 2, 0, 1);
-        ssd1306_line(59, r.origin_y + 2, 69, r.origin_y + 1, 1, 1);
-        ssd1306_line(62, r.origin_y + 2, 64, r.origin_y + 2, 0, 1);
-        ssd1306_line(61, r.origin_y + 1, 65, r.origin_y + 1, 1, 1);
+        ssd1306_line(60 + dx, r.y + 3, 68 + dx, r.y + 2, 0, 1);
+        ssd1306_line(59 + dx, r.y + 2, 69 + dx, r.y + 1, 1, 1);
+        ssd1306_line(62 + dx, r.y + 2, 64 + dx, r.y + 2, 0, 1);
+        ssd1306_line(61 + dx, r.y + 1, 65 + dx, r.y + 1, 1, 1);
+
+        *count--;
     }
 }
 
@@ -278,34 +294,29 @@ void animate_turn(bool is_left) {
     ssd1306_clear();
     draw_screen(player_x, player_y, player_direction);
 
-    // Set the drawing buffer to the temp view
-    draw_buffer = &temp_buffer[0];
+    // Set the drawing buffer back to the main buffer
+    draw_buffer = &oled_buffer[0];
 
     // Slide across from the current view (in 'oled_buffer')
     // to the next view (in 'side_buffer') by copying the
     // key segments to the temporary buffer (the current drawing buffer)
+    // NOTE We write directly to 'i2c_tx_buffer' to save a 1KB memcpy()
     for (uint8_t n = 1 ; n < 128 ; n += 16) {
         // Draw row by row
         for (uint8_t y = 0 ; y < 8 ; ++y) {
             // Write out a line of left-buffer bytes followed by
             // some right-buffer bytes
             if (is_left) {
-                memcpy(&temp_buffer[y << 7], &side_buffer[(y << 7) + 128 - n], n);
-                memcpy(&temp_buffer[(y << 7) + n], &oled_buffer[y << 7], 128 - n);
+                memcpy(&i2c_tx_buffer[1 + (y << 7)], &side_buffer[(y << 7) + 128 - n], n);
+                memcpy(&temp_buffer[1+ (y << 7) + n], &oled_buffer[y << 7], 128 - n);
             } else {
-                memcpy(&temp_buffer[y << 7], &oled_buffer[y * 128 + n], 128 - n);
-                memcpy(&temp_buffer[(y << 7) + 127 - n], &side_buffer[y << 7], n);
+                memcpy(&temp_buffer[1 + (y << 7)], &oled_buffer[y * 128 + n], 128 - n);
+                memcpy(&temp_buffer[1 + (y << 7) + 127 - n], &side_buffer[y << 7], n);
             }
         }
 
-        // Present the animation frame
-        // NOTE takes approx. 20.5ms
-        ssd1306_draw();
-
-        // Pause between frames
-        //sleep_ms(10);
+        // Present the animation frame (takes approx. 20.5ms)
+        i2c_tx_buffer[0] = SSD1306_WRITE_TO_BUFFER;
+        i2c_write_block(&i2c_tx_buffer[0], oled_buffer_size + 1);
     }
-
-    // Set the drawing buffer back to the main buffer
-    draw_buffer = &oled_buffer[0];
 }
