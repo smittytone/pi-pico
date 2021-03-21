@@ -39,6 +39,7 @@ typedef struct {
     uint8_t y;
     uint8_t width;
     uint8_t height;
+    uint8_t spot;
 } Rect;
 
 typedef struct {
@@ -149,6 +150,10 @@ void    tone(unsigned int frequency, unsigned long duration, unsigned long post)
 
 #define MAX_PHANTOMS                                    3
 #define ERROR_CONDITION                                 99
+#define PHANTOM_NORTH                                   1
+#define PHANTOM_EAST                                    2
+#define PHANTOM_SOUTH                                   4
+#define PHANTOM_WEST                                    8
 
 
 /*

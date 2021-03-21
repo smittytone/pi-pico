@@ -59,20 +59,21 @@ void setup() {
 
     // Make the graphic frame rects
     // NOTE These are pixel values
-    uint8_t coords[] = {0,0,128,64,     // Outer LED frame
-                        11,5,106,54,
-                        24,10,80,44,
-                        36,15,56,34,
-                        47,20,34,24,
-                        55,25,18,14,
-                        61,27,6,10};    // 'End wall' for distant views
+    uint8_t coords[] = {0,0,128,64,0,     // Outer LED frame
+                        11,5,106,54,48,
+                        24,10,80,44,30,
+                        36,15,56,34,18,
+                        47,20,34,24,12,
+                        55,25,18,14,8,
+                        61,27,6,10,63};    // 'End wall' for distant views
 
-    for (uint8_t i = 0 ; i < sizeof(coords) ; i += 4) {
+    for (uint8_t i = 0 ; i < sizeof(coords) ; i += 5) {
         Rect a_rect;
         a_rect.x = coords[i];
         a_rect.y = coords[i + 1];
         a_rect.width = coords[i + 2];
         a_rect.height = coords[i + 3];
+        a_rect.spot = coords[i + 4];
         rects[i >> 2] = a_rect;
     }
 
@@ -408,7 +409,7 @@ void update_world(uint32_t now) {
     // Move the phantoms periodically
     if (now - last_phantom_move > game.phantom_speed) {
         last_phantom_move = now;
-        move_phantoms();
+        move_phantoms2();
         check_senses();
     }
 

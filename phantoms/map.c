@@ -235,7 +235,8 @@ bool set_square_contents(uint8_t x, uint8_t y, uint8_t value) {
 
 uint8_t get_view_distance(uint8_t x, uint8_t y, uint8_t direction) {
     // Return the number of squares the player (at x,y) can see
-    // ahead of them in the direction they are facing
+    // ahead of them in the direction they are facing.
+    // NOTE 'count' excludes the current square
     uint8_t count = 0;
     if (x == 0 && direction == DIRECTION_WEST) return count;
     if (x > 18 && direction == DIRECTION_EAST) return count;

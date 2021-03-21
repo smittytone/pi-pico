@@ -21,6 +21,9 @@ uint8_t get_facing_phantom(uint8_t range);
 uint8_t count_facing_phantoms(uint8_t range);
 uint8_t locate_phantom(uint8_t x, uint8_t y);
 
+void move_one(uint8_t c, uint8_t *x, uint8_t *y, uint8_t index);
+void    move_phantoms2();
+
 
 // _PHANTOMS_HEADER_
 #endif

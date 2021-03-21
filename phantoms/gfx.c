@@ -35,7 +35,7 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
         case DIRECTION_NORTH:
             // Viewer is facing north, so left = West, right = East
             // Run through the squares from current to the view limit
-            for (uint8_t i = y ; i >= 0 ; --i) {
+            for (uint8_t i = y ; i >= y - max_squares ; --i) {
                 // Draw in the walls, floor and, if necessary, the facing wall
                 bool done = draw_section(x, i, DIRECTION_WEST, DIRECTION_EAST, squares, max_squares);
                 if (done) break;
@@ -47,15 +47,21 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
             phantom_count = count_facing_phantoms(MAX_VIEW_RANGE);
             if (phantom_count != 0) {
                 phantom_count = (phantom_count << 4) | phantom_count;
+                for (uint8_t i = y - squares ; i >= y ; ++i) {
+                    draw_phantom(x, i, i, &phantom_count);
+                }
+
+                /*
                 for (uint8_t i = y ; i > y - squares ; --i) {
                     draw_phantom(x, i, y - i, &phantom_count);
                 }
+                */
             }
 
             break;
 
         case DIRECTION_EAST:
-            for (uint8_t i = x ; i < 20 ; ++i) {
+            for (uint8_t i = x ; i < x + max_squares + 1 ; ++i) {
                 bool done = draw_section(i, y, DIRECTION_NORTH, DIRECTION_SOUTH, squares, max_squares);
                 if (done) break;
                 squares++;
@@ -68,15 +74,17 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
                     draw_phantom(i - 1, y, i - 1 - x, &phantom_count);
                 }
 
+                /*
                 for (uint8_t i = x ; i < x + squares ; ++i) {
-                    //draw_phantom(i, y, i - x, &phantom_count);
+                    draw_phantom(i, y, i - x, &phantom_count);
                 }
+                */
             }
 
             break;
 
         case DIRECTION_SOUTH:
-            for (uint8_t i = y ; i < 20 ; ++i) {
+            for (uint8_t i = y ; i < y + max_squares + 1 ; ++i) {
                 bool done = draw_section(x, i, DIRECTION_EAST, DIRECTION_WEST, squares, max_squares);
                 if (done) break;
                 squares++;
@@ -85,15 +93,21 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
             phantom_count = count_facing_phantoms(MAX_VIEW_RANGE);
             if (phantom_count != 0) {
                 phantom_count = (phantom_count << 4) | phantom_count;
+                for (uint8_t i = y + squares ; i > y ; --i) {
+                    draw_phantom(x, i - 1, i - 1 - y, &phantom_count);
+                }
+
+                /*
                 for (uint8_t i = y ; i < y + squares ; ++i) {
                     draw_phantom(x, i, i - y, &phantom_count);
                 }
+                */
             }
 
             break;
 
         default:
-            for (uint8_t i = x ; i >= 0 ; --i) {
+            for (uint8_t i = x ; i >= x - max_squares ; --i) {
                 bool done = draw_section(i, y, DIRECTION_SOUTH, DIRECTION_NORTH, squares, max_squares);
                 if (done) break;
                 squares++;
@@ -102,9 +116,15 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
             phantom_count = count_facing_phantoms(MAX_VIEW_RANGE);
             if (phantom_count != 0) {
                 phantom_count = (phantom_count << 4) | phantom_count;
+                for (uint8_t i = x - squares ; i >= x ; ++i) {
+                    draw_phantom(i, y, i, &phantom_count);
+                }
+
+                /*
                 for (uint8_t i = x ; i > x - squares ; --i) {
                     draw_phantom(i, y, x - i, &phantom_count);
                 }
+                */
             }
 
             break;
@@ -112,30 +132,30 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
 }
 
 
-bool draw_section(uint8_t x, uint8_t y, uint8_t left, uint8_t right, uint8_t squares, uint8_t max_squares) {
+bool draw_section(uint8_t x, uint8_t y, uint8_t left_dir, uint8_t right_dir, uint8_t frame_index, uint8_t max_index) {
     // Refactor out common code from 'draw_screen()'
     // Return 'true' when we've got to the furthest rendered square,
     // 'false' otherwise
 
     // Is the square a teleporter?
     if (x == game.tele_x && y == game.tele_y) {
-        draw_teleporter(squares);
+        draw_teleporter(frame_index);
     }
 
     // Draw in left and right wall segments
     // NOTE Second argument is true or false: wall section is
     //      open or closed, respectively
-    draw_left_wall(squares, (get_view_distance(x, y, left) > 0));
-    draw_right_wall(squares, (get_view_distance(x, y, right) > 0));
+    draw_left_wall(frame_index, (get_view_distance(x, y, left_dir) > 0));
+    draw_right_wall(frame_index, (get_view_distance(x, y, right_dir) > 0));
 
     // Have we reached the furthest square the viewer can see?
-    if (squares == max_squares) {
-        draw_far_wall(squares);
+    if (frame_index == max_index) {
+        draw_far_wall(frame_index);
         return true;
     }
 
     // Draw a line on the floor
-    draw_floor_line(squares);
+    draw_floor_line(frame_index);
     return false;
 }
 
@@ -149,9 +169,8 @@ void draw_floor_line(uint8_t frame_index) {
 
 
 void draw_teleporter(uint8_t frame_index) {
-    // Draw a grey floor tile o indicate the Escape
-    // teleport location -- when stepping on this,
-    // the play can beam heat to their start point
+    // Draw a grey floor tile o indicate the Escape teleport location.
+    // When stepping on this, the player can beam heat to their start point
     Rect r = rects[frame_index];
     bool dot_state = true;
 
@@ -234,11 +253,10 @@ void draw_right_wall(uint8_t frame_index, bool is_open) {
 }
 
 
-void draw_far_wall(uint8_t squares) {
-    // Draw the wall facing the viewer, or for long distances,
+void draw_far_wall(uint8_t frame_index) {
+    // Draw the wall facing the viewer, or for very long distances,
     // an 'infinity' view
-    //if (squares > MAX_VIEW_RANGE + 1) return;
-    Rect i = rects[squares >= MAX_VIEW_RANGE ? MAX_VIEW_RANGE + 1 : squares + 1];
+    Rect i = rects[frame_index + 1];
     ssd1306_rect(i.x, i.y, i.width, i.height, 1, true);
 }
 
@@ -250,14 +268,15 @@ void draw_phantom(uint8_t x, uint8_t y, uint8_t frame_index, uint8_t *count) {
     if (locate_phantom(x, y) != ERROR_CONDITION) {
         Rect r = rects[frame_index];
 
-        uint8_t dx = 0;
+        uint8_t dx = 64;
+
         uint8_t c = *count;
         uint8_t number_phantoms = c >> 4;
         uint8_t current = c & 0x0F;
 
         if (number_phantoms > 1) {
-            if (current == 2) dx = -12;
-            if (current == 1) dx = 12;
+            if (current == 2) dx = 64 - r.spot;
+            if (current == 1) dx = 64 + r.spot;
         }
 
         uint8_t p_height = r.height - 4;
@@ -265,30 +284,30 @@ void draw_phantom(uint8_t x, uint8_t y, uint8_t frame_index, uint8_t *count) {
         if ((f_width & 0x01) > 0) f_width += 1;
         if (f_width == 0) f_width = 2;
         uint8_t p_width = f_width << 1;
-        uint8_t bx = 64 - (p_width >> 1);
+        uint8_t bx = dx - (p_width >> 1);
 
         // Body outer frame
-        ssd1306_rect(bx + dx, r.y + 2, p_width, p_height, 1, false);
+        ssd1306_rect(bx, r.y + 2, p_width, p_height, 1, false);
         // Body inner fill
-        ssd1306_rect(bx + 1 + dx, r.y + 3, (p_width - 2), p_height - 2, 0, true);
+        ssd1306_rect(bx + 1, r.y + 3, (p_width - 2), p_height - 2, 0, true);
 
         // Face fill
-        ssd1306_rect(64 - (f_width >> 1) + dx, r.y + 5, f_width, 7 - frame_index, 1, true);
+        ssd1306_rect(bx - (f_width >> 1), r.y + 5, f_width, 7 - frame_index, 1, true);
 
         if (frame_index < 5) {
-            // Left Side
-            ssd1306_line(bx + dx,     r.y + 12 - frame_index, bx + dx,     32, 0, 1);
-            ssd1306_line(bx - 1 + dx, r.y + 12 - frame_index, bx - 1 + dx, 32, 1, 1);
+            // Left arm
+            ssd1306_line(bx,     r.y + 12 - frame_index, bx,     32, 0, 1);
+            ssd1306_line(bx - 1, r.y + 12 - frame_index, bx - 1, 32, 1, 1);
 
-            // Right Side
-            ssd1306_line(bx + p_width - 1 + dx, r.y + 12 - frame_index, bx + p_width - 1 + dx, 32, 0, 1);
-            ssd1306_line(bx + p_width + dx,     r.y + 12 - frame_index, bx + p_width + dx,     32, 1, 1);
+            // Right arm
+            ssd1306_line(bx + p_width - 1, r.y + 12 - frame_index, bx + p_width - 1, 32, 0, 1);
+            ssd1306_line(bx + p_width,     r.y + 12 - frame_index, bx + p_width,     32, 1, 1);
         }
 
         // Cowl top
         p_width -= 1;
-        ssd1306_line(bx + 1 + dx, r.y + 1, bx + p_width + dx, r.y + 2, 1, 1);
-        ssd1306_line(bx + 1 + dx, r.y + 2, bx + p_width + dx, r.y + 2, 0, 1);
+        ssd1306_line(bx + 1, r.y + 1, bx + p_width, r.y + 2, 1, 1);
+        ssd1306_line(bx + 1, r.y + 2, bx + p_width, r.y + 2, 0, 1);
 
         *count = c - 1;
     }

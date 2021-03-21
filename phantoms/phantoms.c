@@ -181,17 +181,117 @@ void move_phantoms() {
                 // for 1-3 steps (assuming it isn't already)
                 p->back_steps = irandom(1, 3);
             }
-
-            /*
-            u_int8_t pn = locate_phantom(p->x, p->y);
-            if (pn != ERROR_CONDITION && pn != i) {
-                p->x = old_x;
-                p->y = old_y;
-                if (p->back_steps > 0) p->back_steps = 0;
-            }
-            */
         }
     }
+}
+
+
+void move_phantoms2() {
+    // Move each phantom toward the player
+    for (uint8_t k = 0 ; k < game.phantoms ; ++k) {
+        Phantom *p = &phantoms[k];
+        // Only move phantoms that are in the maze
+        if (p->x != ERROR_CONDITION) {
+            uint8_t new_x = p->x;
+            uint8_t new_y = p->y;
+
+            // Get distance to player
+            int8_t dx = p->x - player_x;
+            int8_t dy = p->y - player_y;
+
+            // Has the phantom got the player?
+            if (dx == 0 && dy == 0) {
+                // Yes!
+                game.in_play = false;
+                return;
+            }
+
+            uint8_t available_directions = 0;
+            uint8_t favoured_directions = 0;
+            uint8_t usable_directions = 0;
+
+            // Determine the directions in which the phantom *can* move: empty spaces with no phantom already there
+            if (p->x > 0 && get_square_contents(p->x - 1, p->y) != MAP_TILE_WALL && locate_phantom(p->x - 1, p->y) == ERROR_CONDITION) {
+                available_directions |= PHANTOM_WEST;
+            }
+
+            if (p->x < 19 && get_square_contents(p->x + 1, p->y) != MAP_TILE_WALL && locate_phantom(p->x + 1, p->y) == ERROR_CONDITION) {
+                available_directions |= PHANTOM_EAST;
+            }
+
+            if (p->y > 0 && get_square_contents(p->x, p->y - 1) != MAP_TILE_WALL && locate_phantom(p->x, p->y - 1) == ERROR_CONDITION) {
+                available_directions |= PHANTOM_NORTH;
+            }
+
+            if (p->y < 19 && get_square_contents(p->x, p->y + 1) != MAP_TILE_WALL && locate_phantom(p->x, p->y + 1) == ERROR_CONDITION) {
+                available_directions |= PHANTOM_WEST;
+            }
+
+            if (available_directions == 0) {
+                // Phantom can't move anywhere -- all its exits are currently blocked
+                return;
+            }
+
+            // Get move preferences
+            if (dy > 0) favoured_directions |= PHANTOM_NORTH;
+            if (dy < 0) favoured_directions |= PHANTOM_SOUTH;
+            if (dx > 0) favoured_directions |= PHANTOM_WEST;
+            if (dx < 0) favoured_directions |= PHANTOM_EAST;
+
+            // Count up ways favoured moves and available squares match
+            uint8_t count = 0;
+            for (uint8_t i = 0 ; i < 4 ; ++i) {
+                if ((available_directions & (i << i)) && (favoured_directions & (i << i))) {
+                    // Phantom wants to go in a certain direction -- and has an exit
+                    count++;
+                    usable_directions |= (i << i);
+                }
+            }
+
+            // Handle the move
+            if (count == 1) {
+                // Only one way to go, so take it
+                move_one(usable_directions, &new_x, &new_y, k);
+            } else if (count == 2) {
+                // Two ways to go, so pick one at random
+                uint8_t r = irandom(0,2);
+                for (uint8_t i = 0 ; i < 4 ; ++i) {
+                    if (usable_directions & (i << i)) {
+                        if (r == 0) {
+                            move_one((usable_directions & (i << i)), &new_x, &new_y, k);
+                        } else {
+                            r--;
+                        }
+                    }
+                }
+            } else {
+                // Count == 0 -- special case where phantom can't move where it
+                // wants so must move away or wait (if it has NOWHERE to go)
+                if (available_directions != 0) {
+                    for (uint8_t i = 0 ; i < 4 ; ++i) {
+                        // Just pick the first available direction and take it
+                        if (available_directions & (i << i)) {
+                            move_one((available_directions & (i << i)), &new_x, &new_y, k);
+                        }
+                    }
+                }
+            }
+
+            // Set the new location
+            p->x = new_x;
+            p->y = new_y;
+        }
+    }
+}
+
+
+void move_one(uint8_t c, uint8_t *x, uint8_t *y, uint8_t index) {
+    // Refactored multiple-use code
+    Phantom *p = &phantoms[index];
+    if (c == PHANTOM_NORTH) *y = p->y - 1;
+    if (c == PHANTOM_SOUTH) *y = p->y + 1;
+    if (c == PHANTOM_EAST) *x = p->x + 1;
+    if (c == PHANTOM_WEST) *x = p->x - 1;
 }
 
 
