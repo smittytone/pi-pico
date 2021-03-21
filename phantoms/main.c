@@ -197,11 +197,22 @@ void create_world() {
         if (get_square_contents(x, y) == MAP_TILE_CLEAR) break;
     }
 
-    player_x = x;
-    player_y = y;
+    player_x = 0;
+    player_y = 0;
     player_direction = irandom(0, 4);
     game.start_x = x;
     game.start_y = y;
+
+    phantoms[0].x = 10;
+    phantoms[0].y = 0;
+
+    phantoms[1].x = 11;
+    phantoms[1].y = 0;
+
+    phantoms[2].x = 13;
+    phantoms[2].y = 0;
+
+    game.phantoms = 3;
 }
 
 

@@ -29,6 +29,7 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
     uint8_t max_squares = get_view_distance(x, y, direction);
     uint8_t squares = 0;
     uint8_t phantom_count = 0;
+    uint8_t pcount = 0;
 
     switch(direction) {
         case DIRECTION_NORTH:
@@ -44,7 +45,7 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
             // Run from the furthest square to the closest
             // to draw in any phantoms the viewer can see
             phantom_count = count_facing_phantoms(MAX_VIEW_RANGE);
-            if (phantom_count > 0) {
+            if (phantom_count != 0) {
                 phantom_count = (phantom_count << 4) | phantom_count;
                 for (uint8_t i = y ; i > y - squares ; --i) {
                     draw_phantom(x, i, y - i, &phantom_count);
@@ -61,10 +62,14 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
             }
 
             phantom_count = count_facing_phantoms(MAX_VIEW_RANGE);
-            if (phantom_count > 0) {
+            if (phantom_count != 0) {
                 phantom_count = (phantom_count << 4) | phantom_count;
+                for (uint8_t i = x + squares ; i > x ; --i) {
+                    draw_phantom(i - 1, y, i - 1 - x, &phantom_count);
+                }
+
                 for (uint8_t i = x ; i < x + squares ; ++i) {
-                    draw_phantom(i, y, i - x, &phantom_count);
+                    //draw_phantom(i, y, i - x, &phantom_count);
                 }
             }
 
@@ -78,7 +83,7 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
             }
 
             phantom_count = count_facing_phantoms(MAX_VIEW_RANGE);
-            if (phantom_count > 0) {
+            if (phantom_count != 0) {
                 phantom_count = (phantom_count << 4) | phantom_count;
                 for (uint8_t i = y ; i < y + squares ; ++i) {
                     draw_phantom(x, i, i - y, &phantom_count);
@@ -95,7 +100,7 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
             }
 
             phantom_count = count_facing_phantoms(MAX_VIEW_RANGE);
-            if (phantom_count > 0) {
+            if (phantom_count != 0) {
                 phantom_count = (phantom_count << 4) | phantom_count;
                 for (uint8_t i = x ; i > x - squares ; --i) {
                     draw_phantom(i, y, x - i, &phantom_count);
@@ -246,47 +251,46 @@ void draw_phantom(uint8_t x, uint8_t y, uint8_t frame_index, uint8_t *count) {
         Rect r = rects[frame_index];
 
         uint8_t dx = 0;
-        uint8_t number_phantoms = *count >> 4;
-        uint8_t current = *count & 0x0F;
+        uint8_t c = *count;
+        uint8_t number_phantoms = c >> 4;
+        uint8_t current = c & 0x0F;
 
         if (number_phantoms > 1) {
-            if (current == 2) dx = -10;
-            if (current == 1) dx = 10;
+            if (current == 2) dx = -12;
+            if (current == 1) dx = 12;
         }
 
-        uint8_t fh = r.height - 4;
-        uint8_t fw = 6 - frame_index;
-        if ((fw & 0x01) > 0) fw += 1;
-        if (fw == 0) fw = 2;
+        uint8_t p_height = r.height - 4;
+        uint8_t f_width = 6 - frame_index;
+        if ((f_width & 0x01) > 0) f_width += 1;
+        if (f_width == 0) f_width = 2;
+        uint8_t p_width = f_width << 1;
+        uint8_t bx = 64 - (p_width >> 1);
 
-        // Body
-        ssd1306_rect(58 + dx, r.y + 2, (fw << 1), fh, 1, false);
-        ssd1306_rect(59 + dx, r.y + 3, (fw << 1 - 2), fh - 2, 0, true);
+        // Body outer frame
+        ssd1306_rect(bx + dx, r.y + 2, p_width, p_height, 1, false);
+        // Body inner fill
+        ssd1306_rect(bx + 1 + dx, r.y + 3, (p_width - 2), p_height - 2, 0, true);
 
-        // Face
-        fw = 6 - frame_index;
-        if ((fw & 0x01) > 0) fw += 1;
-        if (fw == 0) fw = 2;
-        ssd1306_rect(61 + dx, r.y + 5, fw, 7 - frame_index, 1, true);
+        // Face fill
+        ssd1306_rect(64 - (f_width >> 1) + dx, r.y + 5, f_width, 7 - frame_index, 1, true);
 
-        fw = (r.height - 4) >> 2;
-        if (frame_index < 6) {
+        if (frame_index < 5) {
             // Left Side
-            ssd1306_line(58 + dx, 31 - fw, 58 + dx, 31, 0, 1);
-            ssd1306_line(57 + dx, 31 - fw, 57 + dx, 32, 1, 1);
+            ssd1306_line(bx + dx,     r.y + 12 - frame_index, bx + dx,     32, 0, 1);
+            ssd1306_line(bx - 1 + dx, r.y + 12 - frame_index, bx - 1 + dx, 32, 1, 1);
 
             // Right Side
-            ssd1306_line(69 + dx, 31 - fw, 69 + dx, 31, 0, 1);
-            ssd1306_line(70 + dx, 31 - fw, 70 + dx, 31, 1, 1);
+            ssd1306_line(bx + p_width - 1 + dx, r.y + 12 - frame_index, bx + p_width - 1 + dx, 32, 0, 1);
+            ssd1306_line(bx + p_width + dx,     r.y + 12 - frame_index, bx + p_width + dx,     32, 1, 1);
         }
 
         // Cowl top
-        ssd1306_line(60 + dx, r.y + 3, 68 + dx, r.y + 2, 0, 1);
-        ssd1306_line(59 + dx, r.y + 2, 69 + dx, r.y + 1, 1, 1);
-        ssd1306_line(62 + dx, r.y + 2, 64 + dx, r.y + 2, 0, 1);
-        ssd1306_line(61 + dx, r.y + 1, 65 + dx, r.y + 1, 1, 1);
+        p_width -= 1;
+        ssd1306_line(bx + 1 + dx, r.y + 1, bx + p_width + dx, r.y + 2, 1, 1);
+        ssd1306_line(bx + 1 + dx, r.y + 2, bx + p_width + dx, r.y + 2, 0, 1);
 
-        *count--;
+        *count = c - 1;
     }
 }
 
@@ -315,10 +319,10 @@ void animate_turn(bool is_left) {
             // some right-buffer bytes
             if (is_left) {
                 memcpy(&i2c_tx_buffer[1 + (y << 7)], &side_buffer[(y << 7) + 128 - n], n);
-                memcpy(&temp_buffer[1+ (y << 7) + n], &oled_buffer[y << 7], 128 - n);
+                memcpy(&i2c_tx_buffer[1+ (y << 7) + n], &oled_buffer[y << 7], 128 - n);
             } else {
-                memcpy(&temp_buffer[1 + (y << 7)], &oled_buffer[y * 128 + n], 128 - n);
-                memcpy(&temp_buffer[1 + (y << 7) + 127 - n], &side_buffer[y << 7], n);
+                memcpy(&i2c_tx_buffer[1 + (y << 7)], &oled_buffer[y * 128 + n], 128 - n);
+                memcpy(&i2c_tx_buffer[1 + (y << 7) + 127 - n], &side_buffer[y << 7], n);
             }
         }
 

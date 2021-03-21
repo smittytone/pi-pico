@@ -43,17 +43,16 @@ const uint8_t level_data[84] = {
  */
 void move_phantoms() {
     // Move each phantom toward the player
-
-
-
     for (uint8_t i = 0 ; i < game.phantoms ; ++i) {
         Phantom* p = &phantoms[i];
         // Only move phantoms that are in the maze
         if (p->x != ERROR_CONDITION) {
             uint8_t old_x = p->x;
             uint8_t old_y = p->y;
+
             uint8_t new_x = p->x;
             uint8_t new_y = p->y;
+
             int8_t dx = p->x - player_x;
             int8_t dy = p->y - player_y;
 
@@ -65,18 +64,37 @@ void move_phantoms() {
                     return;
                 }
 
+                if (dx > 0) {
+                    --new_x;
+                } else if (dx < 0) {
+                    ++new_x;
+                }
+
+                if (dx != 0 && get_square_contents(new_x, old_y) != MAP_TILE_WALL) {
+                    p->x = new_x;
+                    p->direction = dx > 0 ? DIRECTION_EAST : DIRECTION_WEST;
+                } else {
+                    if (dy > 0) {
+                        --new_y;
+                    } else if (dy < 0) {
+                        ++new_y;
+                    }
+
+                    if (dy != 0 && get_square_contents(old_x, new_y) != MAP_TILE_WALL) {
+                        p->y = new_y;
+                        p->direction = dy > 0 ? DIRECTION_SOUTH : DIRECTION_NORTH;
+                    }
+                }
+
+                /*
                 if (dx != 0 && dy != 0) {
                     // May move on either axis, but doesn't mean we can
-                    uint8_t weight_x = 0;
-                    uint8_t weight_y = 0;
+                    uint8_t weight_x = false;
+                    uint8_t weight_y = false;
 
                     // Calculate new squares
                     new_x += (dx > 0 ? 1 : -1);
                     new_y += (dy > 0 ? 1 : -1);
-
-                    // Big weight on whether Phantom *can* move
-                    if (get_square_contents(new_x, old_y) != MAP_TILE_WALL) weight_x += 10;
-                    if (get_square_contents(old_x, new_y) != MAP_TILE_WALL) weight_y += 10;
 
                     // Weight to favour moving in the direction of the biggest
                     // delta to the player -- should bring phantom to the
@@ -84,8 +102,12 @@ void move_phantoms() {
                     if (abs(dx) > abs(dy)) ++weight_x;
                     if (abs(dy) > abs(dx)) ++weight_y;
 
+                    // Big weight on whether Phantom *can* move
+                    if (get_square_contents(new_x, old_y) == MAP_TILE_WALL) weight_x = 0;
+                    if (get_square_contents(old_x, new_y) == MAP_TILE_WALL) weight_y = 0;
+
                     // All things equal? Pick a random direction
-                    if (weight_x == weight_y) {
+                    if (weight_x != 0 && weight_x == weight_y) {
                         if (irandom(0,100) > 50) {
                             weight_x++;
                         } else {
@@ -96,7 +118,7 @@ void move_phantoms() {
                     // Apply the weights
                     if (weight_x > weight_y) {
                         p->x = new_x;
-                    } else {
+                    } else if (weight_x < weight_y) {
                         p->y = new_y;
                     }
                 } else if (dy == 0) {
@@ -114,6 +136,7 @@ void move_phantoms() {
                         p->direction = dy > 0 ? DIRECTION_SOUTH : DIRECTION_NORTH;
                     }
                 }
+                */
             } else {
                 // Make a non-standard move in a random direction
                 int8_t direction = irandom(0, 4);
@@ -155,15 +178,18 @@ void move_phantoms() {
 
             if (p->y == old_y && p->x == old_x && p->back_steps == 0) {
                 // Phantom can't move towards player so move elsewhere
-                // for 4-6 steps (assuming it isn't already)
-                p->back_steps = irandom(4, 2);
+                // for 1-3 steps (assuming it isn't already)
+                p->back_steps = irandom(1, 3);
             }
 
-            if (locate_phantom(p->x, p->y) != ERROR_CONDITION) {
+            /*
+            u_int8_t pn = locate_phantom(p->x, p->y);
+            if (pn != ERROR_CONDITION && pn != i) {
                 p->x = old_x;
                 p->y = old_y;
                 if (p->back_steps > 0) p->back_steps = 0;
             }
+            */
         }
     }
 }
@@ -292,7 +318,7 @@ uint8_t count_facing_phantoms(uint8_t range) {
             if (player_y - range < 0) range = player_y;
             for (uint8_t i = player_y ; i >= player_y - range ; --i) {
                 if (get_square_contents(player_x, i) != MAP_TILE_WALL) {
-                    count += (locate_phantom(player_x, i) > 0 ? 1 : 0);
+                    count += (locate_phantom(player_x, i) != ERROR_CONDITION ? 1 : 0);
                 } else {
                     break;
                 }
@@ -302,7 +328,7 @@ uint8_t count_facing_phantoms(uint8_t range) {
             if (player_x + range > 19) range = 20 - player_x;
             for (uint8_t i = player_x ; i < player_y + range ; ++i) {
                 if (get_square_contents(i, player_y) != MAP_TILE_WALL) {
-                    count += (locate_phantom(i, player_y) > 0 ? 1 : 0);
+                    count += (locate_phantom(i, player_y) != ERROR_CONDITION ? 1 : 0);
                 } else {
                     break;
                 }
@@ -312,7 +338,7 @@ uint8_t count_facing_phantoms(uint8_t range) {
             if (player_y + range > 19) range = 20 - player_y;
             for (uint8_t i = player_y ; i < player_y + range ; ++i) {
                 if (get_square_contents(player_x, i) != MAP_TILE_WALL) {
-                    count += (locate_phantom(player_x, i) > 0 ? 1 : 0);
+                    count += (locate_phantom(player_x, i) != ERROR_CONDITION ? 1 : 0);
                 } else {
                     break;
                 }
@@ -322,7 +348,7 @@ uint8_t count_facing_phantoms(uint8_t range) {
             if (player_x - range < 0) range = player_x;
             for (uint8_t i = player_x ; i >= player_x - range ; --i) {
                 if (get_square_contents(i, player_y) != MAP_TILE_WALL) {
-                    count += (locate_phantom(i, player_y) > 0 ? 1 : 0);
+                    count += (locate_phantom(i, player_y) != ERROR_CONDITION ? 1 : 0);
                 } else {
                     break;
                 }

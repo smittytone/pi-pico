@@ -60,7 +60,7 @@ char base_map_41[20] = "\xEE\xEE\xEE\xFF\xEE\xEE\xEE\xFF\xEE\xEE\xEE\xEE\xFF\xEE
 char base_map_42[20] = "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xEE\xEE\xEE\xEE\xEE\xEE\xEE";
 char base_map_43[20] = "\xEE\xEE\xEE\xFF\xEE\xEE\xEE\xFF\xEE\xEE\xEE\xEE\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF";
 char base_map_44[20] = "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xEE\xEE\xEE\xFF\xEE\xEE\xEE\xEE\xFF\xEE";
-char base_map_45[20] = "\xEE\xFF\xEE\xEE\xEE\xEE\xEE\xEE\xFF\xFF\xFF\xFF\xFF\xFF\xEE\xEE\xEE\xEE\xFF\xFF";
+char base_map_45[20] = "\xEE\xFF\xEE\xEE\xEE\xEE\xEE\xEE\xEE\xFF\xFF\xFF\xFF\xFF\xEE\xEE\xEE\xEE\xFF\xFF";
 char base_map_46[20] = "\xFF\xFF\xEE\xEE\xEE\xEE\xEE\xEE\xEE\xEE\xEE\xFF\xEE\xFF\xFF\xFF\xEE\xEE\xFF\xEE";
 char base_map_47[20] = "\xEE\xFF\xFF\xFF\xFF\xFF\xEE\xFF\xFF\xEE\xFF\xFF\xFF\xEE\xEE\xFF\xFF\xFF\xFF\xFF";
 char base_map_48[20] = "\xEE\xFF\xEE\xFF\xEE\xFF\xFF\xEE\xFF\xFF\xFF\xEE\xFF\xFF\xFF\xFF\xEE\xEE\xFF\xEE";
@@ -193,14 +193,14 @@ void show_map(uint8_t y_delta, bool show_entities) {
                 ssd1306_plot(x + j * 3 + 1, y + i * 3 + 2, 0);
             }
 
-            if (show_entities) {
-                // Show the player at the current square
-                if (j == player_x && i == player_y) {
-                    ssd1306_plot(x + j * 3,     y + i * 3 + 1, 0);
-                    ssd1306_plot(x + j * 3 + 1, y + i * 3 + 1, 0);
-                    ssd1306_plot(x + j * 3 + 2, y + i * 3 + 1, 0);
-                }
+            // Show the player at the current square
+            if (j == player_x && i == player_y) {
+                ssd1306_plot(x + j * 3,     y + i * 3 + 1, 0);
+                ssd1306_plot(x + j * 3 + 1, y + i * 3 + 1, 0);
+                ssd1306_plot(x + j * 3 + 2, y + i * 3 + 1, 0);
+            }
 
+            if (show_entities) {
                 // Show any phantoms at the current square
                 for (uint8_t k = 0 ; k < game.phantoms; ++k) {
                     if (j == phantoms[k].x && i == phantoms[k].y) {
