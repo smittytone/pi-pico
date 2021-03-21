@@ -246,31 +246,38 @@ void draw_phantom(uint8_t x, uint8_t y, uint8_t frame_index, uint8_t *count) {
         Rect r = rects[frame_index];
 
         uint8_t dx = 0;
-        if (((*count >> 4) == 3) && ((*count & 0x0F) == 2)) {
-            dx = -10;
-        } else if (((*count >> 4) == 3) && ((*count & 0x0F) == 1)) {
-            dx = 10;
-        } else if (((*count >> 4) == 2) && ((*count & 0x0F) == 2)) {
-            dx = -10;
-        } else if (((*count >> 4) == 2) && ((*count & 0x0F) == 1)) {
-            dx = 10
+        uint8_t number_phantoms = *count >> 4;
+        uint8_t current = *count & 0x0F;
+
+        if (number_phantoms > 1) {
+            if (current == 2) dx = -10;
+            if (current == 1) dx = 10;
         }
 
+        uint8_t fh = r.height - 4;
+        uint8_t fw = 6 - frame_index;
+        if ((fw & 0x01) > 0) fw += 1;
+        if (fw == 0) fw = 2;
+
         // Body
-        ssd1306_rect(58 + dx, r.y + 3, 12, r.height - 3, 1, false);
-        ssd1306_rect(59 + dx, r.y + 4, 10, r.height - 5, 0, true);
+        ssd1306_rect(58 + dx, r.y + 2, (fw << 1), fh, 1, false);
+        ssd1306_rect(59 + dx, r.y + 3, (fw << 1 - 2), fh - 2, 0, true);
 
         // Face
-        ssd1306_rect(61 + dx, r.y + 5, 6, 7 - frame_index, 1, true);
+        fw = 6 - frame_index;
+        if ((fw & 0x01) > 0) fw += 1;
+        if (fw == 0) fw = 2;
+        ssd1306_rect(61 + dx, r.y + 5, fw, 7 - frame_index, 1, true);
 
-        if (frame_index < 5) {
+        fw = (r.height - 4) >> 2;
+        if (frame_index < 6) {
             // Left Side
-            ssd1306_line(58 + dx, r.y + 11, 58 + dx, r.y + r.height - 8, 0, 1);
-            ssd1306_line(57 + dx, r.y + 11, 57 + dx, r.y + r.height - 8, 1, 1);
+            ssd1306_line(58 + dx, 31 - fw, 58 + dx, 31, 0, 1);
+            ssd1306_line(57 + dx, 31 - fw, 57 + dx, 32, 1, 1);
 
             // Right Side
-            ssd1306_line(69 + dx, r.y + 11, 69 + dx, r.y + r.height - 8, 0, 1);
-            ssd1306_line(70 + dx, r.y + 11, 70 + dx, r.y + r.height - 8, 1, 1);
+            ssd1306_line(69 + dx, 31 - fw, 69 + dx, 31, 0, 1);
+            ssd1306_line(70 + dx, 31 - fw, 70 + dx, 31, 1, 1);
         }
 
         // Cowl top
