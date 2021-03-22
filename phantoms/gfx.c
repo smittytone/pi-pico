@@ -26,17 +26,30 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
     // Render a single viewpoint frame at the specified square.
     // Progressively draw in walls, square by square, moving away
     // from (x,y) in the specified direction
-    uint8_t max_squares = get_view_distance(x, y, direction);
-    uint8_t squares = 0;
-    uint8_t phantom_count = 0;
+    uint8_t last_frame = get_view_distance(x, y, direction);
+    uint8_t frame = last_frame;
+    uint8_t phantom_count = count_facing_phantoms(last_frame);
+    phantom_count = (phantom_count << 4) | phantom_count;
+    uint8_t i = 0;
+    //uint8_t squares = 0;
 
     switch(direction) {
         case DIRECTION_NORTH:
             // Viewer is facing north, so left = West, right = East
             // Run through the squares from current to the view limit
+            do {
+                i = y - frame;
+                draw_section(x, i, DIRECTION_WEST, DIRECTION_EAST, frame, last_frame);
+                if (phantom_count > 0 && locate_phantom(x, i) != ERROR_CONDITION) {
+                    draw_phantom(x, i, frame, &phantom_count);
+                }
+                frame--;
+            } while (frame >= 0);
+
+            /*
             for (uint8_t i = y ; i >= 0 ; --i) {
                 // Draw in the walls, floor and, if necessary, the facing wall
-                bool done = draw_section(x, i, DIRECTION_WEST, DIRECTION_EAST, squares, max_squares);
+                bool done = draw_section(x, i, DIRECTION_WEST, DIRECTION_EAST, squares, last_frame);
                 if (done) break;
                 squares++;
             }
@@ -53,12 +66,21 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
                     }
                 }
             }
-
+            */
             break;
 
         case DIRECTION_EAST:
+            do {
+                i = x + frame;
+                draw_section(i, y, DIRECTION_NORTH, DIRECTION_SOUTH, frame, last_frame);
+                if (phantom_count > 0 && locate_phantom(i, y) != ERROR_CONDITION) {
+                    draw_phantom(i, y, frame, &phantom_count);
+                }
+                frame--;
+            } while (frame >= 0);
+            /*
             for (uint8_t i = x ; i < 20 ; ++i) {
-                bool done = draw_section(i, y, DIRECTION_NORTH, DIRECTION_SOUTH, squares, max_squares);
+                bool done = draw_section(i, y, DIRECTION_NORTH, DIRECTION_SOUTH, squares, last_frame);
                 if (done) break;
                 squares++;
             }
@@ -72,12 +94,21 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
                     }
                 }
             }
-
+            */
             break;
 
         case DIRECTION_SOUTH:
+                i = y + frame;
+                draw_section(x, i, DIRECTION_NORTH, DIRECTION_SOUTH, frame, last_frame);
+                if (phantom_count > 0 && locate_phantom(x, i) != ERROR_CONDITION) {
+                    draw_phantom(x, i, frame, &phantom_count);
+                }
+                frame--;
+            } while (frame >= 0);
+
+            /*
             for (uint8_t i = y ; i < 20 ; ++i) {
-                bool done = draw_section(x, i, DIRECTION_EAST, DIRECTION_WEST, squares, max_squares);
+                bool done = draw_section(x, i, DIRECTION_EAST, DIRECTION_WEST, squares, last_frame);
                 if (done) break;
                 squares++;
             }
@@ -91,12 +122,22 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
                     }
                 }
             }
-
+            */
             break;
 
         default:
+            do {
+                i = x - frame;
+                draw_section(i, y, DIRECTION_WEST, DIRECTION_EAST, frame, last_frame);
+                if (phantom_count > 0 && locate_phantom(i, y) != ERROR_CONDITION) {
+                    draw_phantom(i, y, frame, &phantom_count);
+                }
+                frame--;
+            } while (frame >= 0);
+
+            /*
             for (uint8_t i = x ; i >= 0 ; --i) {
-                bool done = draw_section(i, y, DIRECTION_SOUTH, DIRECTION_NORTH, squares, max_squares);
+                bool done = draw_section(i, y, DIRECTION_SOUTH, DIRECTION_NORTH, squares, last_frame);
                 if (done) break;
                 squares++;
             }
@@ -111,36 +152,35 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
                     }
                 }
             }
-
-            break;
+            */
     }
 }
 
 
-bool draw_section(uint8_t x, uint8_t y, uint8_t left_dir, uint8_t right_dir, uint8_t frame_index, uint8_t max_index) {
+bool draw_section(uint8_t x, uint8_t y, uint8_t left_dir, uint8_t right_dir, uint8_t current_frame, uint8_t furthest_frame) {
     // Refactor out common code from 'draw_screen()'
     // Return 'true' when we've got to the furthest rendered square,
     // 'false' otherwise
 
     // Is the square a teleporter?
     if (x == game.tele_x && y == game.tele_y) {
-        draw_teleporter(frame_index);
+        draw_teleporter(current_frame);
     }
 
     // Draw in left and right wall segments
     // NOTE Second argument is true or false: wall section is
     //      open or closed, respectively
-    draw_left_wall(frame_index, (get_view_distance(x, y, left_dir) > 0));
-    draw_right_wall(frame_index, (get_view_distance(x, y, right_dir) > 0));
+    draw_left_wall(current_frame, (get_view_distance(x, y, left_dir) > 0));
+    draw_right_wall(current_frame, (get_view_distance(x, y, right_dir) > 0));
 
     // Have we reached the furthest square the viewer can see?
-    if (frame_index == max_index) {
-        draw_far_wall(frame_index);
+    if (current_frame == furthest_frame) {
+        draw_far_wall(current_frame);
         return true;
     }
 
     // Draw a line on the floor
-    draw_floor_line(frame_index);
+    draw_floor_line(current_frame);
     return false;
 }
 

@@ -238,11 +238,42 @@ void show_map(uint8_t y_delta, bool show_entities) {
                 ssd1306_plot(x + j * 3 + 1, y + i * 3 + 2, 0);
             }
 
-            // Show the player at the current square
+            // Show the player as an arrow at the current square
             if (j == player_x && i == player_y) {
-                ssd1306_plot(x + j * 3,     y + i * 3 + 1, 0);
-                ssd1306_plot(x + j * 3 + 1, y + i * 3 + 1, 0);
-                ssd1306_plot(x + j * 3 + 2, y + i * 3 + 1, 0);
+                switch(player_direction) {
+                    case DIRECTION_NORTH:
+                        ssd1306_plot(x + j * 3 + 1, y + i * 3,     0);
+                        ssd1306_plot(x + j * 3,     y + i * 3 + 1, 0);
+                        ssd1306_plot(x + j * 3 + 1, y + i * 3 + 1, 0);
+                        ssd1306_plot(x + j * 3 + 2, y + i * 3 + 1, 0);
+                        ssd1306_plot(x + j * 3,     y + i * 3 + 2, 0);
+                        ssd1306_plot(x + j * 3 + 2, y + i * 3 + 2, 0);
+                        break;
+                    case DIRECTION_EAST:
+                        ssd1306_plot(x + j * 3,     y + i * 3,     0);
+                        ssd1306_plot(x + j * 3,     y + i * 3 + 2, 0);
+                        ssd1306_plot(x + j * 3 + 1, y + i * 3,     0);
+                        ssd1306_plot(x + j * 3 + 1, y + i * 3 + 1, 0);
+                        ssd1306_plot(x + j * 3 + 1, y + i * 3 + 2, 0);
+                        ssd1306_plot(x + j * 3 + 2, y + i * 3 + 1, 0);
+                        break;
+                    case DIRECTION_SOUTH:
+                        ssd1306_plot(x + j * 3,     y + i * 3,     0);
+                        ssd1306_plot(x + j * 3 + 2, y + i * 3,     0);
+                        ssd1306_plot(x + j * 3,     y + i * 3 + 1, 0);
+                        ssd1306_plot(x + j * 3 + 1, y + i * 3 + 1, 0);
+                        ssd1306_plot(x + j * 3 + 2, y + i * 3 + 1, 0);
+                        ssd1306_plot(x + j * 3 + 1, y + i * 3 + 2, 0);
+                        break;
+                    default:
+                        ssd1306_plot(x + j * 3,     y + i * 3 + 1, 0);
+                        ssd1306_plot(x + j * 3 + 1, y + i * 3,     0);
+                        ssd1306_plot(x + j * 3 + 1, y + i * 3 + 1, 0);
+                        ssd1306_plot(x + j * 3 + 1, y + i * 3 + 2, 0);
+                        ssd1306_plot(x + j * 3 + 2,     y + i * 3, 0);
+                        ssd1306_plot(x + j * 3 + 2, y + i * 3 + 2, 0);
+                }
+
             }
 
             if (show_entities) {
@@ -283,13 +314,14 @@ uint8_t get_view_distance(uint8_t x, uint8_t y, uint8_t direction) {
     // ahead of them in the direction they are facing.
     // NOTE 'count' excludes the current square
     uint8_t count = 0;
-    if (x == 0 && direction == DIRECTION_WEST) return count;
-    if (x > 18 && direction == DIRECTION_EAST) return count;
-    if (y == 0 && direction == DIRECTION_NORTH) return count;
-    if (y > 18 && direction == DIRECTION_SOUTH) return count;
-
     switch(direction) {
         case DIRECTION_NORTH:
+            while (true) {
+                if (y == 0 || get_square_contents(x, y) == MAP_TILE_WALL) break;
+                ++count;
+                --y;
+            }
+            /*
             for (uint8_t i = y - 1 ; i >= 0 ; --i) {
                 if (get_square_contents(x, i) != MAP_TILE_WALL) {
                     count++;
@@ -297,8 +329,15 @@ uint8_t get_view_distance(uint8_t x, uint8_t y, uint8_t direction) {
                     break;
                 }
             }
+            */
             break;
         case DIRECTION_EAST:
+            while (true) {
+                if (x > 18 || get_square_contents(x, y) == MAP_TILE_WALL) break;
+                ++count;
+                ++x;
+            }
+            /*
             for (uint8_t i = x + 1 ; i < 20 ; ++i) {
                 if (get_square_contents(i, y) != MAP_TILE_WALL) {
                     count++;
@@ -306,8 +345,15 @@ uint8_t get_view_distance(uint8_t x, uint8_t y, uint8_t direction) {
                     break;
                 }
             }
+            */
             break;
         case DIRECTION_SOUTH:
+            while (true) {
+                if (y > 18 ||  get_square_contents(x, y) == MAP_TILE_WALL) break;
+                ++count;
+                ++y;
+            }
+            /*
             for (uint8_t i = y + 1 ; i < 20 ; ++i) {
                 if (get_square_contents(x, i) != MAP_TILE_WALL) {
                     count++;
@@ -315,8 +361,15 @@ uint8_t get_view_distance(uint8_t x, uint8_t y, uint8_t direction) {
                     break;
                 }
             }
+            */
             break;
         default:
+            while (true) {
+                if (x == 0 || get_square_contents(x, y) == MAP_TILE_WALL) break;
+                ++count;
+                --x;
+            }
+            /*
             for (uint8_t i = x - 1 ; i >= 0 ; --i) {
                 if (get_square_contents(i, y) != MAP_TILE_WALL) {
                     count++;
@@ -324,6 +377,7 @@ uint8_t get_view_distance(uint8_t x, uint8_t y, uint8_t direction) {
                     break;
                 }
             }
+            */
     }
 
     if (count > MAX_VIEW_RANGE) count = MAX_VIEW_RANGE;

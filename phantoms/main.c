@@ -228,7 +228,7 @@ void game_loop() {
     // Loop while we're in play on one game
     // Death will cause us to break out to the main
     // game-to-game loop
-    while (game.in_play) {
+    do {
         bool is_dead = false;
 
         // Read joystick analog output
@@ -342,7 +342,7 @@ void game_loop() {
             // Player killed by some means
             game.in_play = false;
         }
-    }
+    } while (game.in_play);
 
     // Show the death view when the
     // game loop exits (ie. game.in_play is false)
@@ -386,6 +386,15 @@ uint8_t get_direction(uint16_t x, uint16_t y) {
 void update_world(uint32_t now) {
     // Update the world at the end of the move cycle
     // Draw the graphics and animate the phantoms
+
+    // Move the phantoms periodically
+    if (now - last_phantom_move > game.phantom_speed) {
+        last_phantom_move = now;
+        move_phantoms();
+        check_senses();
+    }
+
+    // Draw the world periodically
     if (now - last_draw > ANIM_TIME_US) {
         ssd1306_clear();
 
@@ -411,13 +420,6 @@ void update_world(uint32_t now) {
 
         ssd1306_draw();
         last_draw = now;
-    }
-
-    // Move the phantoms periodically
-    if (now - last_phantom_move > game.phantom_speed) {
-        last_phantom_move = now;
-        move_phantoms2();
-        check_senses();
     }
 
     // Check for laser recharge
@@ -465,7 +467,7 @@ void do_teleport() {
     bool tstate = false;
     for (uint8_t i = 0 ; i < 10 ; i++) {
         ssd1306_inverse(tstate);
-        tone((tstate ? 3000 : 100), 100, 0);
+        tone((tstate ? 4000 : 1000), 100, 0);
         tstate = !tstate;
     }
 

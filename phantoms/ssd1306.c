@@ -429,7 +429,7 @@ void ssd1306_text(int8_t x, int8_t y, const char *the_string, bool do_wrap, bool
 
         for (size_t j = 1 ; j < glyph_len + 1 ; ++j) {
             if (j == glyph_len) {
-                if (do_double) break;
+                //if (do_double) break;
                 col_1 = glyph[j - 1];
             } else{
                 col_1 = ssd1306_text_flip(glyph[j]);
