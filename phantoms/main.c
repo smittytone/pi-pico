@@ -59,14 +59,14 @@ void setup() {
 
     // Make the graphic frame rects
     // NOTE These are pixel values
-    uint8_t coords[] = {0,0,128,64,0,     // Outer LED frame
-                        11,5,106,54,48,
-                        24,10,80,44,30,
-                        36,15,56,34,18,
-                        47,20,34,24,12,
-                        55,25,18,14,8,
-                        61,27,6,10,63};    // 'End wall' for distant views
-
+    uint8_t coords[] = { 0, 0,128,64,46,     // Outer LED frame
+                        11, 5,106,54,33,
+                        24,10, 80,44,22,
+                        36,15, 56,34,14,
+                        47,20, 34,24, 8,
+                        55,25, 18,14, 4,
+                        61,27,  6,10,63};    // 'End wall' for distant views
+    uint8_t count = 0;
     for (uint8_t i = 0 ; i < sizeof(coords) ; i += 5) {
         Rect a_rect;
         a_rect.x = coords[i];
@@ -74,7 +74,7 @@ void setup() {
         a_rect.width = coords[i + 2];
         a_rect.height = coords[i + 3];
         a_rect.spot = coords[i + 4];
-        rects[i >> 2] = a_rect;
+        rects[count++] = a_rect;
     }
 
     draw_buffer = &oled_buffer[0];
@@ -198,22 +198,29 @@ void create_world() {
         if (get_square_contents(x, y) == MAP_TILE_CLEAR) break;
     }
 
-    player_x = 0;
-    player_y = 0;
+    player_x = x;
+    player_y = y;
     player_direction = irandom(0, 4);
     game.start_x = x;
     game.start_y = y;
 
-    phantoms[0].x = 10;
+
+    /* TEST DATA
+    player_x = 0;
+    player_y = 0;
+    player_direction = 0;
+
+    phantoms[0].x = 8;
     phantoms[0].y = 0;
 
-    phantoms[1].x = 11;
+    phantoms[1].x = 9;
     phantoms[1].y = 0;
 
-    phantoms[2].x = 13;
-    phantoms[2].y = 0;
+    //phantoms[2].x = 11;
+    //phantoms[2].y = 0;
 
-    game.phantoms = 3;
+    game.phantoms = 2;
+    */
 }
 
 
@@ -482,7 +489,7 @@ void fire_laser() {
         ssd1306_circle(64, 32, radii[i], 0, false);
         ssd1306_circle(64, 32, radii[i] - 1, 1, true);
         ssd1306_draw();
-        tone(3200, 40, 40);
+        tone(4800, 40, 40);
         memcpy(&oled_buffer[0], temp_buffer, oled_buffer_size);
     }
 
@@ -504,13 +511,19 @@ void fire_laser() {
             // Briefly invert the screen
             ssd1306_inverse(false);
             tone(1200, 100, 200);
+            draw_screen(player_x, player_y, player_direction);
+            tone(600, 100, 200);
+
+            // Quickly show the map
+            ssd1306_clear();
+            show_scores();
+            sleep_ms(2000);
 
             // Draw without the front phantom
             ssd1306_clear();
             draw_screen(player_x, player_y, player_direction);
-            ssd1306_draw();
             ssd1306_inverse(true);
-            tone(600, 100, 200);
+            ssd1306_draw();
         }
     }
 
@@ -536,6 +549,25 @@ void death() {
     ssd1306_text(0, 8, "WERE", false, false);
     ssd1306_text(0, 16, "KILLED", false, false);
 
+    // Show the map
+    show_scores();
+    ssd1306_inverse(false);
+
+    // Play the music
+    //play_death_march();
+
+    ssd1306_text(0, 40, "PRESS", false, false);
+    ssd1306_text(0, 48, "ANY", false, false);
+    ssd1306_text(0, 56, "KEY", false, false);
+    ssd1306_draw();
+
+    // Wait for a key press
+    inkey();
+}
+
+
+void show_scores() {
+    // Code used in a couple of 'show map' locations
     // Show the score
     char score_string[5] = "000";
     ssd1306_text(98, 0, "SCORE", false, false);
@@ -550,22 +582,10 @@ void death() {
     sprintf(score_string, "%02d", high_score);
     ssd1306_text(98, 49, score_string, false, (high_score < 100));
 
-    // Show the map
     show_map(0, true);
     ssd1306_draw();
-    ssd1306_inverse(false);
-
-    // Play the music
-    //play_death_march();
-
-    ssd1306_text(0, 40, "PRESS", false, false);
-    ssd1306_text(0, 48, "ANY", false, false);
-    ssd1306_text(0, 56, "KEY", false, false);
-    ssd1306_draw();
-
-    // Wait for a key press
-    inkey();
 }
+
 
 void help() {
 
@@ -631,13 +651,14 @@ void tone(unsigned int frequency, unsigned long duration, unsigned long post) {
 void play_intro() {
     // Display the opening titles
     int8_t final_y = 0;
+    int8_t a_tone = 0;
     bool sstate = true;
 
     for (int8_t i = -8 ; i < 22 ; ++i) {
         ssd1306_clear();
         ssd1306_text(10, i, "THE PHANTOM SLAYER", false, false);
         ssd1306_draw();
-        tone(100 + ((i + 16) << 2), 20, 0);
+        tone((((a_tone++) + 16) << 2), 40, 0);
         final_y = i;
     }
 
@@ -647,7 +668,7 @@ void play_intro() {
         ssd1306_text(26, i, "BY TONY SMITH", false, false);
         ssd1306_text(29, i + 10, "& KEN KALISH", false, false);
         ssd1306_draw();
-        tone(100 + ((64 - i) << 2), 20, 0);
+        tone(((a_tone++) << 2), 40, 0);
     }
 
     for (int8_t i = 0 ; i < 10 ; ++i) {
@@ -672,7 +693,7 @@ int main() {
     // Play the game
     while (1) {
         // Start a new game
-        //play_intro();
+        play_intro();
 
         // Set up the environment, once per game
         init_game();

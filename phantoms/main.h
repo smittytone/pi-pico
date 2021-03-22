@@ -96,6 +96,7 @@ void    do_teleport();
 void    fire_laser();
 
 void    death();
+void    show_scores();
 
 int     irandom(int start, int max);
 void    inkey();

@@ -29,13 +29,12 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
     uint8_t max_squares = get_view_distance(x, y, direction);
     uint8_t squares = 0;
     uint8_t phantom_count = 0;
-    uint8_t pcount = 0;
 
     switch(direction) {
         case DIRECTION_NORTH:
             // Viewer is facing north, so left = West, right = East
             // Run through the squares from current to the view limit
-            for (uint8_t i = y ; i >= y - max_squares ; --i) {
+            for (uint8_t i = y ; i >= 0 ; --i) {
                 // Draw in the walls, floor and, if necessary, the facing wall
                 bool done = draw_section(x, i, DIRECTION_WEST, DIRECTION_EAST, squares, max_squares);
                 if (done) break;
@@ -44,87 +43,73 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
 
             // Run from the furthest square to the closest
             // to draw in any phantoms the viewer can see
-            phantom_count = count_facing_phantoms(MAX_VIEW_RANGE);
-            if (phantom_count != 0) {
+            phantom_count = count_facing_phantoms(squares);
+            if (phantom_count > 0) {
                 phantom_count = (phantom_count << 4) | phantom_count;
-                for (uint8_t i = y - squares ; i >= y ; ++i) {
-                    draw_phantom(x, i, i, &phantom_count);
+                if (y - squares < 0) squares = y;
+                for (uint8_t i = y - squares ; i <= y ; ++i) {
+                    if (locate_phantom(x, i) != ERROR_CONDITION) {
+                        draw_phantom(x, i, y - i, &phantom_count);
+                    }
                 }
-
-                /*
-                for (uint8_t i = y ; i > y - squares ; --i) {
-                    draw_phantom(x, i, y - i, &phantom_count);
-                }
-                */
             }
 
             break;
 
         case DIRECTION_EAST:
-            for (uint8_t i = x ; i < x + max_squares + 1 ; ++i) {
+            for (uint8_t i = x ; i < 20 ; ++i) {
                 bool done = draw_section(i, y, DIRECTION_NORTH, DIRECTION_SOUTH, squares, max_squares);
                 if (done) break;
                 squares++;
             }
 
-            phantom_count = count_facing_phantoms(MAX_VIEW_RANGE);
+            phantom_count = count_facing_phantoms(squares);
             if (phantom_count != 0) {
                 phantom_count = (phantom_count << 4) | phantom_count;
                 for (uint8_t i = x + squares ; i > x ; --i) {
-                    draw_phantom(i - 1, y, i - 1 - x, &phantom_count);
+                    if (locate_phantom(i, y) != ERROR_CONDITION) {
+                        draw_phantom(i, y, i - x, &phantom_count);
+                    }
                 }
-
-                /*
-                for (uint8_t i = x ; i < x + squares ; ++i) {
-                    draw_phantom(i, y, i - x, &phantom_count);
-                }
-                */
             }
 
             break;
 
         case DIRECTION_SOUTH:
-            for (uint8_t i = y ; i < y + max_squares + 1 ; ++i) {
+            for (uint8_t i = y ; i < 20 ; ++i) {
                 bool done = draw_section(x, i, DIRECTION_EAST, DIRECTION_WEST, squares, max_squares);
                 if (done) break;
                 squares++;
             }
 
-            phantom_count = count_facing_phantoms(MAX_VIEW_RANGE);
+            phantom_count = count_facing_phantoms(squares);
             if (phantom_count != 0) {
                 phantom_count = (phantom_count << 4) | phantom_count;
                 for (uint8_t i = y + squares ; i > y ; --i) {
-                    draw_phantom(x, i - 1, i - 1 - y, &phantom_count);
+                    if (locate_phantom(x, i) != ERROR_CONDITION) {
+                        draw_phantom(x, i, i - y, &phantom_count);
+                    }
                 }
-
-                /*
-                for (uint8_t i = y ; i < y + squares ; ++i) {
-                    draw_phantom(x, i, i - y, &phantom_count);
-                }
-                */
             }
 
             break;
 
         default:
-            for (uint8_t i = x ; i >= x - max_squares ; --i) {
+            for (uint8_t i = x ; i >= 0 ; --i) {
                 bool done = draw_section(i, y, DIRECTION_SOUTH, DIRECTION_NORTH, squares, max_squares);
                 if (done) break;
                 squares++;
             }
 
-            phantom_count = count_facing_phantoms(MAX_VIEW_RANGE);
+            phantom_count = count_facing_phantoms(squares);
             if (phantom_count != 0) {
                 phantom_count = (phantom_count << 4) | phantom_count;
-                for (uint8_t i = x - squares ; i >= x ; ++i) {
-                    draw_phantom(i, y, i, &phantom_count);
+                if (x - squares < 0) squares = x;
+                for (uint8_t i = x - squares ; i <= x ; ++i) {
+                    if (locate_phantom(i, y) != ERROR_CONDITION) {
+                        draw_phantom(i, y, x - i, &phantom_count);
+                    }
                 }
-
-                /*
-                for (uint8_t i = x ; i > x - squares ; --i) {
-                    draw_phantom(i, y, x - i, &phantom_count);
-                }
-                */
             }
 
             break;
@@ -265,52 +250,48 @@ void draw_phantom(uint8_t x, uint8_t y, uint8_t frame_index, uint8_t *count) {
     // If there is a phantom at (x, y)? If so, draw it
     // TODO Allow an x-axis shift so that multiple phantoms
     //      (three max) appear side by side
-    if (locate_phantom(x, y) != ERROR_CONDITION) {
-        Rect r = rects[frame_index];
+    Rect r = rects[frame_index];
 
-        uint8_t dx = 64;
+    uint8_t dx = 64;
+    uint8_t c = *count;
+    uint8_t number_phantoms = c >> 4;
+    uint8_t current = c & 0x0F;
 
-        uint8_t c = *count;
-        uint8_t number_phantoms = c >> 4;
-        uint8_t current = c & 0x0F;
-
-        if (number_phantoms > 1) {
-            if (current == 2) dx = 64 - r.spot;
-            if (current == 1) dx = 64 + r.spot;
-        }
-
-        uint8_t p_height = r.height - 4;
-        uint8_t f_width = 6 - frame_index;
-        if ((f_width & 0x01) > 0) f_width += 1;
-        if (f_width == 0) f_width = 2;
-        uint8_t p_width = f_width << 1;
-        uint8_t bx = dx - (p_width >> 1);
-
-        // Body outer frame
-        ssd1306_rect(bx, r.y + 2, p_width, p_height, 1, false);
-        // Body inner fill
-        ssd1306_rect(bx + 1, r.y + 3, (p_width - 2), p_height - 2, 0, true);
-
-        // Face fill
-        ssd1306_rect(bx - (f_width >> 1), r.y + 5, f_width, 7 - frame_index, 1, true);
-
-        if (frame_index < 5) {
-            // Left arm
-            ssd1306_line(bx,     r.y + 12 - frame_index, bx,     32, 0, 1);
-            ssd1306_line(bx - 1, r.y + 12 - frame_index, bx - 1, 32, 1, 1);
-
-            // Right arm
-            ssd1306_line(bx + p_width - 1, r.y + 12 - frame_index, bx + p_width - 1, 32, 0, 1);
-            ssd1306_line(bx + p_width,     r.y + 12 - frame_index, bx + p_width,     32, 1, 1);
-        }
-
-        // Cowl top
-        p_width -= 1;
-        ssd1306_line(bx + 1, r.y + 1, bx + p_width, r.y + 2, 1, 1);
-        ssd1306_line(bx + 1, r.y + 2, bx + p_width, r.y + 2, 0, 1);
-
+    if (number_phantoms > 1) {
+        if (current == 2) dx = 64 - r.spot;
+        if (current == 1) dx = 64 + r.spot;
         *count = c - 1;
     }
+
+    uint8_t p_height = r.height - 4;
+    uint8_t f_width = 6 - frame_index;
+    if ((f_width & 0x01) > 0) f_width += 1;
+    if (f_width == 0) f_width = 2;
+    uint8_t p_width = f_width << 1;
+    uint8_t bx = dx - (p_width >> 1);
+
+    // Body outer frame
+    ssd1306_rect(bx, r.y + 2, p_width, p_height, 1, false);
+    // Body inner fill
+    ssd1306_rect(bx + 1, r.y + 3, (p_width - 2), p_height - 2, 0, true);
+
+    // Face fill
+    ssd1306_rect(dx - (f_width >> 1), r.y + 5, f_width, 7 - frame_index, 1, true);
+
+    if (frame_index < 5) {
+        // Left arm
+        ssd1306_line(bx,     r.y + 12 - frame_index, bx,     32, 0, 1);
+        ssd1306_line(bx - 1, r.y + 12 - frame_index, bx - 1, 32, 1, 1);
+
+        // Right arm
+        ssd1306_line(bx + p_width - 1, r.y + 12 - frame_index, bx + p_width - 1, 32, 0, 1);
+        ssd1306_line(bx + p_width,     r.y + 12 - frame_index, bx + p_width,     32, 1, 1);
+    }
+
+    // Cowl top
+    p_width -= 1;
+    ssd1306_line(bx + 1, r.y + 1, bx + p_width, r.y + 2, 1, 1);
+    ssd1306_line(bx + 1, r.y + 2, bx + p_width, r.y + 2, 0, 1);
 }
 
 

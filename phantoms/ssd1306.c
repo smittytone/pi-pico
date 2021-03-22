@@ -14,7 +14,7 @@
  * Ascii Text Character Set
  */
 const char CHARSET[128][6] = {
-    "\x02x00\x00",              // space - Ascii 32
+    "\x02\x00\x00",              // space - Ascii 32
     "\x01\x5F",                  // !
     "\x03\xc0\x00\xc0",          // "
     "\x05\x24\x7e\x24\x7e\x24",  // #
@@ -447,7 +447,6 @@ void ssd1306_text(int8_t x, int8_t y, const char *the_string, bool do_wrap, bool
                 col_1_left = col_1_right;
 
                 for (int8_t a = 6 ; a >= 0 ; --a) {
-                    printf("ss");
                     for (uint8_t b = 1 ; b < 3 ; b++) {
                         if ((((col_0 >> a) & 3) == 3 - b) && (((col_1 >> a) & 3) == b)) {
                             col_0_right |= (1 << ((a * 2) + b));
