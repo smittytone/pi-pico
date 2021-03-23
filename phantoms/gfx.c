@@ -46,29 +46,7 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
                 --frame;
                 ++i;
             } while (frame >= 0);
-
-            /*
-            for (uint8_t i = y ; i >= 0 ; --i) {
-                // Draw in the walls, floor and, if necessary, the facing wall
-                bool done = draw_section(x, i, DIRECTION_WEST, DIRECTION_EAST, frame, last_frame);
-                if (done) break;
-                frame++;
-            }
-
-            // Run from the furthest square to the closest
-            // to draw in any phantoms the viewer can see
-            phantom_count = count_facing_phantoms(frame);
-            if (phantom_count > 0) {
-                phantom_count = (phantom_count << 4) | phantom_count;
-                if (y - frame < 0) frame = y;
-                for (uint8_t i = y - frame ; i <= y ; ++i) {
-                    if (locate_phantom(x, i) != ERROR_CONDITION) {
-                        draw_phantom(x, i, y - i, &phantom_count);
-                    }
-                }
-            }
-            */
-            break;
+        break;
 
         case DIRECTION_EAST:
             i = x + last_frame;
@@ -80,25 +58,6 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
                 --frame;
                 --i;
             } while (frame >= 0);
-
-
-            /*
-            for (uint8_t i = x ; i < 20 ; ++i) {
-                bool done = draw_section(i, y, DIRECTION_NORTH, DIRECTION_SOUTH, frame, last_frame);
-                if (done) break;
-                frame++;
-            }
-
-            phantom_count = count_facing_phantoms(frame);
-            if (phantom_count != 0) {
-                phantom_count = (phantom_count << 4) | phantom_count;
-                for (uint8_t i = x + frame ; i > x ; --i) {
-                    if (locate_phantom(i, y) != ERROR_CONDITION) {
-                        draw_phantom(i, y, i - x, &phantom_count);
-                    }
-                }
-            }
-            */
             break;
 
         case DIRECTION_SOUTH:
@@ -111,24 +70,6 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
                 --frame;
                 --i;
             } while (frame >= 0);
-
-            /*
-            for (uint8_t i = y ; i < 20 ; ++i) {
-                bool done = draw_section(x, i, DIRECTION_EAST, DIRECTION_WEST, frame, last_frame);
-                if (done) break;
-                frame++;
-            }
-
-            phantom_count = count_facing_phantoms(frame);
-            if (phantom_count != 0) {
-                phantom_count = (phantom_count << 4) | phantom_count;
-                for (uint8_t i = y + frame ; i > y ; --i) {
-                    if (locate_phantom(x, i) != ERROR_CONDITION) {
-                        draw_phantom(x, i, i - y, &phantom_count);
-                    }
-                }
-            }
-            */
             break;
 
         default:
@@ -141,25 +82,6 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
                 --frame;
                 ++i;
             } while (frame >= 0);
-
-            /*
-            for (uint8_t i = x ; i >= 0 ; --i) {
-                bool done = draw_section(i, y, DIRECTION_SOUTH, DIRECTION_NORTH, frame, last_frame);
-                if (done) break;
-                frame++;
-            }
-
-            phantom_count = count_facing_phantoms(frame);
-            if (phantom_count != 0) {
-                phantom_count = (phantom_count << 4) | phantom_count;
-                if (x - frame < 0) frame = x;
-                for (uint8_t i = x - frame ; i <= x ; ++i) {
-                    if (locate_phantom(i, y) != ERROR_CONDITION) {
-                        draw_phantom(i, y, x - i, &phantom_count);
-                    }
-                }
-            }
-            */
     }
 }
 
