@@ -6,7 +6,6 @@ project(phantoms VERSION 1.0.0)
 
 add_executable(phantoms
     main.c
-    audio.c
     gfx.c
     map.c
     phantoms.c

@@ -22,6 +22,10 @@
         "tuple": "c",
         "type_traits": "c",
         "utility": "c",
-        "memory_resource": "c"
+        "memory_resource": "c",
+        "deque": "c",
+        "unordered_map": "c",
+        "vector": "c",
+        "initializer_list": "c"
     }
 }

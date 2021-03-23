@@ -59,9 +59,9 @@ void setup() {
 
     // Make the graphic frame rects
     // NOTE These are pixel values
-    uint8_t coords[] = { 0, 0,128,64,46,     // Outer LED frame
-                        11, 5,106,54,33,
-                        24,10, 80,44,22,
+    uint8_t coords[] = { 0, 0,128,64,44,     // Outer LED frame
+                        11, 5,106,54,31,
+                        24,10, 80,44,21,
                         36,15, 56,34,14,
                         47,20, 34,24, 8,
                         55,25, 18,14, 4,
@@ -88,6 +88,7 @@ void init_game() {
     game.is_firing = false;
     game.can_teleport = false;
     game.is_joystick_centred = true;
+    game.show_compass = false;
     game.level_score = 0;
     game.audio_range = 4;
     game.phantoms = 1;
@@ -133,53 +134,11 @@ void create_world() {
     map_init();
     last_draw = 0;
 
-    // Reset the the phantoms data
-    init_phantoms();
-
-    // Add the first phantom to the map, everywhere but empty
-    uint8_t empty_quad = irandom(0, 4);
-    uint8_t phantom_quad = irandom(0, 4);
-    while (true) {
-        // Pick a random co-ordinate
-        uint8_t x = irandom(0, 6);
-        uint8_t y = irandom(0, 6);
-
-        // Make sure the phantom's not in the fourth quadrant
-        if (phantom_quad == empty_quad) ++phantom_quad;
-        if (phantom_quad > 3) phantom_quad = 0;
-
-        // Adjust (x,y) to outer part of quadrant
-        if (phantom_quad == 1) {
-            x = 19 - x;
-        } else if (phantom_quad == 2) {
-            x = 19 - x;
-            y = 19 - y;
-        } else if (phantom_quad == 3) {
-            y = 19 - y;
-        }
-
-        // If the chosen square is valid, use it
-        if (get_square_contents(x, y) == MAP_TILE_CLEAR) {
-            phantoms[0].x = x;
-            phantoms[0].y = y;
-            break;
-        }
-    }
-
     // Set the teleport
     while (true) {
         // Pick a random co-ordinate
-        uint8_t x = irandom(0, 6);
-        uint8_t y = irandom(0, 6);
-
-        if (empty_quad == 1) {
-            x = 19 - x;
-        } else if (empty_quad == 2) {
-            x = 19 - x;
-            y = 19 - y;
-        } else if (empty_quad == 3) {
-            y = 19 - y;
-        }
+        uint8_t x = irandom(0, 20);
+        uint8_t y = irandom(0, 20);
 
         if (get_square_contents(x, y) == MAP_TILE_CLEAR) {
             game.tele_x = x;
@@ -204,23 +163,46 @@ void create_world() {
     game.start_x = x;
     game.start_y = y;
 
+    // Reset the the phantoms data
+    init_phantoms();
+
+    // Add the first phantom to the map, everywhere but empty
+    while (true) {
+        // Pick a random co-ordinate
+        uint8_t x = irandom(0, 20);
+        uint8_t y = irandom(0, 20);
+
+        // If the chosen square is valid, use it
+        if ((x < player_x - 4 || x > player_x + 4) && (y < player_y - 4 || y > player_y + 4)) {
+            if (get_square_contents(x, y) == MAP_TILE_CLEAR) {
+                phantoms[0].x = x;
+                phantoms[0].y = y;
+                break;
+            }
+        }
+    }
 
     /* TEST DATA
     player_x = 0;
     player_y = 0;
-    player_direction = 0;
+    player_direction = 1;
 
+    game.phantoms = 3;
     phantoms[0].x = 8;
     phantoms[0].y = 0;
+
 
     phantoms[1].x = 9;
     phantoms[1].y = 0;
 
-    //phantoms[2].x = 11;
-    //phantoms[2].y = 0;
 
-    game.phantoms = 2;
+    phantoms[2].x = 11;
+    phantoms[2].y = 0;
+
+
     */
+
+
 }
 
 
@@ -387,13 +369,6 @@ void update_world(uint32_t now) {
     // Update the world at the end of the move cycle
     // Draw the graphics and animate the phantoms
 
-    // Move the phantoms periodically
-    if (now - last_phantom_move > game.phantom_speed) {
-        last_phantom_move = now;
-        move_phantoms();
-        check_senses();
-    }
-
     // Draw the world periodically
     if (now - last_draw > ANIM_TIME_US) {
         ssd1306_clear();
@@ -418,12 +393,48 @@ void update_world(uint32_t now) {
             ssd1306_rect(67, 31, 5, 2, 1, false);
         }
 
+        if (game.show_compass) {
+            ssd1306_circle(122, 5, 10, 0, false);
+            ssd1306_circle(122, 5, 8, 1, true);
+
+            switch(player_direction) {
+                case DIRECTION_NORTH:
+                case DIRECTION_SOUTH:
+                    ssd1306_line(122,2,122,8,0,1);
+                    break;
+                default:
+                    ssd1306_line(129,5,125,5,0,1);
+            }
+
+            switch(player_direction) {
+                case DIRECTION_NORTH:
+                    ssd1306_line(121,3,123,3,0,1);
+                    break;
+                case DIRECTION_SOUTH:
+                    ssd1306_line(121,7,123,7,0,1);
+                    break;
+                case DIRECTION_EAST:
+                    ssd1306_line(124,4,124,6,0,1);
+                    break;
+                default:
+                    ssd1306_line(120,4,120,6,0,1);
+            }
+
+        }
+
         ssd1306_draw();
         last_draw = now;
     }
 
+    // Move the phantoms periodically
+    if (now - last_phantom_move > game.phantom_speed) {
+        last_phantom_move = now;
+        move_phantoms();
+        check_senses();
+    }
+
     // Check for laser recharge
-    if (now - game.zap_time > 2100000) {
+    if (now - game.zap_time > LASER_RECHARGE_US) {
         game.zap_time = 0;
         game.can_fire = true;
     }
@@ -519,7 +530,7 @@ void fire_laser() {
             // Quickly show the map
             ssd1306_clear();
             show_scores();
-            sleep_ms(2000);
+            sleep_ms(MAP_POST_KILL_SHOW_MS);
 
             // Draw without the front phantom
             ssd1306_clear();
@@ -551,17 +562,13 @@ void death() {
     ssd1306_text(0, 8, "WERE", false, false);
     ssd1306_text(0, 16, "KILLED", false, false);
 
-    // Show the map
-    show_scores();
-    ssd1306_inverse(false);
-
-    // Play the music
-    //play_death_march();
-
     ssd1306_text(0, 40, "PRESS", false, false);
     ssd1306_text(0, 48, "ANY", false, false);
     ssd1306_text(0, 56, "KEY", false, false);
-    ssd1306_draw();
+
+    // Show the map
+    show_scores();
+    ssd1306_inverse(false);
 
     // Wait for a key press
     inkey();
@@ -656,7 +663,7 @@ void play_intro() {
     int8_t a_tone = 0;
     bool sstate = true;
 
-    for (int8_t i = -8 ; i < 22 ; ++i) {
+    for (int8_t i = -8 ; i < 24 ; ++i) {
         ssd1306_clear();
         ssd1306_text(10, i, "THE PHANTOM SLAYER", false, false);
         ssd1306_draw();
@@ -664,7 +671,7 @@ void play_intro() {
         final_y = i;
     }
 
-    for (int8_t i = 64 ; i > 33 ; --i) {
+    for (int8_t i = 64 ; i > 32 ; --i) {
         ssd1306_clear();
         ssd1306_text(10, final_y, "THE PHANTOM SLAYER", false, false);
         ssd1306_text(26, i, "BY TONY SMITH", false, false);
@@ -687,7 +694,7 @@ void play_intro() {
  * Runtime start
  *
  */
-int main() {
+    int main() {
 
     // Setup the hardware
     setup();
@@ -718,8 +725,6 @@ int main() {
             tone(2200, 20, 0);
             sleep_ms(1000);
         }
-
-        //sleep_ms(10000);
 
         // Show the world...
         update_world(time_us_32());

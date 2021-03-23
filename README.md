@@ -4,21 +4,22 @@ Assorted projects made while playing with the [Raspberry Pi Pico](https://www.ra
 
 ## Phantoms ##
 
-A retro-style 3D arcade game written in C.
+A retro-style 3D arcade game written in C. For more details, [see this blog post]().
 
 ### Requirements ###
 
-* An SSD1306-based 128x64 OLED display; I used [this display](https://www.adafruit.com/product/1049)
+* An SSD1306-based 128x64 OLED display; I used [this display](https://www.adafruit.com/product/326)
 * A piezo speaker
 * Two small buttons
 * A two-way, self-centring analog joystick; there are [lots available on eBay](https://www.ebay.co.uk/itm/New-PSP-2-Axis-Analog-Thumb-GAME-Joystick-Module-3V-5V-For-arduino-PSP/401104248437?hash=item5d63ad1e75:g:HcEAAOSwjqVZNSzw)
 * Wires
+* Two standard breadboards
 
 ### Build ###
 
 <img src="images/phantoms.png" />
 
-* The joystick shown is not the one used, but it gives you the idea. Connect white to the X pin, grey to the Y pin.
+* The joystick shown is not the one used, but it gives you the idea. Connect purple to the X pin, white to the Y pin.
 
 ### The Game ###
 
@@ -26,8 +27,7 @@ See [this blog post for full details]().
 
 ### Credit ###
 
-This games is based on a 1982 original created by Ken Kalish for the Tandy Color Computer. The design is Ken’s; the code is mine, and I’ve taken only a few liberties with certain details.
-
+This games is based on a 1982 original created by Ken Kalish of Med Systems for the Tandy Color Computer. The design is Ken’s; the code is mine, and I’ve taken only a few liberties with certain details.
 
 ## Wumpus ##
 
@@ -42,6 +42,7 @@ A sample C project to build a fun game.
 * A red LED
 * A green LED
 * Wires
+* Two standard breadboards
 
 ### Build ###
 

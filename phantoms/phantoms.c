@@ -314,81 +314,39 @@ uint8_t get_facing_phantom(uint8_t range) {
     // 'range' is the number of squares we'll iterate
     // over
     uint8_t phantom = ERROR_CONDITION;
-    uint8_t i = 0;
 
     switch(player_direction) {
         case DIRECTION_NORTH:
             if (player_y == 0) return phantom;
-            i = player_y;
             if (player_y - range < 0) range = player_y;
-            do {
-                phantom = locate_phantom(player_x, i);
-                if (phantom != ERROR_CONDITION) return phantom;
-                i--;
-            } while (i >= player_y - range);
-
-            /*uint8_t end = player_y - range;
-            if (player_y - range < 0) end = 0;
-
-            for (int8_t i = player_y ; i >= end ; --i) {
+            for (int8_t i = player_y ; i > player_y - range ; --i) {
                 phantom = locate_phantom(player_x, i);
                 if (phantom != ERROR_CONDITION) return phantom;
             }
-            */
             break;
         case DIRECTION_EAST:
             if (player_x == 19) return phantom;
-            i = player_x;
             if (player_x + range > 19) range = 19 - player_x;
-            do {
-                phantom = locate_phantom(i, player_y);
-                if (phantom != ERROR_CONDITION) return phantom;
-                i++;
-            } while (i <= player_x + range);
-
-            /*
-            if (player_x + range > 19) range = 19 - player_x;
-            for (uint8_t i = player_x ; i < player_x + range ; ++i) {
+            for (int8_t i = player_x ; i < player_x + range ; ++i) {
                 phantom = locate_phantom(i, player_y);
                 if (phantom != ERROR_CONDITION) return phantom;
             }
-            */
             break;
         case DIRECTION_SOUTH:
             if (player_y == 19) return phantom;
-            i = player_y;
             if (player_y + range > 19) range = 19 - player_y;
-            do {
-                phantom = locate_phantom(player_x, i);
-                if (phantom != ERROR_CONDITION) return phantom;
-                i++;
-            } while (i <= player_y + range);
-
-            /*if (player_y + range > 19) range = 19 - player_y;
-            for (uint8_t i = player_y ; i < player_y + range ; ++i) {
+            for (int8_t i = player_y ; i < player_y + range ; ++i) {
                 phantom = locate_phantom(player_x, i);
                 if (phantom != ERROR_CONDITION) return phantom;
             }
-            */
             break;
         default:
             if (player_x == 0) return phantom;
             if (player_x - range < 0) range = player_x;
-            i = player_x;
-            do {
-                phantom = locate_phantom(i, player_y);
-                if (phantom != ERROR_CONDITION) return phantom;
-                i--;
-            } while (i >= player_x - range);
-
-            /*
-            if (player_x == 0) return phantom;
-            if (player_x - range < 0) range = player_x;
-            for (uint8_t i = player_x ; i >= player_x - range ; --i) {
+            for (int8_t i = player_x ; i > player_x - range ; --i) {
                 phantom = locate_phantom(i, player_y);
                 if (phantom != ERROR_CONDITION) return phantom;
             }
-            */
     }
 
     return phantom;
@@ -401,92 +359,35 @@ uint8_t count_facing_phantoms(uint8_t range) {
     // 'range' is the number of squares we'll iterate
     // over
     uint8_t count = 0;
-    uint8_t i = 0;
 
     switch(player_direction) {
         case DIRECTION_NORTH:
             if (player_y == 0) return count;
-            i = player_y;
             if (player_y - range < 0) range = player_y;
-            do {
-                if (get_square_contents(player_x, i) != MAP_TILE_WALL) {
-                    count += (locate_phantom(player_x, i) != ERROR_CONDITION ? 1 : 0);
-                i--;
-            } while (i >= player_y - range);
-
-            /*
-            if ((int8_t)player_y - (int8_t)range < 0) range = player_y;
-            for (uint8_t i = player_y - 1; i >= player_y - range ; --i) {
-                if (get_square_contents(player_x, i) != MAP_TILE_WALL) {
-                    count += (locate_phantom(player_x, i) != ERROR_CONDITION ? 1 : 0);
-                } else {
-                    break;
-                }
+            for (int8_t i = player_y ; i >= player_y - range ; --i) {
+                count += (locate_phantom(player_x, i) != ERROR_CONDITION ? 1 : 0);;
             }
-            */
             break;
         case DIRECTION_EAST:
             if (player_x == 19) return count;
-            i = player_x;
             if (player_x + range > 19) range = 19 - player_x;
-            do {
-                if (get_square_contents(i, player_y) != MAP_TILE_WALL) {
-                    count += (locate_phantom(i, player_y) != ERROR_CONDITION ? 1 : 0);
-                i++;
-            } while (i <= player_x + range);
-
-            /*if (player_x + range > 19) range = 19 - player_x;
-            for (uint8_t i = player_x ; i < player_x + range ; ++i) {
-                if (get_square_contents(i, player_y) != MAP_TILE_WALL) {
-                    count += (locate_phantom(i, player_y) != ERROR_CONDITION ? 1 : 0);
-                } else {
-                    break;
-                }
+            for (int8_t i = player_x ; i <= player_x + range ; ++i) {
+                count += (locate_phantom(i, player_y) != ERROR_CONDITION ? 1 : 0);;
             }
-            */
             break;
         case DIRECTION_SOUTH:
             if (player_y == 19) return count;
-            i = player_y;
             if (player_y + range > 19) range = 19 - player_y;
-            do {
-                if (get_square_contents(player_x, i) != MAP_TILE_WALL) {
-                    count += (locate_phantom(player_x, i) != ERROR_CONDITION ? 1 : 0);
-                i++;
-            } while (i <= player_y + range);
-
-            /*
-            if (player_y + range > 19) range = 19 - player_y;
-            for (uint8_t i = player_y ; i < player_y + range ; ++i) {
-                if (get_square_contents(player_x, i) != MAP_TILE_WALL) {
-                    count += (locate_phantom(player_x, i) != ERROR_CONDITION ? 1 : 0);
-                } else {
-                    break;
-                }
+            for (int8_t i = player_y ; i <= player_y + range ; ++i) {
+                count += (locate_phantom(player_x, i) != ERROR_CONDITION ? 1 : 0);;
             }
-            */
             break;
         default:
             if (player_x == 0) return count;
-            i = player_x;
             if (player_x - range < 0) range = player_x;
-            do {
-                if (get_square_contents(i, player_y) != MAP_TILE_WALL) {
-                    count += (locate_phantom(i, player_y) != ERROR_CONDITION ? 1 : 0);
-                i--;
-            } while (i >= player_x - range);
-
-            /*if (player_x == 0) return count;
-            if (player_x - range < 0) range = player_x;
-            for (uint8_t i = player_x ; i >= player_x - range ; --i) {
-                if (get_square_contents(i, player_y) != MAP_TILE_WALL) {
-                    count += (locate_phantom(i, player_y) != ERROR_CONDITION ? 1 : 0);
-                } else {
-                    break;
-                }
+            for (int8_t i = player_x ; i >= player_x - range ; --i) {
+                count += (locate_phantom(i, player_y) != ERROR_CONDITION ? 1 : 0);;
             }
-            */
-            break;
     }
 
     return count;

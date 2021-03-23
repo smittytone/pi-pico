@@ -105,7 +105,7 @@ void map_init() {
     // Load initial map
     // TODO Randomly generate a map
     uint8_t map = irandom(0,4);
-    //map = 0;
+    map = 1;
     switch(map) {
         case 0:
             current_map[0] = base_map_00;
@@ -266,23 +266,24 @@ void show_map(uint8_t y_delta, bool show_entities) {
                         ssd1306_plot(x + j * 3 + 1, y + i * 3 + 2, 0);
                         break;
                     default:
-                        ssd1306_plot(x + j * 3,     y + i * 3 + 1, 0);
-                        ssd1306_plot(x + j * 3 + 1, y + i * 3,     0);
+                        ssd1306_plot(x + j * 3 + 1, y + i * 3    , 0);
+                        ssd1306_plot(x + j * 3    , y + i * 3 + 1, 0);
                         ssd1306_plot(x + j * 3 + 1, y + i * 3 + 1, 0);
+                        ssd1306_plot(x + j * 3 + 2, y + i * 3 + 1, 0);
                         ssd1306_plot(x + j * 3 + 1, y + i * 3 + 2, 0);
-                        ssd1306_plot(x + j * 3 + 2,     y + i * 3, 0);
-                        ssd1306_plot(x + j * 3 + 2, y + i * 3 + 2, 0);
-                }
 
+                }
             }
 
             if (show_entities) {
-                // Show any phantoms at the current square
+                // Show any phantoms at the current square as a cross
                 for (uint8_t k = 0 ; k < game.phantoms; ++k) {
                     if (j == phantoms[k].x && i == phantoms[k].y) {
-                        ssd1306_plot(x + j * 3 + 1, y + i * 3, 0);
+                        ssd1306_plot(x + j * 3    , y + i * 3 + 1, 0);
+                        ssd1306_plot(x + j * 3 + 1, y + i * 3,     0);
                         ssd1306_plot(x + j * 3 + 1, y + i * 3 + 1, 0);
                         ssd1306_plot(x + j * 3 + 1, y + i * 3 + 2, 0);
+                        ssd1306_plot(x + j * 3 + 2, y + i * 3 + 1, 0);
                     }
                 }
             }
@@ -309,75 +310,47 @@ bool set_square_contents(uint8_t x, uint8_t y, uint8_t value) {
 }
 
 
-uint8_t get_view_distance(uint8_t x, uint8_t y, uint8_t direction) {
+uint8_t get_view_distance(int8_t x, int8_t y, uint8_t direction) {
     // Return the number of squares the player (at x,y) can see
     // ahead of them in the direction they are facing.
     // NOTE 'count' excludes the current square
     uint8_t count = 0;
     switch(direction) {
         case DIRECTION_NORTH:
-            while (true) {
-                if (y == 0 || get_square_contents(x, y) == MAP_TILE_WALL) break;
+            if (y == 0) return count;
+            --y;
+            do {
+                if (get_square_contents(x, y) == MAP_TILE_WALL) break;
                 ++count;
                 --y;
-            }
-            /*
-            for (uint8_t i = y - 1 ; i >= 0 ; --i) {
-                if (get_square_contents(x, i) != MAP_TILE_WALL) {
-                    count++;
-                } else {
-                    break;
-                }
-            }
-            */
+            } while (y >= 0);
             break;
         case DIRECTION_EAST:
-            while (true) {
-                if (x > 18 || get_square_contents(x, y) == MAP_TILE_WALL) break;
+            if (x > 18) return count;
+            x++;
+            do {
+                if (get_square_contents(x, y) == MAP_TILE_WALL) break;
                 ++count;
                 ++x;
-            }
-            /*
-            for (uint8_t i = x + 1 ; i < 20 ; ++i) {
-                if (get_square_contents(i, y) != MAP_TILE_WALL) {
-                    count++;
-                } else {
-                    break;
-                }
-            }
-            */
+            } while (x < 20);
             break;
         case DIRECTION_SOUTH:
-            while (true) {
-                if (y > 18 ||  get_square_contents(x, y) == MAP_TILE_WALL) break;
+            if (y > 18) return count;
+            ++y;
+            do {
+                if (get_square_contents(x, y) == MAP_TILE_WALL) break;
                 ++count;
                 ++y;
-            }
-            /*
-            for (uint8_t i = y + 1 ; i < 20 ; ++i) {
-                if (get_square_contents(x, i) != MAP_TILE_WALL) {
-                    count++;
-                } else {
-                    break;
-                }
-            }
-            */
+            } while (y < 20);
             break;
         default:
-            while (true) {
-                if (x == 0 || get_square_contents(x, y) == MAP_TILE_WALL) break;
+            if (x == 0) return count;
+            --x;
+            do {
+                if (get_square_contents(x, y) == MAP_TILE_WALL) break;
                 ++count;
                 --x;
-            }
-            /*
-            for (uint8_t i = x - 1 ; i >= 0 ; --i) {
-                if (get_square_contents(i, y) != MAP_TILE_WALL) {
-                    count++;
-                } else {
-                    break;
-                }
-            }
-            */
+            } while (x >= 0);
     }
 
     if (count > MAX_VIEW_RANGE) count = MAX_VIEW_RANGE;

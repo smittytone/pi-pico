@@ -24,7 +24,6 @@
 #include "hardware/adc.h"
 
 // Game includes
-#include "audio.h"
 #include "gfx.h"
 #include "map.h"
 #include "phantoms.h"
@@ -58,6 +57,7 @@ typedef struct {
     bool is_firing;
     bool can_teleport;
     bool is_joystick_centred;
+    bool show_compass;
 
     uint8_t phantoms;
     uint8_t audio_range;
@@ -142,6 +142,8 @@ void    tone(unsigned int frequency, unsigned long duration, unsigned long post)
 #define DEBOUNCE_TIME_US                                5000
 #define ANIM_TIME_US                                    22000
 #define PHANTOM_MOVE_TIME_US                            1000000
+#define LASER_RECHARGE_US                               2500000
+#define MAP_POST_KILL_SHOW_MS                           3000
 
 // Map square types
 #define MAP_TILE_WALL                                   0xEE
