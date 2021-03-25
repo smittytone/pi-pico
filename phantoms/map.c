@@ -105,7 +105,11 @@ void map_init() {
     // Load initial map
     // TODO Randomly generate a map
     uint8_t map = irandom(0,4);
+
+    /* TEST VALUE
     map = 1;
+    */
+
     switch(map) {
         case 0:
             current_map[0] = base_map_00;
@@ -251,11 +255,11 @@ void show_map(uint8_t y_delta, bool show_entities) {
                         break;
                     case DIRECTION_EAST:
                         ssd1306_plot(x + j * 3,     y + i * 3,     0);
-                        ssd1306_plot(x + j * 3,     y + i * 3 + 2, 0);
                         ssd1306_plot(x + j * 3 + 1, y + i * 3,     0);
                         ssd1306_plot(x + j * 3 + 1, y + i * 3 + 1, 0);
-                        ssd1306_plot(x + j * 3 + 1, y + i * 3 + 2, 0);
                         ssd1306_plot(x + j * 3 + 2, y + i * 3 + 1, 0);
+                        ssd1306_plot(x + j * 3,     y + i * 3 + 2, 0);
+                        ssd1306_plot(x + j * 3 + 1, y + i * 3 + 2, 0);
                         break;
                     case DIRECTION_SOUTH:
                         ssd1306_plot(x + j * 3,     y + i * 3,     0);
@@ -271,7 +275,7 @@ void show_map(uint8_t y_delta, bool show_entities) {
                         ssd1306_plot(x + j * 3 + 1, y + i * 3 + 1, 0);
                         ssd1306_plot(x + j * 3 + 2, y + i * 3 + 1, 0);
                         ssd1306_plot(x + j * 3 + 1, y + i * 3 + 2, 0);
-
+                        ssd1306_plot(x + j * 3 + 2, y + i * 3 + 2, 0);
                 }
             }
 

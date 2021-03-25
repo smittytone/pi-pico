@@ -18,6 +18,42 @@ const char angles[2][13] = {
     "\xFE\x7E\x7E\x7E\x3E\x3E\x3E\x1E\x1E\x1E\x1C\x1C\x1C"
 };
 
+const char phantom_frnt_00[144] =
+{"\x00\x00\x00\x00\x00\x00\x07\x1C\x38\x70\xF0\x78\x1D\x07\x00\x00\x00\x00\x03\x07\x07\x0F\x0F\x1F\xDF\xFF\x7F\x0F\x3F\x7F\xFF\x9F\x0F\x0F\x07\x07\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xF0\xF0\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xF0\xF0\x00\x00\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x00\x00\x00\x00\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x00\x00\x00\x00\xF0\xF0\xF0\xF0\xF0\xF0\xF0\xF0\xF0\xF0\xF0\xF0\xF0\xF0\x00\x00"};
+
+const char phantom_back_00[160] =
+{"\x00\x00\x00\x00\x00\x00\x07\x1F\x3F\x7F\xFF\xFF\xFF\x7F\x1F\x0F\x00\x00\x00\x00\x03\x07\x07\x0F\x0F\x1F\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x0F\x0F\x07\x07\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFC\xFC\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFC\xFC\x00\x00\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x00\x00\x00\x00\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x00\x00\x00\x00\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\xFC\x00\x00"};
+
+const char phantom_frnt_01[105] =
+{"\x00\x00\x00\x00\x00\x0F\x19\x60\xE0\x70\x1B\x0F\x00\x00\x00\x0F\x1F\x3F\x3F\x7F\x7F\xFF\xFF\xFF\xFF\xFF\x7F\x3F\x1F\x1F\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFC\xFC\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFC\xFC\x00\x00\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x00\x00\x00\x00\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x00\x00\x00\x00\xC0\xC0\xC0\xC0\xC0\xC0\xC0\xC0\xC0\xC0\xC0\x00\x00"};
+
+const char phantom_back_01[119] =
+{"\x00\x00\x00\x00\x00\x0F\x1F\x7F\xFF\xFF\xFF\x7F\x1F\x0F\x00\x00\x00\x0F\x1F\x3F\x3F\x7F\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x3F\x1F\x1F\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x00\x00\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x00\x00\x00\x00\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x00\x00\x00\x00\xF0\xF0\xF0\xF0\xF0\xF0\xF0\xF0\xF0\xF0\xF0\xF0\xF0\x00\x00"};
+
+const char phantom_frnt_02[60] =
+{"\x00\x00\x00\x01\x1D\x33\xC3\x63\x37\x1D\x00\x00\x3F\x7F\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x7F\x7F\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x00\x00\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x00\x00\x00\x00\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x00\x00"};
+
+const char phantom_back_02[84] =
+{"\x00\x00\x00\x01\x1F\x3F\xFF\xFF\xFF\x7F\x3F\x1E\x00\x00\x3F\x7F\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x7F\x7F\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xC0\xC0\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xC0\xC0\x00\x00\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x00\x00\x00\x00\xC0\xC0\xC0\xC0\xC0\xC0\xC0\xC0\xC0\xC0\x00\x00"};
+
+const char phantom_frnt_03[36] =
+{"\x00\x03\x07\x3F\xC7\x47\x3F\x01\x01\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xC0\xFF\xFF\xFF\xFF\xFF\xFF\xC0\xC0\x00\xFC\xFC\xFC\xFC\xFC\xFC\x00\x00"};
+
+const char phantom_back_03[55] =
+{"\x00\x01\x03\x1F\x7F\xFF\x7F\x3F\x1F\x00\x00\x7F\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFC\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFC\xFC\x00\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x00\x00\x00\x80\x80\x80\x80\x80\x80\x80\x80\x00\x00"};
+
+const char phantom_frnt_04[18] =
+{"\x07\x1F\x7F\x9F\x7F\x07\xF0\xFF\xFF\xFF\xFF\xF0\x00\xF0\xF0\xF0\xF0\x00"};
+
+const char phantom_back_04[24] =
+{"\x03\x0F\x3F\x7F\xFF\x7F\x3F\x03\xFE\xFF\xFF\xFF\xFF\xFF\xFF\xFE\x00\xFC\xFC\xFC\xFC\xFC\xFC\x00"};
+
+const char phantom_frnt_05[6] =
+{"\x3C\xFF\x3C\x00\xC0\x00"};
+
+const char phantom_back_05[10] =
+{"\x3F\xFF\xFF\xFF\x3F\x00\xF0\xF0\xF0\x00"};
+
 
 /*
  * GRAPHICS FUNCTIONS
@@ -31,7 +67,6 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
     uint8_t phantom_count = count_facing_phantoms(last_frame);
     phantom_count = (phantom_count << 4) | phantom_count;
     uint8_t i = 0;
-    //uint8_t squares = 0;
 
     switch(direction) {
         case DIRECTION_NORTH:
@@ -41,7 +76,7 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
             do {
                 draw_section(x, i, DIRECTION_WEST, DIRECTION_EAST, frame, last_frame);
                 if (phantom_count > 0 && locate_phantom(x, i) != ERROR_CONDITION) {
-                    draw_phantom(x, i, frame, &phantom_count);
+                    draw_phantom(frame, &phantom_count);
                 }
                 --frame;
                 ++i;
@@ -53,7 +88,7 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
             do {
                 draw_section(i, y, DIRECTION_NORTH, DIRECTION_SOUTH, frame, last_frame);
                 if (phantom_count > 0 && locate_phantom(i, y) != ERROR_CONDITION) {
-                    draw_phantom(i, y, frame, &phantom_count);
+                    draw_phantom(frame, &phantom_count);
                 }
                 --frame;
                 --i;
@@ -65,7 +100,7 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
             do {
                 draw_section(x, i, DIRECTION_EAST, DIRECTION_WEST, frame, last_frame);
                 if (phantom_count > 0 && locate_phantom(x, i) != ERROR_CONDITION) {
-                    draw_phantom(x, i, frame, &phantom_count);
+                    draw_phantom(frame, &phantom_count);
                 }
                 --frame;
                 --i;
@@ -77,7 +112,7 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
             do {
                 draw_section(i, y, DIRECTION_SOUTH, DIRECTION_NORTH, frame, last_frame);
                 if (phantom_count > 0 && locate_phantom(i, y) != ERROR_CONDITION) {
-                    draw_phantom(i, y, frame, &phantom_count);
+                    draw_phantom(frame, &phantom_count);
                 }
                 --frame;
                 ++i;
@@ -215,52 +250,119 @@ void draw_far_wall(uint8_t frame_index) {
 }
 
 
-void draw_phantom(uint8_t x, uint8_t y, uint8_t frame_index, uint8_t *count) {
-    // If there is a phantom at (x, y)? If so, draw it
-    // TODO Allow an x-axis shift so that multiple phantoms
-    //      (three max) appear side by side
+void draw_phantom(uint8_t frame_index, uint8_t *count) {
+    // Draw a Phantom in the specified frame - which determines
+    // its x and y co-ordinates in the frame
     Rect r = rects[frame_index];
-
     uint8_t dx = 64;
     uint8_t c = *count;
     uint8_t number_phantoms = c >> 4;
     uint8_t current = c & 0x0F;
+    uint8_t width = 9;
 
+    // Space the phantoms sidewats ccording to
+    // the number of them on screen
     if (number_phantoms > 1) {
         if (current == 2) dx = 64 - r.spot;
         if (current == 1) dx = 64 + r.spot;
         *count = c - 1;
     }
 
-    uint8_t p_height = r.height - 4;
-    uint8_t f_width = 6 - frame_index;
-    if ((f_width & 0x01) > 0) f_width += 1;
-    if (f_width == 0) f_width = 2;
-    uint8_t p_width = f_width << 1;
-    uint8_t bx = dx - (p_width >> 1);
-
-    // Body outer frame
-    ssd1306_rect(bx, r.y + 2, p_width, p_height, 1, false);
-    // Body inner fill
-    ssd1306_rect(bx + 1, r.y + 3, (p_width - 2), p_height - 2, 0, true);
-
-    // Face fill
-    ssd1306_rect(dx - (f_width >> 1), r.y + 5, f_width, 7 - frame_index, 1, true);
-
-    if (frame_index < 5) {
-        // Left arm
-        ssd1306_line(bx,     r.y + 12 - frame_index, bx,     32, 0, 1);
-        ssd1306_line(bx - 1, r.y + 12 - frame_index, bx - 1, 32, 1, 1);
-
-        // Right arm
-        ssd1306_line(bx + p_width - 1, r.y + 12 - frame_index, bx + p_width - 1, 32, 0, 1);
-        ssd1306_line(bx + p_width,     r.y + 12 - frame_index, bx + p_width,     32, 1, 1);
+    // NOTE Screen render frame indices run from 0 to 5, front to back
+    switch(frame_index) {
+        case 0:
+            width = 18;
+            dx -= (width >> 1);
+            draw_bitmap(dx - 1, r.y + 1, 20,    1, 160, &phantom_back_00[0]);
+            draw_bitmap(dx,     r.y + 2, width, 0, 144, &phantom_frnt_00[0]);
+            break;
+        case 1:
+            width = 15;
+            dx -= (width >> 1);
+            draw_bitmap(dx - 1, r.y + 1, 17,    1, 119, &phantom_back_01[0]);
+            draw_bitmap(dx,     r.y + 2, width, 0, 105, &phantom_frnt_01[0]);
+            break;
+        case 2:
+            width = 12;
+            dx -= (width >> 1);
+            draw_bitmap(dx - 1, r.y + 1, 14,    1, 84, &phantom_back_02[0]);
+            draw_bitmap(dx,     r.y + 2, width, 0, 60, &phantom_frnt_02[0]);
+            break;
+        case 3:
+            width = 9;
+            dx -= (width >> 1);
+            draw_bitmap(dx - 1, r.y    , 11,    1, 55, &phantom_back_03[0]);
+            draw_bitmap(dx,     r.y + 2, width, 0, 36, &phantom_frnt_03[0]);
+            break;
+        case 4:
+            width = 6;
+            dx -= (width >> 1);
+            draw_bitmap(dx - 1, r.y + 1, 8,     1, 24, &phantom_back_04[0]);
+            draw_bitmap(dx,     r.y + 2, width, 0, 18, &phantom_frnt_04[0]);
+            break;
+        default:
+            width = 3;
+            dx -= (width >> 1);
+            draw_bitmap(dx - 1, r.y + 1, 5,     0, 10, &phantom_frnt_05[0]);
+            draw_bitmap(dx,     r.y + 2, width, 1, 6,  &phantom_frnt_05[0]);
     }
+}
 
-    // Cowl top
-    p_width -= 1;
-    ssd1306_line(bx + 1, r.y + 1, bx + p_width, r.y + 2, 1, 1);
-    ssd1306_line(bx + 1, r.y + 2, bx + p_width, r.y + 2, 0, 1);
+
+void draw_bitmap(uint8_t x, uint8_t y, uint8_t width, uint8_t colour, uint8_t length, const char *bitmap) {
+    // Paint the specifiec monochrome bitmap to the screen
+    // with (x,y) the top-left co-ordinate. Zeros in the bit map are the
+    // 'alpha channel', Ones are set or unset according to the value of
+    // 'colour'. The value of 'length' is the number of bytes in the bitmap;
+    // 'width' is the number of bytes per row in the image. Bytes are vertical,
+    // with bit 0 at the top.
+
+    // Save the left-hand co-ord
+    uint8_t x_start = x;
+
+    for (uint8_t i = 0 ; i < length ; ++i) {
+        // Get the column byte
+        uint8_t col = ssd1306_text_flip(bitmap[i]);
+
+        // Get the topmost bit (in range 0-7)
+        uint8_t z = (y - ((y >> 3) << 3)) - 1;
+
+        // Run through the bits in the column, setting the destintation
+        // bit accordingly
+        for (uint8_t k = 0 ; k < 8 ; ++k) {
+            if (((y + k) % 8) == 0 && k > 0) {
+                z = 0;
+            } else {
+                z += 1;
+            }
+
+            if (x < oled_width) bitmap_plot(x, y, k, col, z, colour);
+        }
+
+        // Move onto the next byte along, cycling back when we
+        // get to the end of the width of the image
+        x++;
+        if (x >= x_start + width) {
+            x = x_start;
+            y += 8;
+        }
+    }
+}
+
+
+void bitmap_plot(int8_t x, int8_t y, uint8_t char_bit, uint16_t char_byte, uint8_t byte_bit, uint8_t colour) {
+    // Write a byte from bitmap to the screen buffer
+    if (x < 0 || x >= oled_width) return;
+    if (y + char_bit < 0 || y + char_bit >= oled_height) return;
+    uint16_t byte = ssd1306_coords_to_index(x, y + char_bit);
+
+    if (colour == 1) {
+        // Set the buffer pixel if it's set in the char byte
+        if ((char_byte & (1 << char_bit)) != 0) draw_buffer[byte] |= (1 << byte_bit);
+    } else {
+        // Clear the buffer pixel if it's set in the char byte
+        if ((char_byte & (1 << char_bit)) != 0) draw_buffer[byte] &= ~(1 << byte_bit);
+    }
 }
 
 

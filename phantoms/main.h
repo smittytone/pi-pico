@@ -34,38 +34,38 @@
  * STRUCTURE DEFINITIONS
  */
 typedef struct {
-    uint8_t x;
-    uint8_t y;
-    uint8_t width;
-    uint8_t height;
-    uint8_t spot;
+    uint8_t  x;
+    uint8_t  y;
+    uint8_t  width;
+    uint8_t  height;
+    uint8_t  spot;
 } Rect;
 
 typedef struct {
-    uint8_t x;
-    uint8_t y;
-    uint8_t hp;
-    uint8_t hp_max;
-    uint8_t direction;
-    uint8_t back_steps;
+    uint8_t  x;
+    uint8_t  y;
+    uint8_t  hp;
+    uint8_t  hp_max;
+    uint8_t  direction;
+    uint8_t  back_steps;
 } Phantom;
 
 typedef struct {
-    bool in_play;
-    bool show_reticule;
-    bool can_fire;
-    bool is_firing;
-    bool can_teleport;
-    bool is_joystick_centred;
-    bool show_compass;
+    bool     in_play;
+    bool     show_reticule;
+    bool     can_fire;
+    bool     is_firing;
+    bool     can_teleport;
+    bool     is_joystick_centred;
+    bool     show_compass;
 
-    uint8_t phantoms;
-    uint8_t audio_range;
-    uint8_t tele_x;
-    uint8_t tele_y;
-    uint8_t start_x;
-    uint8_t start_y;
-    uint8_t level_kills;
+    uint8_t  phantoms;
+    uint8_t  audio_range;
+    uint8_t  tele_x;
+    uint8_t  tele_y;
+    uint8_t  start_x;
+    uint8_t  start_y;
+    uint8_t  level_kills;
 
     uint16_t level;
     uint16_t level_score;
@@ -175,23 +175,23 @@ uint8_t  i2c_tx_buffer[1025];
 uint16_t oled_buffer_size;
 uint16_t i2c_tx_buffer_size;
 
-uint8_t *draw_buffer;
+uint8_t  *draw_buffer;
 
 // Player
-uint8_t player_x;
-uint8_t player_y;
-uint8_t player_direction;
+uint8_t  player_x;
+uint8_t  player_y;
+uint8_t  player_direction;
 
 // Graphics structures
-Rect rects[7];
+Rect     rects[7];
 
 // Game data
-Phantom phantoms[3];
-Game game;
+Phantom  phantoms[3];
+Game     game;
 
 uint32_t last_draw;
 uint32_t last_phantom_move;
-bool chase_mode;
+bool     chase_mode;
 uint16_t high_score;
 
 

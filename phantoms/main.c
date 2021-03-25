@@ -191,16 +191,12 @@ void create_world() {
     phantoms[0].x = 8;
     phantoms[0].y = 0;
 
-
     phantoms[1].x = 9;
     phantoms[1].y = 0;
 
-
     phantoms[2].x = 11;
     phantoms[2].y = 0;
-
-
-    */
+     */
 
 
 }
@@ -491,8 +487,6 @@ void do_teleport() {
 void fire_laser() {
     // Hit the front-most facing phantom, if there is one
 
-    // PLAY SOUND
-
     // Animate the zap
     uint8_t radii[] = {20, 16, 10, 4};
     memcpy(&temp_buffer[0], oled_buffer, oled_buffer_size);
@@ -596,20 +590,6 @@ void show_scores() {
 }
 
 
-void help() {
-
-    ssd1306_clear();
-    ssd1306_text(0, 0,  "Phantom Slayer is a", false, false);
-    ssd1306_text(0, 8,  "chase game played in", false, false);
-    ssd1306_text(0, 16, "a 3D maze. Each maze", false, false);
-    ssd1306_text(0, 24, "is inhabited by evil", false, false);
-    ssd1306_text(0, 32, "phantoms which can", false, false);
-    ssd1306_text(0, 40, "destroy you with a", false, false);
-    ssd1306_text(0, 48, "single touch!", false, false);
-    ssd1306_text(24, 56, "PRESS A KEY", false, false);
-}
-
-
 /*
  *  Misc Functions
  */
@@ -683,6 +663,7 @@ void play_intro() {
     for (int8_t i = 0 ; i < 10 ; ++i) {
         ssd1306_inverse(sstate);
         sstate = !sstate;
+        tone(4400, 40, 40);
         sleep_ms(200);
     }
 
@@ -699,11 +680,11 @@ void play_intro() {
     // Setup the hardware
     setup();
 
+    // Start a new game
+    play_intro();
+
     // Play the game
     while (1) {
-        // Start a new game
-        play_intro();
-
         // Set up the environment, once per game
         init_game();
         create_world();

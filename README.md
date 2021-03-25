@@ -4,16 +4,16 @@ Assorted projects made while playing with the [Raspberry Pi Pico](https://www.ra
 
 ## Phantoms ##
 
-A retro-style 3D arcade game written in C. For more details, [see this blog post]().
+A retro-style 3D arcade game written in C. For more details, [see this page](https://smittytone.net/pico-phantoms/).
 
 ### Requirements ###
 
-* An SSD1306-based 128x64 OLED display; I used [this display](https://www.adafruit.com/product/326)
-* A piezo speaker
-* Two small buttons
-* A two-way, self-centring analog joystick; there are [lots available on eBay](https://www.ebay.co.uk/itm/New-PSP-2-Axis-Analog-Thumb-GAME-Joystick-Module-3V-5V-For-arduino-PSP/401104248437?hash=item5d63ad1e75:g:HcEAAOSwjqVZNSzw)
-* Wires
-* Two standard breadboards
+* An SSD1306-based 128x64 OLED display; I used [this display](https://www.adafruit.com/product/326).
+* A piezo speaker.
+* Two small buttons.
+* A two-way, self-centring analog joystick; there are [lots available on eBay](https://www.ebay.co.uk/itm/New-PSP-2-Axis-Analog-Thumb-GAME-Joystick-Module-3V-5V-For-arduino-PSP/401104248437?hash=item5d63ad1e75:g:HcEAAOSwjqVZNSzw).
+* Wires.
+* Two standard breadboards.
 
 ### Build ###
 
@@ -35,14 +35,14 @@ A sample C project to build a fun game.
 
 ### Requirements ###
 
-* An HT16K33-based 8x8 LED matrix; I used [this display](https://www.adafruit.com/product/1049)
-* A piezo speaker
-* One small button
-* A two-way, self-centring analog joystick; there are [lots available on eBay](https://www.ebay.co.uk/itm/New-PSP-2-Axis-Analog-Thumb-GAME-Joystick-Module-3V-5V-For-arduino-PSP/401104248437?hash=item5d63ad1e75:g:HcEAAOSwjqVZNSzw)
-* A red LED
-* A green LED
-* Wires
-* Two standard breadboards
+* An HT16K33-based 8x8 LED matrix; I used [this display](https://www.adafruit.com/product/1049).
+* A piezo speaker.
+* One small button.
+* A two-way, self-centring analog joystick; there are [lots available on eBay](https://www.ebay.co.uk/itm/New-PSP-2-Axis-Analog-Thumb-GAME-Joystick-Module-3V-5V-For-arduino-PSP/401104248437?hash=item5d63ad1e75:g:HcEAAOSwjqVZNSzw).
+* A red LED.
+* A green LED.
+* Wires.
+* Two standard breadboards.
 
 ### Build ###
 
@@ -63,7 +63,7 @@ A green light indicates the Wumpus is close. Enter its square and it will eat yo
 
 ### Credit ###
 
-This version was based on an [Ardiuno version](https://github.com/coreyfaure/HuntTheWumpus-Arduino) created by Corey Faure. This is very much his game, but I have taken a few liberties with a couple of the animations and rewritten the code.
+This version was based on an [Arduino version](https://github.com/coreyfaure/HuntTheWumpus-Arduino) created by Corey Faure. This is very much his game, but I have taken a few liberties with a couple of the animations and rewritten the code.
 
 ## sensor ##
 
@@ -87,7 +87,7 @@ Pico project set up script for Z Shell. Requires Pico C SDK pre-installed.
 
 ## Updates ##
 
-- *Unreleased*
+- *26 March 2021*
     - Add Phantoms 1.0.0
 - *25 February 2021*
     - Bump Wumpus to 1.0.1
