@@ -235,7 +235,7 @@ void game_loop() {
                 if (player_direction == DIRECTION_WEST) nx += (dir == MOVE_FORWARD ? -1 : 1);
 
                 if (ny < 20 && nx < 20 && get_square_contents(nx, ny) != MAP_TILE_WALL) {
-                    // Has the player walked into a Phantom?
+                    // Has the player walked up to a Phantom?
                     if (locate_phantom(nx, ny) != ERROR_CONDITION) {
                         is_dead = true;
                     } else {
@@ -307,10 +307,10 @@ void game_loop() {
             }
         }
 
-        if (!is_dead) {
-            // Manage and draw the world
-            update_world(time_us_32());
+        // Manage and draw the world
+        update_world(time_us_32(), is_dead);
 
+        if (!is_dead) {
             // Check for a laser burst
             if (game.is_firing) {
                 game.is_firing = false;
@@ -361,12 +361,12 @@ uint8_t get_direction(uint16_t x, uint16_t y) {
 }
 
 
-void update_world(uint32_t now) {
+void update_world(uint32_t now, bool is_dead) {
     // Update the world at the end of the move cycle
     // Draw the graphics and animate the phantoms
 
     // Draw the world periodically
-    if (now - last_draw > ANIM_TIME_US) {
+    if (now - last_draw > ANIM_TIME_US || is_dead) {
         ssd1306_clear();
 
         if (chase_mode) {
@@ -510,8 +510,6 @@ void fire_laser() {
         p->hp -= 1;
         if (p->hp == 0) {
             // One dead phantom
-            p->x = ERROR_CONDITION;
-            p->y = ERROR_CONDITION;
             game.level_score += p->hp_max;
             ++game.level_kills;
 
@@ -531,6 +529,11 @@ void fire_laser() {
             draw_screen(player_x, player_y, player_direction);
             ssd1306_inverse(true);
             ssd1306_draw();
+
+            // Take the dead phantom off the board
+            // (so it gets re-rolled in 'managePhantoms()')
+            p->x = ERROR_CONDITION;
+            p->y = ERROR_CONDITION;
         }
     }
 
@@ -708,7 +711,7 @@ void play_intro() {
         }
 
         // Show the world...
-        update_world(time_us_32());
+        update_world(time_us_32(), false);
         ssd1306_inverse(true);
 
         // ...and start play
