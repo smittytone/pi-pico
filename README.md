@@ -25,9 +25,11 @@ A retro-style 3D arcade game written in C. For more details, [see this page](htt
 
 See [this blog post for full details]().
 
-### Credit ###
+### Credits ###
 
 This games is based on a 1982 original created by Ken Kalish of Med Systems for the Tandy Color Computer. The design is Ken’s; the code is mine, and I’ve taken only a few liberties with certain details.
+
+Phantoms uses [TinyMT](https://github.com/MersenneTwister-Lab/TinyMT), copyright © 2011 Mutsuo Saito, Makoto Matsumoto, Hiroshima University and The University of Tokyo. All rights reserved. Licensed under the [three-clause BSD Licence](/phantoms/TinyMT-Licence.txt).
 
 ## Wumpus ##
 

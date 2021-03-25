@@ -52,6 +52,10 @@ void setup() {
     adc_select_input(2);
     srand(adc_read());
 
+    // Randomise using TinyMT
+    // https://github.com/MersenneTwister-Lab/TinyMT
+    tinymt32_init(&tinymt_store, adc_read());
+
     // Set up the LED to flash with the speaker
     gpio_init(PIN_LED);
     gpio_set_dir(PIN_LED, GPIO_OUT);
@@ -597,9 +601,12 @@ void show_scores() {
  *  Misc Functions
  */
 int irandom(int start, int max) {
+    // Randomise using TinyMT
+    // https://github.com/MersenneTwister-Lab/TinyMT
     // Generate a PRG between 0 and max-1 then add start
     // Eg. 10, 20 -> range 10-29
-    return (rand() % max + start);
+    uint32_t value = tinymt32_generate_uint32(&tinymt_store);
+    return (value % max + start);
 }
 
 

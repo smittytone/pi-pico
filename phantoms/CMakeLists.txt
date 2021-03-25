@@ -10,6 +10,7 @@ add_executable(phantoms
     map.c
     phantoms.c
     ssd1306.c
+    tinymt32.c
 )
 
 pico_sdk_init()

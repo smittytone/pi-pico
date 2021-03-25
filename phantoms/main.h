@@ -28,6 +28,7 @@
 #include "map.h"
 #include "phantoms.h"
 #include "ssd1306.h"
+#include "tinymt32.h"
 
 
 /*
@@ -194,6 +195,7 @@ uint32_t last_phantom_move;
 bool     chase_mode;
 uint16_t high_score;
 
+tinymt32_t tinymt_store;
 
 // _PHANTOMS_MAIN_HEADER_
 #endif
