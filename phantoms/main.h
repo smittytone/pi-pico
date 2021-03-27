@@ -90,7 +90,7 @@ void    game_loop();
 bool    check_joystick(uint16_t x, uint16_t y) ;
 uint8_t get_direction(uint16_t x, uint16_t y);
 
-void    update_world(uint32_t now, bool is_dead);
+void    update_world(uint32_t now);
 void    check_senses();
 
 void    do_teleport();

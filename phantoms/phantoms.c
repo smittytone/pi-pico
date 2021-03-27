@@ -49,11 +49,12 @@ void move_phantoms() {
         if (p->x != ERROR_CONDITION) {
             uint8_t new_x = p->x;
             uint8_t new_y = p->y;
+            uint8_t new_direction = p->direction;
 
             // Get distance to player
             int8_t dx = p->x - player_x;
             int8_t dy = p->y - player_y;
-            
+
             // FROM 1.0.1
             // Move away from the player if we're reversing
             if (p->back_steps == 1) {
@@ -119,54 +120,61 @@ void move_phantoms() {
             if (count == 1) {
                 // Only one way to go, so take it
                 move_one(usable_directions, &new_x, &new_y, k);
+                new_direction = usable_directions;
             } else if (count == 2) {
                 // Two ways to go, so pick one at random
-                uint8_t r = irandom(0,2);
-                for (uint8_t i = 0 ; i < 4 ; ++i) {
-                    if (usable_directions & (i << i)) {
+                uint8_t r = (irandom(1,100) % 2);
+                uint8_t i = 0;
+                while(true) {
+                    if (usable_directions & (1 << i)) {
                         if (r == 0) {
-                            move_one((usable_directions & (i << i)), &new_x, &new_y, k);
+                            move_one((usable_directions & (1 << i)), &new_x, &new_y, k);
+                            new_direction = (usable_directions & (1 << i));
                             break;
                         } else {
                             r--;
                         }
                     }
+
+                    ++i;
+                    if (i > 3) i = 0;
                 }
-                
-                // FROM 1.0.1
-                uint8_t weights[2] = {0,0};
-                for (uint8_t i = 0 ; i < 2 ; ++i) {
-                    // For each available exit:
-                    // 1. Go to next junction
-                    //     1. Count exits: is it a dead end? weight -= 5
-                    //     2. Get new x delta: different, weight -1; zero +5
-                    //     3. Get new y delta: different, weight -1; zer0 +5
-                    //     4. Exit toward player? No: -10, yes +1
-                }
-                
             } else {
                 // Count == 0 -- special case where phantom can't move where it
                 // wants so must move away or wait (if it has NOWHERE to go)
                 if (available_directions != 0) {
-                    for (uint8_t i = 0 ; i < 4 ; ++i) {
+                    uint8_t i = 0;
+                    uint8_t r = irandom(0,4);
+                    while (true) {
                         // Just pick the first available direction and take it
-                        if (available_directions & (i << i)) {
-                            move_one((available_directions & (i << i)), &new_x, &new_y, k);
-                            p->back_steps = 1;
+                        uint8_t d = available_directions & (1 << i);
+                        if (d != p->direction) {
+                            if (r == 0) {
+                                move_one((available_directions & (1 << i)), &new_x, &new_y, k);
+                                new_direction = (usable_directions & (1 << i));
+                                p->back_steps = 1;
+                                break;
+                            } else {
+                                r--;
+                            }
                         }
+
+                        ++i;
+                        if (i > 3) i = 0;
                     }
                 }
             }
 
             // FROM 1.0.1
             // Clear back-tracking at a junction
-            if (p->back_steps == 1 && (exit_counts > 2 || (p->x == new_x && p->y == new_y))) {
+            if (p->back_steps == 1 && (exit_count > 2 || (p->x == new_x && p->y == new_y))) {
                 p->back_steps = 0;
             }
-            
+
             // Set the new location
             p->x = new_x;
             p->y = new_y;
+            p->direction = new_direction;
         }
     }
 }
@@ -238,7 +246,7 @@ void roll_new_phantom(uint8_t phantom_index) {
     while (true) {
         uint8_t x = irandom(0, 20);
         uint8_t y = irandom(0, 20);
-        
+
         // UPDATED 1.0.1
         // Make sure we're selecting a clear square, the player is not there
         // already and is not in an adjacent square either
@@ -246,7 +254,7 @@ void roll_new_phantom(uint8_t phantom_index) {
         good &= ((x != player_x) && (y != player_y));
         good &= ((x != player_x - 1) && (x != player_x + 1));
         good &= ((y != player_y - 1) && (y != player_y + 1));
-        
+
         if (good) {
             p->x = x;
             p->y = y;

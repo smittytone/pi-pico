@@ -106,7 +106,7 @@ void init_game() {
     game.start_y = 0;
     game.phantom_speed = PHANTOM_MOVE_TIME_US << 1;
 
-    chase_mode = false;
+    chase_mode = true;
 }
 
 
@@ -241,7 +241,7 @@ void game_loop() {
                     if (locate_phantom(nx, ny) != ERROR_CONDITION) {
                         game.in_play = false;
                     }
-                    
+
                     player_x = nx;
                     player_y = ny;
                 }
@@ -249,12 +249,12 @@ void game_loop() {
                 // Turn player right
                 ++player_direction;
                 if (player_direction > DIRECTION_WEST) player_direction = DIRECTION_NORTH;
-                animate_turn(false);
+                if (!chase_mode) animate_turn(false);
             } else if (dir == TURN_LEFT) {
                 // Turn player left
                 --player_direction;
                 if (player_direction > DIRECTION_WEST) player_direction = DIRECTION_WEST;
-                animate_turn(true);
+                if (!chase_mode) animate_turn(true);
             }
         }
 
@@ -711,7 +711,7 @@ void play_intro() {
         }
 
         // Show the world...
-        update_world(time_us_32(), false);
+        update_world(time_us_32());
         ssd1306_inverse(true);
 
         // ...and start play

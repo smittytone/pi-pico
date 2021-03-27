@@ -270,12 +270,13 @@ void show_map(uint8_t y_delta, bool show_entities) {
                         ssd1306_plot(x + j * 3 + 1, y + i * 3 + 2, 0);
                         break;
                     default:
-                        ssd1306_plot(x + j * 3 + 1, y + i * 3    , 0);
                         ssd1306_plot(x + j * 3    , y + i * 3 + 1, 0);
+                        ssd1306_plot(x + j * 3 + 1, y + i * 3    , 0);
                         ssd1306_plot(x + j * 3 + 1, y + i * 3 + 1, 0);
-                        ssd1306_plot(x + j * 3 + 2, y + i * 3 + 1, 0);
                         ssd1306_plot(x + j * 3 + 1, y + i * 3 + 2, 0);
+                        ssd1306_plot(x + j * 3 + 2, y + i * 3    , 0);
                         ssd1306_plot(x + j * 3 + 2, y + i * 3 + 2, 0);
+
                 }
             }
 
