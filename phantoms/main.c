@@ -1,7 +1,7 @@
 /*
  * Phantoms
  *
- * @version     1.0.0
+ * @version     1.0.1
  * @author      smittytone
  * @copyright   2021, Tony Smith
  * @licence     MIT
@@ -369,12 +369,20 @@ void update_world(uint32_t now, bool is_dead) {
     // Update the world at the end of the move cycle
     // Draw the graphics and animate the phantoms
 
+    // Move the phantoms periodically
+    if (now - last_phantom_move > game.phantom_speed) {
+        last_phantom_move = now;
+        move_phantoms();
+        check_senses();
+    }
+
     // Draw the world periodically
     if (now - last_draw > ANIM_TIME_US || is_dead) {
         ssd1306_clear();
 
         if (chase_mode) {
-            draw_screen(phantoms[0].x, phantoms[0].y, phantoms[0].direction);
+            show_map(0, true);
+            //draw_screen(phantoms[0].x, phantoms[0].y, phantoms[0].direction);
         } else {
             draw_screen(player_x, player_y, player_direction);
         }
@@ -424,13 +432,6 @@ void update_world(uint32_t now, bool is_dead) {
 
         ssd1306_draw();
         last_draw = now;
-    }
-
-    // Move the phantoms periodically
-    if (now - last_phantom_move > game.phantom_speed) {
-        last_phantom_move = now;
-        move_phantoms();
-        check_senses();
     }
 
     // Check for laser recharge

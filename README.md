@@ -31,7 +31,7 @@ This games is based on a 1982 original created by Ken Kalish of Med Systems for 
 
 Phantom Slayer uses [TinyMT](https://github.com/MersenneTwister-Lab/TinyMT), copyright © 2011 Mutsuo Saito, Makoto Matsumoto, Hiroshima University and The University of Tokyo. All rights reserved. Licensed under the [three-clause BSD Licence](/phantoms/TinyMT-Licence.txt).
 
-## Wumpus ##
+## Hunt the Wumpus ##
 
 A sample C project to build a fun game.
 
@@ -67,6 +67,8 @@ A green light indicates the Wumpus is close. Enter its square and it will eat yo
 
 This version was based on an [Arduino version](https://github.com/coreyfaure/HuntTheWumpus-Arduino) created by Corey Faure. This is very much his game, but I have taken a few liberties with a couple of the animations and rewritten the code.
 
+Hunt the Wumpus uses [TinyMT](https://github.com/MersenneTwister-Lab/TinyMT), copyright © 2011 Mutsuo Saito, Makoto Matsumoto, Hiroshima University and The University of Tokyo. All rights reserved. Licensed under the [three-clause BSD Licence](/wumpus/TinyMT-Licence.txt).
+
 ## sensor ##
 
 A sample C project. Requires an HT16K33-based 4-digit, 7-segment LED and an SGP30 TVOC sensor. I used [this sensor](https://shop.pimoroni.com/products/sgp30-air-quality-sensor-breakout) and [this display](https://www.adafruit.com/product/878):
@@ -89,6 +91,13 @@ Pico project set up script for Z Shell. Requires Pico C SDK pre-installed.
 
 ## Updates ##
 
+- *Unreleased*
+    - Bump Wumpus to 1.0.2
+        - Use TinyMT for random number generation.
+    - Bump Phantoms to 1.0.1
+        - Graphics tweaks.
+        - Improve Phantom movement logic.
+    - Bump makepico to 1.2.0.
 - *26 March 2021*
     - Add Phantoms 1.0.0
 - *25 February 2021*

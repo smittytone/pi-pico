@@ -1,14 +1,15 @@
 /*
- * 'Hunt the Wumpus' for Raspberry Pi Pico
+ * Hunt the Wumpus for Raspberry Pi Pico
  *
- * By Tony Smith
- * Original version by Corey Faure
- *
- * Version 1.0.2
+ * @version     1.0.2
+ * @authors     smittytone, Coreu Faure
+ * @copyright   2021, Tony Smith
+ * @licence     MIT
  *
  */
 #ifndef _WUMPUS_SPRITES_
 #define _WUMPUS_SPRITES_
+
 
 unsigned char bat_1[]   = "\x1E\x38\x6F\x3E\x3E\x6F\x38\x1E";
 unsigned char bat_2[]   = "\xF0\x38\x6F\x3E\x3E\x6F\x38\xF0";

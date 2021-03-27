@@ -7,7 +7,7 @@
 #
 # @author    Tony Smith
 # @copyright 2021, Tony Smith
-# @version   1.1.0
+# @version   1.2.0
 # @license   MIT
 #
 
@@ -29,7 +29,7 @@ fi
 
 show_help() {
     echo -e "\nMake a Pi Pico Project\n"
-    echo -e "Usage:\n  makepick [path/name] [-d] [-h]\n"
+    echo -e "Usage:\n  makepico [path/name] [-d] [-h]\n"
     echo    "Options:"
     echo    "  -d / --debug   Set up the project for SWD. Default: false"
     echo    "  -h / --help    This help screen"
@@ -79,20 +79,41 @@ make_source_files() {
     echo "Creating project files..."
     project_name=${1:t}
     source_file=${1:t:l}
-
+    
+    write_header "$project_name" "${1}/${source_file}.c"
+    write_header "$project_name" "${1}/${source_file}.h"
     {
-        echo -e "/*\n *    ${project_name}/${source_file}.h created by makepico\n */\n\n"
+        echo "#ifndef _${project_name:u}_HEADER_"
+        echo "#define _${project_name:u}_HEADER_"
+        echo
+        echo '#include <stdbool.h>'
         echo '#include <stdio.h>'
+        echo '#include <stdlib.h>'
+        echo '#include <string.h>'
+        echo '#include <time.h>'
         echo '#include "pico/stdlib.h"'
         echo '#include "pico/binary_info.h"'
         echo '#include "hardware/gpio.h"'
+        echo '#include "hardware/i2c.h"'
+        echo '#include "hardware/adc.h"'
+        echo
+        echo "#endif // _${project_name:u}_HEADER_"
     } >> "${1}/${source_file}.h"
+}
 
+write_header() {
+    # Write header info
     {
-        echo -e "/*\n *    ${project_name}/${source_file}.c created by makepico\n */\n\n"
-        echo "#include \"${source_file}.h\""
-        echo -e "\n\nint main() {\n    return 0;\n}\n"
-    } >> "${1}/${source_file}.c"
+        echo "/*"
+        echo " * ${1} for Raspberry Pi Pico"
+        echo " *"
+        echo " * @version     1.0.0"
+        echo " * @author      <YOU>"
+        echo " * @copyright   2021, <YOU>"
+        echo " * @licence     MIT"
+        echo " *"
+        echo " */"
+    } > "$2"
 }
 
 make_cmake_file() {
@@ -103,15 +124,23 @@ make_cmake_file() {
     project_name=${1:t}
     source_file=${project_name:l}
     {
-        echo "cmake_minimum_required(VERSION 3.12)"
-        echo "include(pico_sdk_import.cmake)"
-        echo "project(${project_name})"
-        echo "add_executable(${project_name} ${source_file}.c)"
+        echo 'cmake_minimum_required(VERSION 3.13)'
+        echo 'include(pico_sdk_import.cmake)'
+        echo "project(${project_name} VERSION 1.0.0)"
+        echo "add_executable(${project_name}"
+        echo "               ${source_file}.c)"
+        echo
         echo "pico_sdk_init()"
+        echo
         echo "pico_enable_stdio_usb(${project_name} 1)"
         echo "pico_enable_stdio_uart(${project_name} 1)"
         echo "pico_add_extra_outputs(${project_name})"
-        echo "target_link_libraries(${project_name} pico_stdlib hardware_gpio)"
+        echo
+        echo "target_link_libraries(${project_name}"
+        echo '                      pico_stdlib'
+        echo '                      hardware_gpio'
+        echo '                      hardware_i2c'
+        echo '                      hardware_adc)'
     } >> "${1}/CMakeLists.txt"
 }
 
@@ -121,41 +150,41 @@ make_vscode() {
     echo "Configuring VSCode..."
     mkdir "${1}/.vscode"
     {
-        echo "{"
-        echo "    \"cmake.environment\": {"
+        echo '{'
+        echo '    "cmake.environment": {'
         echo "        \"PICO_SDK_PATH\": \"${PICO_SDK_PATH}\""
-        echo "    },"
-        echo "    \"C_Cpp.default.configurationProvider\": \"ms-vscode.cmake-tools\""
-        echo "}"
+        echo '    },'
+        echo '    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools\"'
+        echo '}'
     } >> "${1}/.vscode/settings.json"
 
     # Debug flag set? write out an SWD launch config
     if [[ $do_swd -eq 1 ]]; then
         {
-            echo "{"
-            echo "    \"version\": \"0.2.0\","
-            echo "    \"configurations\": ["
-            echo "        {   \"name\": \"Pico Debug\","
-            echo "            \"device\": \"RP2040\","
-            echo "            \"gdbPath\": \"arm-none-eabi-gdb\","
-            echo "            \"cwd\": \"\${workspaceRoot}\","
-            echo "            \"executable\": \"\${command:cmake.launchTargetPath}\","
-            echo "            \"request\": \"launch\","
-            echo "            \"type\": \"cortex-debug\","
-            echo "            \"servertype\": \"openocd\","
-            echo "            \"configFiles\": ["
-            echo "                \"/interface/picoprobe.cfg\","
-            echo "                \"/target/rp2040.cfg\""
-            echo "            ],"
-            echo "            \"svdFile\": \"\${env:PICO_SDK_PATH}/src/rp2040/hardware_regs/rp2040.svd\","
-            echo "            \"runToMain\": true,"
-            echo "            \"postRestartCommands\": ["
-            echo "                \"break main\","
-            echo "                \"continue\""
-            echo "            ]"
-            echo "        }"
-            echo "    ]"
-            echo "}"
+            echo '{'
+            echo '    "version": "0.2.0",'
+            echo '    "configurations": ['
+            echo '        {   "name": "Pico Debug",'
+            echo '            "device": "RP2040",'
+            echo '            "gdbPath": "arm-none-eabi-gdb",'
+            echo '            "cwd": "\${workspaceRoot}",'
+            echo '            "executable": "\${command:cmake.launchTargetPath}",'
+            echo '            "request": "launch",'
+            echo '            "type": "cortex-debug",'
+            echo '            "servertype": "openocd",'
+            echo '            "configFiles": ['
+            echo '                "/interface/picoprobe.cfg",'
+            echo '                "/target/rp2040.cfg"'
+            echo '            ],'
+            echo '            "svdFile": "\${env:PICO_SDK_PATH}/src/rp2040/hardware_regs/rp2040.svd",'
+            echo '            "runToMain": true,'
+            echo '            "postRestartCommands": ['
+            echo '                "break main",'
+            echo '                "continue"'
+            echo '            ]'
+            echo '        }'
+            echo '    ]'
+            echo '}'
         } >> "${1}/.vscode/launch.json"
     fi
 }

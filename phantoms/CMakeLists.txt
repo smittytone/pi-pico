@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.13)
 
 include(pico_sdk_import.cmake)
 
-project(phantoms VERSION 1.0.0)
+project(phantoms VERSION 1.0.1)
 
 add_executable(phantoms
     main.c

@@ -1,14 +1,15 @@
 /*
- * 'Hunt the Wumpus' for Raspberry Pi Pico
+ * Hunt the Wumpus for Raspberry Pi Pico
  *
- * By Tony Smith
- * Original version by Corey Faure
- *
- * Version 1.0.2
+ * @version     1.0.2
+ * @authors     smittytone, Coreu Faure
+ * @copyright   2021, Tony Smith
+ * @licence     MIT
  *
  */
 #ifndef _WUMPUS_HEADER_
 #define _WUMPUS_HEADER_
+
 
 /*
  *  Includes
@@ -26,6 +27,7 @@
 
 // Sprite Data
 #include "sprites.h"
+#include "tinymt32.h"
 
 
 /*
@@ -84,6 +86,7 @@ int irandom(int start, int max);
 void tone(unsigned int frequency, unsigned long duration, unsigned long post) ;
 bool digitalRead(uint8_t pin);
 
+
 /*
  *  Constants
  */
@@ -118,6 +121,7 @@ bool digitalRead(uint8_t pin);
 #define HT16K33_ADDRESS                 0x70
 
 #define DEBOUNCE_TIME_US                10000
+
 
 // _WUMPUS_HEADER_
 #endif

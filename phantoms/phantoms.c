@@ -1,7 +1,7 @@
 /*
  * Phantoms
  *
- * @version     1.0.0
+ * @version     1.0.1
  * @author      smittytone
  * @copyright   2021, Tony Smith
  * @licence     MIT
@@ -53,6 +53,12 @@ void move_phantoms() {
             // Get distance to player
             int8_t dx = p->x - player_x;
             int8_t dy = p->y - player_y;
+            
+            // Move away from the player if we're reversing
+            if (p->back_steps == 1) {
+                dx *= -1;
+                dy *= -1;
+            }
 
             // Has the phantom got the player?
             if (dx == 0 && dy == 0) {
@@ -64,22 +70,27 @@ void move_phantoms() {
             uint8_t available_directions = 0;
             uint8_t favoured_directions = 0;
             uint8_t usable_directions = 0;
+            uint8_t exit_count = 0;
 
             // Determine the directions in which the phantom *can* move: empty spaces with no phantom already there
             if (p->x > 0 && get_square_contents(p->x - 1, p->y) != MAP_TILE_WALL && locate_phantom(p->x - 1, p->y) == ERROR_CONDITION) {
                 available_directions |= PHANTOM_WEST;
+                ++exit_count;
             }
 
             if (p->x < 19 && get_square_contents(p->x + 1, p->y) != MAP_TILE_WALL && locate_phantom(p->x + 1, p->y) == ERROR_CONDITION) {
                 available_directions |= PHANTOM_EAST;
+                ++exit_count;
             }
 
             if (p->y > 0 && get_square_contents(p->x, p->y - 1) != MAP_TILE_WALL && locate_phantom(p->x, p->y - 1) == ERROR_CONDITION) {
                 available_directions |= PHANTOM_NORTH;
+                ++exit_count;
             }
 
             if (p->y < 19 && get_square_contents(p->x, p->y + 1) != MAP_TILE_WALL && locate_phantom(p->x, p->y + 1) == ERROR_CONDITION) {
                 available_directions |= PHANTOM_SOUTH;
+                ++exit_count;
             }
 
             if (available_directions == 0) {
@@ -114,11 +125,24 @@ void move_phantoms() {
                     if (usable_directions & (i << i)) {
                         if (r == 0) {
                             move_one((usable_directions & (i << i)), &new_x, &new_y, k);
+                            break;
                         } else {
                             r--;
                         }
                     }
                 }
+                
+                // NEW CODE
+                uint8_t weights[2] = {0,0};
+                for (uint8_t i = 0 ; i < 2 ; ++i) {
+                    // For each available exit:
+                    // 1. Go to next junction
+                    //     1. Count exits: is it a dead end? weight -= 5
+                    //     2. Get new x delta: different, weight -1; zero +5
+                    //     3. Get new y delta: different, weight -1; zer0 +5
+                    //     4. Exit toward player? No: -10, yes +1
+                }
+                
             } else {
                 // Count == 0 -- special case where phantom can't move where it
                 // wants so must move away or wait (if it has NOWHERE to go)
@@ -127,11 +151,17 @@ void move_phantoms() {
                         // Just pick the first available direction and take it
                         if (available_directions & (i << i)) {
                             move_one((available_directions & (i << i)), &new_x, &new_y, k);
+                            p->back_steps = 1;
                         }
                     }
                 }
             }
 
+            // Clear back-tracking at a junction
+            if (p->back_steps == 1 && (exit_counts > 2 || (p->x == new_x && p->y == new_y))) {
+                p->back_steps = 0;
+            }
+            
             // Set the new location
             p->x = new_x;
             p->y = new_y;

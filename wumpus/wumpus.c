@@ -1,13 +1,14 @@
 /*
- * 'Hunt the Wumpus' for Raspberry Pi Pico
+ * Hunt the Wumpus for Raspberry Pi Pico
  *
- * By Tony Smith
- * Original version by Corey Faure
- *
- * Version 1.0.2
+ * @version     1.0.2
+ * @authors     smittytone, Coreu Faure
+ * @copyright   2021, Tony Smith
+ * @licence     MIT
  *
  */
 #include "wumpus.h"
+
 
 /*
  *  Globals
@@ -36,6 +37,10 @@ uint8_t buffer[8];
 uint32_t debounce_count_button = 0;
 bool is_joystick_centred = true;
 uint32_t last_player_pixel_flash = 0;
+
+// TinyMT RNG store
+tinymt32_t tinymt_store;
+
 
 /*
  *  I2C Functions
@@ -186,8 +191,13 @@ void ht16k33_draw() {
  *  Misc Functions
  */
 int irandom(int start, int max) {
-    // Generate a PRG between start and max
-    return rand() % max + start;
+    // FROM 1.0.2
+    // Randomise using TinyMT rather than rand()
+    // https://github.com/MersenneTwister-Lab/TinyMT
+    // Generate a PRG between 0 and max-1 then add start
+    // Eg. 10, 20 -> range 10-29
+    uint32_t value = tinymt32_generate_uint32(&tinymt_store);
+    return (value % max + start);
 }
 
 void tone(unsigned int frequency, unsigned long duration, unsigned long post) {
@@ -258,6 +268,11 @@ void setup() {
     adc_gpio_init(28);
     adc_select_input(2);
     srand(adc_read());
+
+    // FROM 1.0.2
+    // Randomise using TinyMT
+    // https://github.com/MersenneTwister-Lab/TinyMT
+    tinymt32_init(&tinymt_store, adc_read());
 }
 
 void create_world() {
@@ -411,7 +426,7 @@ void game_loop() {
 
                     // Shoot arrow
                     fire_arrow_animation();
-                    
+
                     // Did the arrow hit or miss?
                     if (last_move_dir == 0) {
                         if (player_y < 7) {
