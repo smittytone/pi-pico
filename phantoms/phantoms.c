@@ -55,13 +55,6 @@ void move_phantoms() {
             int8_t dx = p->x - player_x;
             int8_t dy = p->y - player_y;
 
-            // FROM 1.0.1
-            // Move away from the player if we're reversing
-            if (p->back_steps == 1) {
-                dx *= -1;
-                dy *= -1;
-            }
-
             // Has the phantom got the player?
             if (dx == 0 && dy == 0) {
                 // Yes!
@@ -99,12 +92,31 @@ void move_phantoms() {
                 // Phantom can't move anywhere -- all its exits are currently blocked
                 return;
             }
+            
+            // FROM 1.0.1
+            // Move away from the player if we're reversing
+            uint8_t from = 0;
+            if (p->back_steps > 0) {
+                if (exit_count > 2) {
+                    p->back_steps == 0;
+                    from = get_direction(k);
+                } else {
+                    dx *= -1;
+                    dy *= -1;
+                    --p->back_steps;
+                }
+            }
 
             // Get move preferences
             if (dy > 0) favoured_directions |= PHANTOM_NORTH;
             if (dy < 0) favoured_directions |= PHANTOM_SOUTH;
             if (dx > 0) favoured_directions |= PHANTOM_WEST;
             if (dx < 0) favoured_directions |= PHANTOM_EAST;
+            
+            // FROM 1.0.1
+            // Remove the way the Phantom has come
+            // (when it's reversing and has reached a junction)
+            favoured_directions &= ~(1 << from);
 
             // Count up ways favoured moves and available squares match
             uint8_t count = 0;
@@ -123,7 +135,7 @@ void move_phantoms() {
                 new_direction = usable_directions;
             } else if (count == 2) {
                 // Two ways to go, so pick one at random
-                uint8_t r = (irandom(1,100) % 2);
+                uint8_t r = (irandom(1, 100) % 2);
                 uint8_t i = 0;
                 while(true) {
                     if (usable_directions & (1 << i)) {
@@ -143,16 +155,22 @@ void move_phantoms() {
                 // Count == 0 -- special case where phantom can't move where it
                 // wants so must move away or wait (if it has NOWHERE to go)
                 if (available_directions != 0) {
+                    // Just pick a random available direction and take it,
+                    // but take out the way the phantom came (provided it
+                    // doesn't leave it with no way out)
+                    from = get_direction(k);
+                    uint8_t ad = available_directions;
+                    ad &= ~(1 << from);
+                    if (ad != 0) available_directions = ad;
+                    
                     uint8_t i = 0;
-                    uint8_t r = irandom(0,4);
+                    uint8_t r = irandom(0, 4);
                     while (true) {
-                        // Just pick the first available direction and take it
-                        uint8_t d = available_directions & (1 << i);
-                        if (d != p->direction) {
+                        if (available_directions & (1 << i) > 0) {
                             if (r == 0) {
                                 move_one((available_directions & (1 << i)), &new_x, &new_y, k);
-                                new_direction = (usable_directions & (1 << i));
-                                p->back_steps = 1;
+                                new_direction = (available_directions & (1 << i));
+                                p->back_steps = 5;
                                 break;
                             } else {
                                 r--;
@@ -163,12 +181,6 @@ void move_phantoms() {
                         if (i > 3) i = 0;
                     }
                 }
-            }
-
-            // FROM 1.0.1
-            // Clear back-tracking at a junction
-            if (p->back_steps == 1 && (exit_count > 2 || (p->x == new_x && p->y == new_y))) {
-                p->back_steps = 0;
             }
 
             // Set the new location
@@ -187,6 +199,16 @@ void move_one(uint8_t c, uint8_t *x, uint8_t *y, uint8_t index) {
     if (c == PHANTOM_SOUTH) *y = p->y + 1;
     if (c == PHANTOM_EAST) *x = p->x + 1;
     if (c == PHANTOM_WEST) *x = p->x - 1;
+}
+
+
+uint8_t get_direction(phanton_index) {
+    // Return the direction the phantom has come from
+    Phantom *p = &phantoms[index];
+    if (p->direction == PHANTOM_WEST) return PHANTOM_EAST;
+    if (p->direction == PHANTOM_EAST) return PHANTOM_WEST;
+    if (p->direction == PHANTOM_NORTH) return PHANTOM_SOUTH;
+    return PHANTOM_NORTH;
 }
 
 
