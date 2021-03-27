@@ -54,6 +54,7 @@ void move_phantoms() {
             int8_t dx = p->x - player_x;
             int8_t dy = p->y - player_y;
             
+            // FROM 1.0.1
             // Move away from the player if we're reversing
             if (p->back_steps == 1) {
                 dx *= -1;
@@ -132,7 +133,7 @@ void move_phantoms() {
                     }
                 }
                 
-                // NEW CODE
+                // FROM 1.0.1
                 uint8_t weights[2] = {0,0};
                 for (uint8_t i = 0 ; i < 2 ; ++i) {
                     // For each available exit:
@@ -157,6 +158,7 @@ void move_phantoms() {
                 }
             }
 
+            // FROM 1.0.1
             // Clear back-tracking at a junction
             if (p->back_steps == 1 && (exit_counts > 2 || (p->x == new_x && p->y == new_y))) {
                 p->back_steps = 0;
@@ -189,27 +191,27 @@ void manage_phantoms() {
 
     if (game.level < MAX_PHANTOMS) {
         if (game.level_kills == game.level) {
-            ++game.level;
-            level_up = true;
             game.level_kills = 0;
+            ++game.level;
             ++game.phantoms;
+            level_up = true;
         }
     } else {
         if (game.level_kills == MAX_PHANTOMS) {
-            ++game.level;
-            level_up = true;
             game.level_kills = 0;
+            level_up = true;
+            ++game.level;
         }
     }
-
-    // Just in case...
-    if (game.phantoms > MAX_PHANTOMS) game.phantoms = MAX_PHANTOMS;
 
     // Did we level-up? Is so, set the phantom movement speed
     if (level_up) {
         uint8_t index = (game.level - 1) * 4;
         game.phantom_speed = ((PHANTOM_MOVE_TIME_US << level_data[index + 2]) >> level_data[index + 3]);
     }
+
+    // Just in case...
+    if (game.phantoms > MAX_PHANTOMS) game.phantoms = MAX_PHANTOMS;
 
     // Do we need to add any new phantoms to the board?
     for (uint8_t i = 0 ; i < game.phantoms ; ++i) {
@@ -236,7 +238,16 @@ void roll_new_phantom(uint8_t phantom_index) {
     while (true) {
         uint8_t x = irandom(0, 20);
         uint8_t y = irandom(0, 20);
-        if (get_square_contents(x, y) == MAP_TILE_CLEAR && x != player_x && y != player_y) {
+        
+        // UPDATED 1.0.1
+        // Make sure we're selecting a clear square, the player is not there
+        // already and is not in an adjacent square either
+        bool good = (get_square_contents(x, y) == MAP_TILE_CLEAR);
+        good &= ((x != player_x) && (y != player_y));
+        good &= ((x != player_x - 1) && (x != player_x + 1));
+        good &= ((y != player_y - 1) && (y != player_y + 1));
+        
+        if (good) {
             p->x = x;
             p->y = y;
             break;

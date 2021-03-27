@@ -211,8 +211,6 @@ void game_loop() {
     // Death will cause us to break out to the main
     // game-to-game loop
     do {
-        bool is_dead = false;
-
         // Read joystick analog output
         adc_select_input(0);
         uint16_t x = adc_read();
@@ -241,11 +239,11 @@ void game_loop() {
                 if (ny < 20 && nx < 20 && get_square_contents(nx, ny) != MAP_TILE_WALL) {
                     // Has the player walked up to a Phantom?
                     if (locate_phantom(nx, ny) != ERROR_CONDITION) {
-                        is_dead = true;
-                    } else {
-                        player_x = nx;
-                        player_y = ny;
+                        game.in_play = false;
                     }
+                    
+                    player_x = nx;
+                    player_y = ny;
                 }
             } else if (dir == TURN_RIGHT) {
                 // Turn player right
@@ -312,17 +310,14 @@ void game_loop() {
         }
 
         // Manage and draw the world
-        update_world(time_us_32(), is_dead);
+        update_world(time_us_32());
 
-        if (!is_dead) {
+        if (game.in_play) {
             // Check for a laser burst
             if (game.is_firing) {
                 game.is_firing = false;
                 fire_laser();
             }
-        } else {
-            // Player killed by some means
-            game.in_play = false;
         }
     } while (game.in_play);
 
@@ -365,7 +360,7 @@ uint8_t get_direction(uint16_t x, uint16_t y) {
 }
 
 
-void update_world(uint32_t now, bool is_dead) {
+void update_world(uint32_t now) {
     // Update the world at the end of the move cycle
     // Draw the graphics and animate the phantoms
 
@@ -377,7 +372,7 @@ void update_world(uint32_t now, bool is_dead) {
     }
 
     // Draw the world periodically
-    if (now - last_draw > ANIM_TIME_US || is_dead) {
+    if (now - last_draw > ANIM_TIME_US || !game.in_play) {
         ssd1306_clear();
 
         if (chase_mode) {
@@ -552,10 +547,7 @@ void fire_laser() {
  */
 void death() {
     // The player has died -- show the map and the score
-    for (unsigned int i = 400 ; i > 100 ; i -= 5) {
-        tone(i, 40, 0);
-    }
-
+    for (unsigned int i = 400 ; i > 100 ; i -= 5) tone(i, 40, 0);
     sleep_ms(200);
     tone(2200, 500, 500);
 
