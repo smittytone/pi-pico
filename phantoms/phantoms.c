@@ -92,14 +92,14 @@ void move_phantoms() {
                 // Phantom can't move anywhere -- all its exits are currently blocked
                 return;
             }
-            
+
             // FROM 1.0.1
             // Move away from the player if we're reversing
             uint8_t from = 0;
             if (p->back_steps > 0) {
                 if (exit_count > 2) {
                     p->back_steps == 0;
-                    from = get_direction(k);
+                    from = get_phantom_direction(k);
                 } else {
                     dx *= -1;
                     dy *= -1;
@@ -112,7 +112,7 @@ void move_phantoms() {
             if (dy < 0) favoured_directions |= PHANTOM_SOUTH;
             if (dx > 0) favoured_directions |= PHANTOM_WEST;
             if (dx < 0) favoured_directions |= PHANTOM_EAST;
-            
+
             // FROM 1.0.1
             // Remove the way the Phantom has come
             // (when it's reversing and has reached a junction)
@@ -158,11 +158,11 @@ void move_phantoms() {
                     // Just pick a random available direction and take it,
                     // but take out the way the phantom came (provided it
                     // doesn't leave it with no way out)
-                    from = get_direction(k);
+                    from = get_phantom_direction(k);
                     uint8_t ad = available_directions;
                     ad &= ~(1 << from);
                     if (ad != 0) available_directions = ad;
-                    
+
                     uint8_t i = 0;
                     uint8_t r = irandom(0, 4);
                     while (true) {
@@ -202,9 +202,9 @@ void move_one(uint8_t c, uint8_t *x, uint8_t *y, uint8_t index) {
 }
 
 
-uint8_t get_direction(phanton_index) {
+uint8_t get_phantom_direction(uint8_t phantom_index){
     // Return the direction the phantom has come from
-    Phantom *p = &phantoms[index];
+    Phantom *p = &phantoms[phantom_index];
     if (p->direction == PHANTOM_WEST) return PHANTOM_EAST;
     if (p->direction == PHANTOM_EAST) return PHANTOM_WEST;
     if (p->direction == PHANTOM_NORTH) return PHANTOM_SOUTH;
