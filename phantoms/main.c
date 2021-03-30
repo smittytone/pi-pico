@@ -106,7 +106,10 @@ void init_game() {
     game.start_y = 0;
     game.phantom_speed = PHANTOM_MOVE_TIME_US << 1;
 
-    chase_mode = true;
+    // If these demo/test modes are both set,
+    // chase mode takes priority
+    chase_mode = false;
+    map_mode = false;
 }
 
 
@@ -249,12 +252,12 @@ void game_loop() {
                 // Turn player right
                 ++player_direction;
                 if (player_direction > DIRECTION_WEST) player_direction = DIRECTION_NORTH;
-                if (!chase_mode) animate_turn(false);
+                if (!chase_mode && !map_mode) animate_turn(false);
             } else if (dir == TURN_LEFT) {
                 // Turn player left
                 --player_direction;
                 if (player_direction > DIRECTION_WEST) player_direction = DIRECTION_WEST;
-                if (!chase_mode) animate_turn(true);
+                if (!chase_mode && !map_mode) animate_turn(true);
             }
         }
 
@@ -288,6 +291,7 @@ void game_loop() {
                     game.show_reticule = false;
                     game.is_firing = true;
                     game.can_fire = false;
+                    game.zap_time = time_us_32();
                 }
             }
         }
@@ -376,8 +380,9 @@ void update_world(uint32_t now) {
         ssd1306_clear();
 
         if (chase_mode) {
+            draw_screen(phantoms[0].x, phantoms[0].y, phantoms[0].direction);
+        } else if (map_mode) {
             show_map(0, true);
-            //draw_screen(phantoms[0].x, phantoms[0].y, phantoms[0].direction);
         } else {
             draw_screen(player_x, player_y, player_direction);
         }
@@ -547,9 +552,9 @@ void fire_laser() {
  */
 void death() {
     // The player has died -- show the map and the score
-    for (unsigned int i = 400 ; i > 100 ; i -= 5) tone(i, 40, 0);
-    sleep_ms(200);
-    tone(2200, 500, 500);
+    for (unsigned int i = 400 ; i > 100 ; i -= 2) tone(i, 30, 0);
+    sleep_ms(50);
+    tone(2200, 500, 600);
 
     ssd1306_clear();
     ssd1306_text(0, 0, "YOU", false, false);
@@ -666,8 +671,10 @@ void play_intro() {
     for (int8_t i = 0 ; i < 10 ; ++i) {
         ssd1306_inverse(sstate);
         sstate = !sstate;
-        tone(4400, 40, 40);
-        sleep_ms(200);
+        for (int8_t j = 0 ; j < 20 ; ++j) {
+            tone(irandom(100, 500), 5, 0);
+        }
+        sleep_ms(300);
     }
 
     sleep_ms(5000);

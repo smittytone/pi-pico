@@ -97,13 +97,17 @@ void move_phantoms() {
             // Move away from the player if we're reversing
             uint8_t from = 0;
             if (p->back_steps > 0) {
+                from = get_phantom_direction(k);
                 if (exit_count > 2) {
-                    p->back_steps == 0;
-                    from = get_phantom_direction(k);
+                    // Backed up to a junction, ie. a square with more than
+                    // two exits, so try to move toward the player again
+
+                    p->back_steps = 0;
                 } else {
+                    // Not at a junction, so keep moving away
                     dx *= -1;
                     dy *= -1;
-                    --p->back_steps;
+                    //--p->back_steps;
                 }
             }
 
@@ -114,9 +118,9 @@ void move_phantoms() {
             if (dx < 0) favoured_directions |= PHANTOM_EAST;
 
             // FROM 1.0.1
-            // Remove the way the Phantom has come
-            // (when it's reversing and has reached a junction)
-            favoured_directions &= ~(1 << from);
+            // Remove the way the Phantom has come,
+            // ie. when it's reversing and has reached a junction
+            favoured_directions &= (~from);
 
             // Count up ways favoured moves and available squares match
             uint8_t count = 0;
@@ -160,17 +164,17 @@ void move_phantoms() {
                     // doesn't leave it with no way out)
                     from = get_phantom_direction(k);
                     uint8_t ad = available_directions;
-                    ad &= ~(1 << from);
+                    ad &= (~from);
                     if (ad != 0) available_directions = ad;
 
                     uint8_t i = 0;
                     uint8_t r = irandom(0, 4);
                     while (true) {
-                        if (available_directions & (1 << i) > 0) {
+                        if ((available_directions & (1 << i)) > 0) {
                             if (r == 0) {
                                 move_one((available_directions & (1 << i)), &new_x, &new_y, k);
                                 new_direction = (available_directions & (1 << i));
-                                p->back_steps = 5;
+                                p->back_steps = 1;
                                 break;
                             } else {
                                 r--;

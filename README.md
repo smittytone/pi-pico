@@ -2,7 +2,7 @@
 
 Assorted projects made while playing with the [Raspberry Pi Pico](https://www.raspberrypi.org/documentation/pico/getting-started/).
 
-## Phantom Slayer ##
+## Phantom Slayer 1.0.1 ##
 
 A retro-style 3D arcade game written in C. For more details, [see this page](https://smittytone.net/pico-phantoms/).
 
@@ -21,6 +21,14 @@ A retro-style 3D arcade game written in C. For more details, [see this page](htt
 
 * The joystick shown is not the one used, but it gives you the idea. Connect purple to the X pin, white to the Y pin.
 
+### The Code ###
+
+Build from source code, or copy `phantoms.uf2` to your Pico. Please check the SHA 256:
+
+```
+ae88d63272dcc14d9f81563ab6bdb17151b3a34b5e09eb64ade5613e901547ee
+```
+
 ### The Game ###
 
 See [this blog post for full details](https://blog.smittytone.net/2021/03/26/3d-arcade-action-courtesy-of-raspberry-pi-pico/).
@@ -31,7 +39,7 @@ This games is based on a 1982 original created by Ken Kalish of Med Systems for 
 
 Phantom Slayer uses [TinyMT](https://github.com/MersenneTwister-Lab/TinyMT), copyright © 2011 Mutsuo Saito, Makoto Matsumoto, Hiroshima University and The University of Tokyo. All rights reserved. Licensed under the [three-clause BSD Licence](/phantoms/TinyMT-Licence.txt).
 
-## Hunt the Wumpus ##
+## Hunt the Wumpus 1.0.2 ##
 
 A sample C project to build a fun game.
 
@@ -52,6 +60,14 @@ A sample C project to build a fun game.
 
 * Make sure you wire the LEDs correctly: longer leg to the Pico pin, shorter leg to GND.
 * The joystick shown is not the one used, but it gives you the idea. Connect white to the X pin, blue to the Y pin.
+
+### The Code ###
+
+Build from source code, or copy `wumpus.uf2` to your Pico. Please check the SHA 256:
+
+```
+65957c643df25f89ddd3f70f16131c7037e582fa04743c35b7af78b90eb0a0f5
+```
 
 ### The Game ###
 
@@ -97,6 +113,7 @@ Pico project set up script for Z Shell. Requires Pico C SDK pre-installed.
     - Bump Phantoms to 1.0.1
         - Graphics tweaks.
         - Improve Phantom movement logic.
+        - Fix laser post-fire delay.
     - Bump makepico to 1.2.0.
 - *26 March 2021*
     - Add Phantoms 1.0.0
