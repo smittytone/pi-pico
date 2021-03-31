@@ -101,7 +101,7 @@ void    show_scores();
 
 int     irandom(int start, int max);
 void    inkey();
-void    tone(unsigned int frequency, unsigned long duration, unsigned long post);
+void    tone(unsigned int frequency_hz, unsigned long duration_ms, unsigned long post_play_delay_ms);
 
 
 /*

@@ -26,7 +26,7 @@ A retro-style 3D arcade game written in C. For more details, [see this page](htt
 Build from source code, or copy `phantoms.uf2` to your Pico. Please check the SHA 256:
 
 ```
-ae88d63272dcc14d9f81563ab6bdb17151b3a34b5e09eb64ade5613e901547ee
+226bc982d7103782eec813ed0c1002174995f1f9f4c2e90d002fb5a80b38b918
 ```
 
 ### The Game ###
@@ -107,13 +107,13 @@ Pico project set up script for Z Shell. Requires Pico C SDK pre-installed.
 
 ## Updates ##
 
-- *Unreleased*
-    - Bump Wumpus to 1.0.2
-        - Use TinyMT for random number generation.
+- *31 March 2021*
     - Bump Phantoms to 1.0.1
         - Graphics tweaks.
         - Improve Phantom movement logic.
         - Fix laser post-fire delay.
+    - Bump Wumpus to 1.0.2
+        - Use TinyMT for random number generation.
     - Bump makepico to 1.2.0.
 - *26 March 2021*
     - Add Phantoms 1.0.0

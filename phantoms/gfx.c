@@ -18,6 +18,12 @@ const char angles[2][13] = {
     "\xFE\x7E\x7E\x7E\x3E\x3E\x3E\x1E\x1E\x1E\x1C\x1C\x1C"
 };
 
+/*
+ *  Phantom shape graphics
+ *  There are shapes for the mask + border, and the Phantom itself,
+ *  each at set distance from the player defined by the frame rects
+ */
+
 const char phantom_frnt_00[144] =
 {"\x00\x00\x00\x00\x00\x00\x07\x1C\x38\x70\xF0\x78\x1D\x07\x00\x00\x00\x00\x03\x07\x07\x0F\x0F\x1F\xDF\xFF\x7F\x0F\x3F\x7F\xFF\x9F\x0F\x0F\x07\x07\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xF0\xF0\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xF0\xF0\x00\x00\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x00\x00\x00\x00\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x00\x00\x00\x00\xF0\xF0\xF0\xF0\xF0\xF0\xF0\xF0\xF0\xF0\xF0\xF0\xF0\xF0\x00\x00"};
 
@@ -71,13 +77,23 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
     switch(direction) {
         case DIRECTION_NORTH:
             // Viewer is facing north, so left = West, right = East
-            // Run through the squares from current to the view limit
+            // Run through the squares from the view limit (inner frame) forward
+            // to the player's current square (outer frame)
             i = y - last_frame;
             do {
+                // Draw the current frame
                 draw_section(x, i, DIRECTION_WEST, DIRECTION_EAST, frame, last_frame);
+                
+                // Check for the presence of a Phantom on the drawn square
+                // and, if there is, draw it in
+                // NOTE 'phantom_count comes back so we can keep track of multiple
+                //      Phantoms in the player's field of view and space them
+                //      laterally
                 if (phantom_count > 0 && locate_phantom(x, i) != ERROR_CONDITION) {
                     draw_phantom(frame, &phantom_count);
                 }
+                
+                // Move to the next frame and square
                 --frame;
                 ++i;
             } while (frame >= 0);
@@ -125,11 +141,9 @@ bool draw_section(uint8_t x, uint8_t y, uint8_t left_dir, uint8_t right_dir, uin
     // Refactor out common code from 'draw_screen()'
     // Return 'true' when we've got to the furthest rendered square,
     // 'false' otherwise
-
-    // Is the square a teleporter?
-    if (x == game.tele_x && y == game.tele_y) {
-        draw_teleporter(current_frame);
-    }
+ 
+    // Is the square a teleporter? If so, draw it
+    if (x == game.tele_x && y == game.tele_y) draw_teleporter(current_frame);
 
     // Draw in left and right wall segments
     // NOTE Second argument is true or false: wall section is
@@ -158,11 +172,12 @@ void draw_floor_line(uint8_t frame_index) {
 
 
 void draw_teleporter(uint8_t frame_index) {
-    // Draw a grey floor tile o indicate the Escape teleport location.
-    // When stepping on this, the player can beam heat to their start point
+    // Draw a grey floor tile to indicate the Escape teleport location.
+    // When stepping on this, the player can beam to their start point
     Rect r = rects[frame_index];
     bool dot_state = true;
-
+    
+    // Plot a dot pattern
     for (uint8_t y = r.y + r.height -  4; y < r.y + r.height ; ++y) {
         for (uint8_t i = r.x ; i < r.x + r.width - 2; i += 2) {
             ssd1306_plot(dot_state ? i : i + 1, y, 1);
@@ -176,6 +191,8 @@ void draw_left_wall(uint8_t frame_index, bool is_open) {
     // Render a left-side wall section for the current square
     // NOTE 'is_open' is true if there is no wall -- we're at
     //      a junction point
+    
+    // 'i'ner and 'o'uter frames
     Rect i = rects[frame_index + 1];
     Rect o = rects[frame_index];
 
@@ -210,6 +227,8 @@ void draw_right_wall(uint8_t frame_index, bool is_open) {
     // Render a right-side wall section for the current square
     // NOTE 'is_open' is true if there is no wall -- we're at
     //      a junction point
+    
+    // 'i'ner and 'o'uter frames
     Rect i = rects[frame_index + 1];
     Rect o = rects[frame_index];
 
@@ -260,7 +279,7 @@ void draw_phantom(uint8_t frame_index, uint8_t *count) {
     uint8_t current = c & 0x0F;
     uint8_t width = 9;
 
-    // Space the phantoms sidewats ccording to
+    // Space the phantoms sideways ccording to
     // the number of them on screen
     if (number_phantoms > 1) {
         if (current == 2) dx = 64 - r.spot;

@@ -62,14 +62,17 @@ void setup() {
     gpio_put(PIN_LED, false);
 
     // Make the graphic frame rects
-    // NOTE These are pixel values
-    uint8_t coords[] = { 0, 0,128,64,44,     // Outer LED frame
-                        11, 5,106,54,31,
-                        24,10, 80,44,21,
-                        36,15, 56,34,14,
-                        47,20, 34,24, 8,
-                        55,25, 18,14, 4,
-                        61,27,  6,10,63};    // 'End wall' for distant views
+    // NOTE These are pixel values:
+    //      left, top, width, height, Phantom lateral offset
+    uint8_t coords[] = { 0,  0, 128, 64, 44,     // Outer LED frame
+                        11,  5, 106, 54, 31,
+                        24, 10,  80, 44, 21,
+                        36, 15,  56, 34, 14,
+                        47, 20,  34, 24,  8,
+                        55, 25,  18, 14,  4,
+                        61, 27,   6, 10, 63};    // 'End wall' for distant views
+
+    // Read the array values into Rect structures
     uint8_t count = 0;
     for (uint8_t i = 0 ; i < sizeof(coords) ; i += 5) {
         Rect a_rect;
@@ -81,6 +84,7 @@ void setup() {
         rects[count++] = a_rect;
     }
 
+    // Set the address of the buffer we'll draw to
     draw_buffer = &oled_buffer[0];
 }
 
@@ -114,7 +118,7 @@ void init_game() {
 
 
 void init_phantoms() {
-    // Reset the phantoms structure
+    // Reset the array stored phantoms structures
     for (uint8_t i = 0 ; i < 3 ; ++i) {
         Phantom* p = &phantoms[i];
         p->x = ERROR_CONDITION;
@@ -174,6 +178,7 @@ void create_world() {
     init_phantoms();
 
     // Add the first phantom to the map, everywhere but empty
+    // or where the player
     while (true) {
         // Pick a random co-ordinate
         uint8_t x = irandom(0, 20);
@@ -204,8 +209,6 @@ void create_world() {
     phantoms[2].x = 11;
     phantoms[2].y = 0;
      */
-
-
 }
 
 
@@ -242,9 +245,11 @@ void game_loop() {
                 if (ny < 20 && nx < 20 && get_square_contents(nx, ny) != MAP_TILE_WALL) {
                     // Has the player walked up to a Phantom?
                     if (locate_phantom(nx, ny) != ERROR_CONDITION) {
+                        // Yes -- so the player is dead!
                         game.in_play = false;
                     }
 
+                    // Set the new square for rendering later
                     player_x = nx;
                     player_y = ny;
                 }
@@ -252,11 +257,15 @@ void game_loop() {
                 // Turn player right
                 ++player_direction;
                 if (player_direction > DIRECTION_WEST) player_direction = DIRECTION_NORTH;
+
+                // Animate the turn now
                 if (!chase_mode && !map_mode) animate_turn(false);
             } else if (dir == TURN_LEFT) {
                 // Turn player left
                 --player_direction;
                 if (player_direction > DIRECTION_WEST) player_direction = DIRECTION_WEST;
+
+                // Animate the turn now
                 if (!chase_mode && !map_mode) animate_turn(true);
             }
         }
@@ -271,7 +280,7 @@ void game_loop() {
                     // Set debounce timer
                     game.debounce_count_press = now;
                 } else if (now - game.debounce_count_press > DEBOUNCE_TIME_US) {
-                    // Prime the laser if it's unprimed
+                    // Prime the laser if it's unprimed, ie. show the crosshair
                     if (!game.show_reticule) {
                         game.show_reticule = true;
                         game.debounce_count_press = 0;
@@ -286,7 +295,7 @@ void game_loop() {
                     // Set debounce timer
                     game.debounce_count_release = now;
                 } else if (now - game.debounce_count_release > DEBOUNCE_TIME_US) {
-                    // Fire the laser
+                    // Fire the laser: clear the cross hair and zap
                     game.debounce_count_release == 0;
                     game.show_reticule = false;
                     game.is_firing = true;
@@ -297,8 +306,8 @@ void game_loop() {
         }
 
         if (gpio_get(PIN_TELE_BUTTON)) {
-            // Player can only teleport if they have walked over the teleport square
-            // and they are not firing the laser
+            // Player can only teleport if they have walked over the
+            // teleport square and they are not firing the laser
             if (!game.show_reticule) {
                 if (game.debounce_count_press == 0) {
                     // Set debounce timer
@@ -316,18 +325,20 @@ void game_loop() {
         // Manage and draw the world
         update_world(time_us_32());
 
-        if (game.in_play) {
-            // Check for a laser burst
-            if (game.is_firing) {
-                game.is_firing = false;
-                fire_laser();
-            }
+        if (game.in_play && game.is_firing) {
+            game.is_firing = false;
+            fire_laser();
         }
+
+    // At the end of the loop check to see if the player is
+    // still alive -- and drop out if they are not
     } while (game.in_play);
 
-    // Show the death view when the
-    // game loop exits (ie. game.in_play is false)
+    // Show the death view when the game loop exits
     death();
+
+    // At this point, the code returns to the outer loop
+    // in 'main()' to initialize a new game and start it
 }
 
 
@@ -368,17 +379,19 @@ void update_world(uint32_t now) {
     // Update the world at the end of the move cycle
     // Draw the graphics and animate the phantoms
 
-    // Move the phantoms periodically
+    // Move the Phantoms periodically -- this is how
+    // we increase their speed as the game progresses
     if (now - last_phantom_move > game.phantom_speed) {
         last_phantom_move = now;
         move_phantoms();
         check_senses();
     }
 
-    // Draw the world periodically
+    // Draw the world periodically (approx. 44fps)
     if (now - last_draw > ANIM_TIME_US || !game.in_play) {
         ssd1306_clear();
 
+        // Render the screen
         if (chase_mode) {
             draw_screen(phantoms[0].x, phantoms[0].y, phantoms[0].direction);
         } else if (map_mode) {
@@ -387,6 +400,7 @@ void update_world(uint32_t now) {
             draw_screen(player_x, player_y, player_direction);
         }
 
+        // Has the player primed the laser? If so show the crosshair
         if (game.show_reticule) {
             // White outline
             ssd1306_rect(62, 24, 4, 7, 0, false);
@@ -394,13 +408,14 @@ void update_world(uint32_t now) {
             ssd1306_rect(55, 30, 7, 4, 0, false);
             ssd1306_rect(66, 30, 7, 4, 0, false);
 
-            // Black cross
+            // Black inner bars
             ssd1306_rect(63, 25, 2, 5, 1, false);
             ssd1306_rect(63, 34, 2, 5, 1, false);
             ssd1306_rect(56, 31, 5, 2, 1, false);
             ssd1306_rect(67, 31, 5, 2, 1, false);
         }
 
+        // **** EXPERIMENTAL ****
         if (game.show_compass) {
             ssd1306_circle(122, 5, 10, 0, false);
             ssd1306_circle(122, 5, 8, 1, true);
@@ -430,11 +445,12 @@ void update_world(uint32_t now) {
 
         }
 
+        // Send the rendered image to the display
         ssd1306_draw();
         last_draw = now;
     }
 
-    // Check for laser recharge
+    // Check for a laser recharge
     if (now - game.zap_time > LASER_RECHARGE_US) {
         game.zap_time = 0;
         game.can_fire = true;
@@ -450,14 +466,15 @@ void check_senses() {
     int8_t dx = player_x - game.audio_range;
     int8_t dy = player_y - game.audio_range;
 
-    for (int8_t i = dx ; i < dx + 10 ; ++i) {
+    for (int8_t i = dx ; i < dx + (game.audio_range << 1) ; ++i) {
         if (i < 0) continue;
         if (i > 19) break;
-        for (int8_t j = dy ; j < dy + 10 ; ++j) {
+        for (int8_t j = dy ; j < dy + (game.audio_range << 1) ; ++j) {
             if (j < 0) continue;
             if (j > 19) break;
             if (locate_phantom(i, j) != ERROR_CONDITION) {
-                // Flash the LED, sound a tone
+                // There's a Phantom in range, so
+                // flash the LED and sound a tone
                 gpio_put(PIN_LED, true);
                 tone(200, 10, 0);
                 gpio_put(PIN_LED, false);
@@ -479,7 +496,7 @@ void do_teleport() {
     bool tstate = false;
     for (uint8_t i = 0 ; i < 10 ; i++) {
         ssd1306_inverse(tstate);
-        tone((tstate ? 4000 : 1000), 100, 0);
+        tone((tstate ? 4000 : 2000), 100, 0);
         tstate = !tstate;
     }
 
@@ -492,33 +509,47 @@ void do_teleport() {
 void fire_laser() {
     // Hit the front-most facing phantom, if there is one
 
-    // Animate the zap
+    // Set the zap circle radii
     uint8_t radii[] = {20, 16, 10, 4};
+
+    // Copy the current display buffer contents for use
+    // in the animation
     memcpy(&temp_buffer[0], oled_buffer, oled_buffer_size);
 
+    // Draw a sequence of smaller circles as the zap
+    // moves away from the player
     for (uint8_t i = 0 ; i < 4 ; ++i) {
         // Laser shot is a white circle with a black fill
         ssd1306_circle(64, 32, radii[i], 0, false);
         ssd1306_circle(64, 32, radii[i] - 1, 1, true);
+
+        // Send the buffer to the display and sound a beep
         ssd1306_draw();
         tone(4800, 40, 40);
+
+        // Copy the saved, clear screen back to the buffer
+        // ready for the next animation frame's draw cycle
         memcpy(&oled_buffer[0], temp_buffer, oled_buffer_size);
     }
 
-    // Draw the bulletless view
+    // Draw in the final bulletless view
     ssd1306_draw();
 
+    // Did we hit a Phantom?
     uint8_t n = get_facing_phantom(MAX_VIEW_RANGE);
     if (n != ERROR_CONDITION) {
         // A hit! A palpable hit!
+        // Deduct 1HP from the Phantom
         Phantom* p = &phantoms[n];
         p->hp -= 1;
+
+        // Did that kill it?
         if (p->hp == 0) {
-            // One dead phantom
+            // Yes! One dead Phantom...
             game.level_score += p->hp_max;
             ++game.level_kills;
 
-            // Briefly invert the screen
+            // Briefly invert the screen and sound some tones
             ssd1306_inverse(false);
             tone(1200, 100, 200);
             draw_screen(player_x, player_y, player_direction);
@@ -529,16 +560,16 @@ void fire_laser() {
             show_scores();
             sleep_ms(MAP_POST_KILL_SHOW_MS);
 
-            // Draw without the front phantom
-            ssd1306_clear();
-            draw_screen(player_x, player_y, player_direction);
-            ssd1306_inverse(true);
-            ssd1306_draw();
-
             // Take the dead phantom off the board
             // (so it gets re-rolled in 'managePhantoms()')
             p->x = ERROR_CONDITION;
             p->y = ERROR_CONDITION;
+
+            // Draw without the zapped Phantom
+            ssd1306_clear();
+            draw_screen(player_x, player_y, player_direction);
+            ssd1306_inverse(true);
+            ssd1306_draw();
         }
     }
 
@@ -576,13 +607,13 @@ void death() {
 
 void show_scores() {
     // Code used in a couple of 'show map' locations
-    // Show the score
+    // Show the current score alongside the map
     char score_string[5] = "000";
     ssd1306_text(98, 0, "SCORE", false, false);
     sprintf(score_string, "%02d", game.level_score);
     ssd1306_text(98, 9, score_string, false, (game.level_score < 100));
 
-    /// Show the high score
+    // Show the high score
     ssd1306_text(98, 32, "HIGH", false, false);
     ssd1306_text(98, 40, "SCORE", false, false);
 
@@ -609,7 +640,7 @@ int irandom(int start, int max) {
 
 
 void inkey() {
-    // Wait for any button to be pushed
+    // Wait for any button to be pushed, using debounce
     while (true) {
         if (gpio_get(PIN_TELE_BUTTON) || gpio_get(PIN_FIRE_BUTTON)) {
             uint32_t now = time_us_32();
@@ -624,16 +655,18 @@ void inkey() {
 }
 
 
-void tone(unsigned int frequency, unsigned long duration, unsigned long post) {
+void tone(unsigned int frequency_hz, unsigned long duration_ms, unsigned long post_play_delay_ms) {
+    // Play the required tone on the pizeo speaker pin
+
     // Get the cycle period in microseconds
     // NOTE Input is in Hz
-    float period = 1000000 / (float)frequency;
+    float period = 1000000 / (float)frequency_hz;
 
     // Get the microsecond timer now
     unsigned long start = time_us_64();
 
     // Loop until duration (milliseconds) in microseconds has elapsed
-    while (time_us_64() < start + duration * 1000) {
+    while (time_us_64() < start + duration_ms * 1000) {
         gpio_put(PIN_SPEAKER, true);
         sleep_us(0.5 * period);
         gpio_put(PIN_SPEAKER, false);
@@ -641,16 +674,17 @@ void tone(unsigned int frequency, unsigned long duration, unsigned long post) {
     };
 
     // Apply a post-tone delay
-    if (post > 0) sleep_ms(post);
+    if (post_play_delay_ms > 0) sleep_ms(post_play_delay_ms);
 }
 
 
 void play_intro() {
-    // Display the opening titles
+    // Display the opening title sequence
     int8_t final_y = 0;
     int8_t a_tone = 0;
     bool sstate = true;
 
+    // Draw the animated text blocks, one after the other
     for (int8_t i = -8 ; i < 24 ; ++i) {
         ssd1306_clear();
         ssd1306_text(10, i, "THE PHANTOM SLAYER", false, false);
@@ -668,6 +702,7 @@ void play_intro() {
         tone(((a_tone++) << 2), 40, 0);
     }
 
+    // Flash the screen by inverting
     for (int8_t i = 0 ; i < 10 ; ++i) {
         ssd1306_inverse(sstate);
         sstate = !sstate;
@@ -677,6 +712,7 @@ void play_intro() {
         sleep_ms(300);
     }
 
+    // Wait 5 seconds
     sleep_ms(5000);
 }
 
@@ -699,7 +735,8 @@ void play_intro() {
         init_game();
         create_world();
 
-        // Clear the screen and present the current map
+        // Clear the screen, present the current map and
+        // give the player a five-second countdown
         char count_string[2] = "00";
         for (uint8_t i = 5 ; i > 0 ; --i) {
             ssd1306_clear();

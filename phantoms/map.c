@@ -11,7 +11,7 @@
 
 
 /*
- * Define a basic map for testing
+ * Define some basic maps for testing
  */
 char base_map_00[20] = "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF";
 char base_map_01[20] = "\xFF\xEE\xEE\xFF\xEE\xEE\xFF\xEE\xEE\xEE\xEE\xFF\xEE\xEE\xFF\xEE\xEE\xFF\xEE\xEE";
@@ -123,7 +123,7 @@ char base_map_99[20] = "\xEE\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF
  * Map Functions
  */
 void map_init() {
-    // Load initial map
+    // Load the current map randomly from the pre-made ones
     // TODO Randomly generate a map
     uint8_t map = irandom(0, 5);
 
@@ -248,7 +248,8 @@ void map_init() {
 void show_map(uint8_t y_delta, bool show_entities) {
     // Draw the current map on the screen buffer, centred but
     // vertically adjusted according to 'y_delta'. If 'show_entities'
-    // is true, the player and phantom locations are plotted in.
+    // is true, the phantom locations are plotted in. The player and
+    // the teleport sqaure positions are always shown.
     // NOTE With the map now drawn on 3x3 blocks, 'y_delta'
     //      has s very limited range of useable values
 
@@ -263,10 +264,12 @@ void show_map(uint8_t y_delta, bool show_entities) {
         char *line = current_map[i];
         for (uint8_t j = 0 ; j < 20 ; ++j) {
             uint8_t pixel = line[j];
+            
+            // Draw and empty (path) square
             if (pixel != MAP_TILE_WALL) {
-                ssd1306_plot(x + j * 3,     y + i * 3, 1);
-                ssd1306_plot(x + j * 3 + 1, y + i * 3, 1);
-                ssd1306_plot(x + j * 3 + 2, y + i * 3, 1);
+                ssd1306_plot(x + j * 3,     y + i * 3,     1);
+                ssd1306_plot(x + j * 3 + 1, y + i * 3,     1);
+                ssd1306_plot(x + j * 3 + 2, y + i * 3,     1);
 
                 ssd1306_plot(x + j * 3,     y + i * 3 + 1, 1);
                 ssd1306_plot(x + j * 3 + 1, y + i * 3 + 1, 1);
