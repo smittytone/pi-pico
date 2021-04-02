@@ -1,7 +1,7 @@
 /*
- * Phantoms
+ * Phantom Slayer
  *
- * @version     1.0.1
+ * @version     1.0.2
  * @author      smittytone
  * @copyright   2021, Tony Smith
  * @licence     MIT
@@ -264,7 +264,7 @@ void show_map(uint8_t y_delta, bool show_entities) {
         char *line = current_map[i];
         for (uint8_t j = 0 ; j < 20 ; ++j) {
             uint8_t pixel = line[j];
-            
+
             // Draw and empty (path) square
             if (pixel != MAP_TILE_WALL) {
                 ssd1306_plot(x + j * 3,     y + i * 3,     1);

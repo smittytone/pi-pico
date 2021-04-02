@@ -1,7 +1,7 @@
 /*
- * Phantoms
+ * Phantom Slayer
  *
- * @version     1.0.1
+ * @version     1.0.2
  * @author      smittytone
  * @copyright   2021, Tony Smith
  * @licence     MIT
@@ -25,10 +25,12 @@
 
 // Game includes
 #include "gfx.h"
+#include "help.h"
 #include "map.h"
 #include "phantoms.h"
 #include "ssd1306.h"
 #include "tinymt32.h"
+#include "utils.h"
 
 
 /*
@@ -98,10 +100,6 @@ void    fire_laser();
 
 void    death();
 void    show_scores();
-
-int     irandom(int start, int max);
-void    inkey();
-void    tone(unsigned int frequency_hz, unsigned long duration_ms, unsigned long post_play_delay_ms);
 
 
 /*

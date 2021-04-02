@@ -1,7 +1,7 @@
 /*
- * Phantoms
+ * Phantom Slayer
  *
- * @version     1.0.1
+ * @version     1.0.2
  * @author      smittytone
  * @copyright   2021, Tony Smith
  * @licence     MIT
@@ -83,7 +83,7 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
             do {
                 // Draw the current frame
                 draw_section(x, i, DIRECTION_WEST, DIRECTION_EAST, frame, last_frame);
-                
+
                 // Check for the presence of a Phantom on the drawn square
                 // and, if there is, draw it in
                 // NOTE 'phantom_count comes back so we can keep track of multiple
@@ -92,7 +92,7 @@ void draw_screen(uint8_t x, uint8_t y, uint8_t direction) {
                 if (phantom_count > 0 && locate_phantom(x, i) != ERROR_CONDITION) {
                     draw_phantom(frame, &phantom_count);
                 }
-                
+
                 // Move to the next frame and square
                 --frame;
                 ++i;
@@ -141,7 +141,7 @@ bool draw_section(uint8_t x, uint8_t y, uint8_t left_dir, uint8_t right_dir, uin
     // Refactor out common code from 'draw_screen()'
     // Return 'true' when we've got to the furthest rendered square,
     // 'false' otherwise
- 
+
     // Is the square a teleporter? If so, draw it
     if (x == game.tele_x && y == game.tele_y) draw_teleporter(current_frame);
 
@@ -176,7 +176,7 @@ void draw_teleporter(uint8_t frame_index) {
     // When stepping on this, the player can beam to their start point
     Rect r = rects[frame_index];
     bool dot_state = true;
-    
+
     // Plot a dot pattern
     for (uint8_t y = r.y + r.height -  4; y < r.y + r.height ; ++y) {
         for (uint8_t i = r.x ; i < r.x + r.width - 2; i += 2) {
@@ -191,7 +191,7 @@ void draw_left_wall(uint8_t frame_index, bool is_open) {
     // Render a left-side wall section for the current square
     // NOTE 'is_open' is true if there is no wall -- we're at
     //      a junction point
-    
+
     // 'i'ner and 'o'uter frames
     Rect i = rects[frame_index + 1];
     Rect o = rects[frame_index];
@@ -227,7 +227,7 @@ void draw_right_wall(uint8_t frame_index, bool is_open) {
     // Render a right-side wall section for the current square
     // NOTE 'is_open' is true if there is no wall -- we're at
     //      a junction point
-    
+
     // 'i'ner and 'o'uter frames
     Rect i = rects[frame_index + 1];
     Rect o = rects[frame_index];

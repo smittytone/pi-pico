@@ -1,7 +1,7 @@
 /*
- * Phantoms
+ * Phantom Slayer
  *
- * @version     1.0.1
+ * @version     1.0.2
  * @author      smittytone
  * @copyright   2021, Tony Smith
  * @licence     MIT

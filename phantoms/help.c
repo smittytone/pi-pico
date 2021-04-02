@@ -1,0 +1,68 @@
+/*
+ * Phantom Slayer
+ *
+ * @version     1.0.2
+ * @author      smittytone
+ * @copyright   2021, Tony Smith
+ * @licence     MIT
+ *
+ */
+#include "main.h"
+
+/*
+ * The Help text strings, adapted from the original
+ */
+const char help_01[] = "PHANTOM SLAYER IS A CHASE GAME PLAYED IN A 3D MAZE INHABITED BY EVIL PHANTOMS WHICH CAN KILL YOU WITH A SINGLE TOUCH. YOUR MISSION - DESTROY THEM BEFORE THEY DESTROY YOU!";
+const char help_02[] = "IF A PHANTOM TOUCHES YOU, YOU ARE KILLED. THEY ALWAYS KNOW WHERE YOU ARE AND WILL TRY TO REACH YOU BY THE MOST DIRECT PATH. YOU DESTROY PHANTOMS WITH YOUR LASER PISTOL.";
+const char help_03[] = "IT MAY TAKE MORE THAN ONE HIT TO KILL A PHANTOM. WHEN ONE PHANTOM IS DESTROYED, ANOTHER IS CREATED TO TAKE ITS PLACE. THERE ARE NEVER MORE THAN THREE PHANTOMS IN THE MAZE AT ONCE.";
+const char help_04[] = "ONCE A PHANTOM IS DESTROYED, YOU HAVE A CHANCE TO LOOK AT THE MAZE FROM ABOVE FOR A FEW SECONDS. IN THIS MAP, THE PHANTOMS ARE DENOTED BY CROSSES. YOU ARE THE ARROW. ";
+const char help_05[] = "YOUR WEAPON IS A LASER PISTOL. YOUR PISTOL IS ARMED BY PRESSING THE LEFT BUTTON. RELEASING THE BUTTON FIRES. A CROSS-HAIR APPEARS, AUTOMATICALLY CENTERED ON THE TARGET";
+const char help_06[] = "ONCE YOUR PISTOL IS ARMED, YOU CAN'T MOVE UNTIL IT IS FIRED. IMPORTANT - IT TAKES ABOUT 2 SECONDS TO RECHARGE YOUR PISTOL AFTER IT HAS BEEN FIRED.";
+const char help_07[] = "YOU ALSO HAVE A PHANTOM DETECTOR: AN AUDIO TONE TRIGGERED BY NEARBY PHANTOMS. THE PHANTOM DETECTOR IS TRIGGERED BY PHANTOMS AT THE DISTANCE YOU SET, REGARDLESS OF INTERVENING WALLS.";
+const char help_08[] = "THE GREY SQUARE CAN BE A VERY VALUABLE ESCAPE ROUTE. IT IS RANDOMLY PLACED IN THE MAZE. IF YOU STAND ON IT, YOU CAN RETURN TO YOUR STARTING POINT BY PRESSING THE RIGHT-HAND BUTTON.";
+const char help_09[] = "ONCE YOU HAVE USED A PARTICULAR TELEPORT SQUARE, IT DISAPPEARS AND A NEW ONE IS GENERATED SOMEWHERE ELSE IN THE MAZE. THE MAZES CAN BE EITHER A FAIRLY OPEN, OR DENSE WITH MANY TWISTS AND TURNS.";
+const char help_10[] = "YOU SCORE 2 POINTS FOR EACH HIT AND 10 POINTS FOR EACH KILL. AT THE END OF EACH GAME (I.E. AT YOUR DEATH) THE MAP AND THE SCORE ARE DISPLAYED.";
+const char help_11[] = "STRATEGY: SINCE IT MAY TAKE MORE THAN 1 HIT TO KILL A PHANTOM, AND YOUR PISTOL TAKES TIME TO RECHARGE, YOU MUST LEARN TO FIRE, TURN AND RUN FROM PHANTOMS.";
+const char help_12[] = " YOU WILL FIND THAT CERTAIN ARRANGEMENTS OF HALLWAYS AND CORNERS ARE BEST FOR THIS TACTIC, AND THAT OTHER ARRANGEMENTS ARE PERFECT SPOTS FOR A PHANTOM AMBUSH ON YOU. REMEMBER THE GREY SQUARE AS AN ESCAPE ROUTE.";
+
+
+/*
+ * Functions
+ */
+void show_help() {
+    // FROM 1.0.2
+    // Show help.
+    // Press Fire to move to the next page, or
+    // Teleport to exit
+
+    // Show a Help call to action
+    ssd1306_clear();
+    ssd1306_text(32, 8, "WOULD YOU LIKE", false, false);
+    ssd1306_text(56, 16, "INSTRUCTIONS?", false, false);
+    ssd1306_text(24, 32, "PRESS FIRE TO VIEW", false, false);
+    ssd1306_text(21, 40, "OR TELEPORT TO PLAY", false, false);
+    if (inkey() == PIN_TELE_BUTTON) return;
+
+    // Show the help
+    const char *pages[NUMBER_OF_PAGES];
+    pages[0] = help_01;
+    pages[1] = help_02;
+    pages[2] = help_03;
+    pages[3] = help_04;
+    pages[4] = help_05;
+    pages[5] = help_06;
+    pages[6] = help_07;
+    pages[7] = help_08;
+    pages[8] = help_09;
+    pages[9] = help_10;
+    pages[10] = help_11;
+    pages[11] = help_12;
+
+    // Run through the pages, one at a time
+    for (uint8_t i = 0 ; i < NUMBER_OF_PAGES ; ++i) {
+        ssd1306_clear();
+        ssd1306_text(0, 0, pages[i], true, false);
+        ssd1306_text(41, 0, "PRESS FIRE", false, false);
+        if (inkey() == PIN_TELE_BUTTON) return;
+    }
+}
