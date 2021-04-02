@@ -2,7 +2,7 @@
 
 Assorted projects made while playing with the [Raspberry Pi Pico](https://www.raspberrypi.org/documentation/pico/getting-started/).
 
-## Phantom Slayer 1.0.1 ##
+## Phantom Slayer 1.0.2 ##
 
 A retro-style 3D arcade game written in C. For more details, [see this page](https://smittytone.net/pico-phantoms/).
 
@@ -107,6 +107,10 @@ Pico project set up script for Z Shell. Requires Pico C SDK pre-installed.
 
 ## Updates ##
 
+- *Unreleased*
+    - Bump Phantoms to 1.0.2
+        - Add Help text.
+        - Move some common routines into `utils.h`/`utils.c`.
 - *31 March 2021*
     - Bump Phantoms to 1.0.1
         - Graphics tweaks.
