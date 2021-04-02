@@ -187,6 +187,7 @@ Rect        rects[7];
 // Game data
 Phantom     phantoms[3];
 Game        game;
+uint8_t     game_map;
 
 uint32_t    last_draw;
 uint32_t    last_phantom_move;

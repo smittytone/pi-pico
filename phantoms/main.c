@@ -114,6 +114,11 @@ void init_game() {
     // chase mode takes priority
     chase_mode = false;
     map_mode = false;
+
+    // FROM 1.0.2
+    // Store the current map number so it's not
+    // used in subsequent games
+    game_map = ERROR_CONDITION;
 }
 
 
@@ -142,7 +147,7 @@ void create_world() {
     game.in_play = true;
 
     // Initialise the current map
-    map_init();
+    game_map = map_init(game_map);
     last_draw = 0;
 
     // Set the teleport
