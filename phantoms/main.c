@@ -118,7 +118,7 @@ void init_game() {
     // FROM 1.0.2
     // Store the current map number so it's not
     // used in subsequent games
-    game_map = ERROR_CONDITION;
+    game.map = ERROR_CONDITION;
 }
 
 
@@ -147,7 +147,7 @@ void create_world() {
     game.in_play = true;
 
     // Initialise the current map
-    game_map = map_init(game_map);
+    game.map = map_init(game.map);
     last_draw = 0;
 
     // Set the teleport
@@ -683,11 +683,11 @@ void play_intro() {
     // Setup the hardware
     setup();
 
-    // FROM 1.0.2
-    show_help();
-
     // Start a new game
     play_intro();
+
+    // FROM 1.0.2
+    // show_help();
 
     // Play the game
     while (1) {

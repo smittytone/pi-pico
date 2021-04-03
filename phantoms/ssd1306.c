@@ -15,7 +15,7 @@
  */
 const char CHARSET[128][6] = {
     "\x02\x00\x00",              // space - Ascii 32
-    "\x01\x5F",                  // !
+    "\x01\xFA",                  // !
     "\x03\xc0\x00\xc0",          // "
     "\x05\x24\x7e\x24\x7e\x24",  // #
     "\x04\x24\xd4\x56\x48",      // $
@@ -401,26 +401,34 @@ void ssd1306_text(int8_t x, int8_t y, const char *the_string, bool do_wrap, bool
     uint8_t bit_max = do_double ? 16 : 8;
 
     for (size_t i = 0 ; i < strlen(the_string) ; ++i) {
-        uint8_t asc_val = the_string[i] - 32;
-        ssize_t glyph_len = CHARSET[asc_val][0] + 1;
-
         char glyph[6];
-        for (size_t j = 0 ; j < glyph_len ; ++j) {
-            if (j == glyph_len - 1) {
-                glyph[j] = 0x00;
-            } else {
-                glyph[j] = CHARSET[asc_val][j + 1];
+        char col_1 = 0;
+        char col_0 = 0;
+        ssize_t glyph_len;
+
+        uint8_t asc_val = the_string[i];
+        if (asc_val != 0x10) {
+            asc_val -= 32;
+            glyph_len = CHARSET[asc_val][0] + 1;
+            for (size_t j = 0 ; j < glyph_len ; ++j) {
+                if (j == glyph_len - 1) {
+                    glyph[j] = 0x00;
+                } else {
+                    glyph[j] = CHARSET[asc_val][j + 1];
+                }
             }
+
+            col_0 = ssd1306_text_flip(glyph[0]);
+        } else {
+            glyph[0] = asc_val;
         }
 
-        char col_0 = ssd1306_text_flip(glyph[0]);
-        char col_1 = 0;
-
-        if (do_wrap) {
-            if (x + glyph_len * (do_double ? 2 : 1) >= oled_width) {
+        if (do_wrap || asc_val == 0x10) {
+            if ((x + glyph_len * (do_double ? 2 : 1) >= oled_width) || asc_val == 0x10) {
                 if (y + bit_max < oled_height) {
                     x = 0;
                     y += bit_max;
+                    if (asc_val == 0x10) continue;
                 } else {
                     return;
                 }

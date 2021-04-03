@@ -38,9 +38,10 @@ void show_help() {
     // Show a Help call to action
     ssd1306_clear();
     ssd1306_text(32, 8, "WOULD YOU LIKE", false, false);
-    ssd1306_text(56, 16, "INSTRUCTIONS?", false, false);
+    ssd1306_text(32, 16, "INSTRUCTIONS?", false, false);
     ssd1306_text(24, 32, "PRESS FIRE TO VIEW", false, false);
-    ssd1306_text(21, 40, "OR TELEPORT TO PLAY", false, false);
+    ssd1306_text(20, 40, "OR TELEPORT TO PLAY", false, false);
+    ssd1306_draw();
     if (inkey() == PIN_TELE_BUTTON) return;
 
     // Show the help
@@ -63,6 +64,7 @@ void show_help() {
         ssd1306_clear();
         ssd1306_text(0, 0, pages[i], true, false);
         ssd1306_text(41, 0, "PRESS FIRE", false, false);
+        ssd1306_draw();
         if (inkey() == PIN_TELE_BUTTON) return;
     }
 }

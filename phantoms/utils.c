@@ -25,27 +25,43 @@ uint8_t inkey() {
 
     // FROM 1.0.2
     // Return the key pressed
-    uint8_t the_key;
+    uint8_t the_key = ERROR_CONDITION;
+    bool is_pressed = false;
+    bool was_pressed = false;
 
     while (true) {
+        uint32_t now = time_us_32();
+
         if (gpio_get(PIN_TELE_BUTTON)) {
             the_key = PIN_TELE_BUTTON;
+            is_pressed = true;
         } else if (gpio_get(PIN_FIRE_BUTTON)) {
             the_key = PIN_FIRE_BUTTON;
+            is_pressed = true;
         } else {
-            the_key = ERROR_CONDITION;
+            is_pressed = false;
         }
 
-        if (the_key != ERROR_CONDITION) {
-            uint32_t now = time_us_32();
+        if (is_pressed) {
             if (game.debounce_count_press == 0) {
                 game.debounce_count_press = now;
             } else if (now - game.debounce_count_press > DEBOUNCE_TIME_US) {
                 game.debounce_count_press == 0;
+                was_pressed = true;
+            }
+        } else if (was_pressed) {
+            // Button released
+            if (game.debounce_count_press == 0) {
+                // Set debounce timer
+                game.debounce_count_press = now;
+            } else if (now - game.debounce_count_press > DEBOUNCE_TIME_US) {
+                // Fire the laser: clear the cross hair and zap
                 return the_key;
             }
         }
     }
+
+    return the_key;
 }
 
 

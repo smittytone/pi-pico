@@ -69,10 +69,12 @@ typedef struct {
     uint8_t  start_x;
     uint8_t  start_y;
     uint8_t  level_kills;
+    uint8_t  map;
 
     uint16_t level;
     uint16_t level_score;
     uint16_t high_score;
+
     uint32_t zap_time;
     uint32_t debounce_count_press;
     uint32_t debounce_count_release;
@@ -187,7 +189,6 @@ Rect        rects[7];
 // Game data
 Phantom     phantoms[3];
 Game        game;
-uint8_t     game_map;
 
 uint32_t    last_draw;
 uint32_t    last_phantom_move;
