@@ -25,7 +25,6 @@
 
 // Game includes
 #include "gfx.h"
-#include "help.h"
 #include "map.h"
 #include "phantoms.h"
 #include "ssd1306.h"

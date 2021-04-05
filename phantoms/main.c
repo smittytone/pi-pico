@@ -686,9 +686,6 @@ void play_intro() {
     // Start a new game
     play_intro();
 
-    // FROM 1.0.2
-    // show_help();
-
     // Play the game
     while (1) {
         // Set up the environment, once per game

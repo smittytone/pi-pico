@@ -7,7 +7,6 @@ project(phantoms VERSION 1.0.2)
 add_executable(phantoms
     main.c
     gfx.c
-    help.c
     map.c
     phantoms.c
     ssd1306.c
