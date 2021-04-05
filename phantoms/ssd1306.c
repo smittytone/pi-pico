@@ -404,31 +404,25 @@ void ssd1306_text(int8_t x, int8_t y, const char *the_string, bool do_wrap, bool
         char glyph[6];
         char col_1 = 0;
         char col_0 = 0;
-        ssize_t glyph_len;
+        ssize_t glyph_len = 0;
 
-        uint8_t asc_val = the_string[i];
-        if (asc_val != 0x10) {
-            asc_val -= 32;
-            glyph_len = CHARSET[asc_val][0] + 1;
-            for (size_t j = 0 ; j < glyph_len ; ++j) {
-                if (j == glyph_len - 1) {
-                    glyph[j] = 0x00;
-                } else {
-                    glyph[j] = CHARSET[asc_val][j + 1];
-                }
+        uint8_t asc_val = the_string[i] - 32;
+        glyph_len = CHARSET[asc_val][0] + 1;
+        for (size_t j = 0 ; j < glyph_len ; ++j) {
+            if (j == glyph_len - 1) {
+                glyph[j] = 0x00;
+            } else {
+                glyph[j] = CHARSET[asc_val][j + 1];
             }
-
-            col_0 = ssd1306_text_flip(glyph[0]);
-        } else {
-            glyph[0] = asc_val;
         }
 
-        if (do_wrap || asc_val == 0x10) {
-            if ((x + glyph_len * (do_double ? 2 : 1) >= oled_width) || asc_val == 0x10) {
+        col_0 = ssd1306_text_flip(glyph[0]);
+
+        if (do_wrap) {
+            if ((x + glyph_len * (do_double ? 2 : 1) >= oled_width)) {
                 if (y + bit_max < oled_height) {
                     x = 0;
                     y += bit_max;
-                    if (asc_val == 0x10) continue;
                 } else {
                     return;
                 }
