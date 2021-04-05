@@ -109,8 +109,8 @@ Pico project set up script for Z Shell. Requires Pico C SDK pre-installed.
 
 - *Unreleased*
     - Bump Phantoms to 1.0.2
-        - Add Help text.
         - Move some common routines into `utils.h`/`utils.c`.
+        - Update *inkey()* to return the key pressed.
 - *31 March 2021*
     - Bump Phantoms to 1.0.1
         - Graphics tweaks.
