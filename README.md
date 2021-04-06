@@ -26,7 +26,7 @@ A retro-style 3D arcade game written in C. For more details, [see this page](htt
 Build from source code, or copy `phantoms.uf2` to your Pico. Please check the SHA 256:
 
 ```
-226bc982d7103782eec813ed0c1002174995f1f9f4c2e90d002fb5a80b38b918
+d9e4e2d28b8a5b983e1551d114cd4ae6d668858b43a9df6c92f946327a96f146
 ```
 
 ### The Game ###
@@ -107,20 +107,21 @@ Pico project set up script for Z Shell. Requires Pico C SDK pre-installed.
 
 ## Updates ##
 
-- *Unreleased*
-    - Bump Phantoms to 1.0.2
+- *6 April 2021*
+    - Bump Phantom Slayer to 1.0.2
         - Move some common routines into `utils.h`/`utils.c`.
         - Update *inkey()* to return the key pressed.
+        - Add another map.
 - *31 March 2021*
-    - Bump Phantoms to 1.0.1
+    - Bump Phantom Slayer to 1.0.1
         - Graphics tweaks.
         - Improve Phantom movement logic.
         - Fix laser post-fire delay.
-    - Bump Wumpus to 1.0.2
+    - Bump Hunt the Wumpus to 1.0.2
         - Use TinyMT for random number generation.
     - Bump makepico to 1.2.0.
 - *26 March 2021*
-    - Add Phantoms 1.0.0
+    - Add Phantom Slayer 1.0.0
 - *25 February 2021*
     - Bump Wumpus to 1.0.1
         - Tweak sprites.
