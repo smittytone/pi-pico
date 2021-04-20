@@ -7,7 +7,7 @@
 #
 # @author    Tony Smith
 # @copyright 2021, Tony Smith
-# @version   1.2.0
+# @version   2.0.0
 # @license   MIT
 #
 
@@ -31,7 +31,9 @@ show_help() {
     echo -e "\nMake a Pi Pico Project\n"
     echo -e "Usage:\n  makepico [path/name] [-d] [-h]\n"
     echo    "Options:"
+    echo    "  -c / --cpp     Set up the project for C++. Default: false"
     echo    "  -d / --debug   Set up the project for SWD. Default: false"
+    echo    "  -n / --name    Your name for the comments. Default: <YOU>"
     echo    "  -h / --help    This help screen"
     echo
 }
@@ -79,24 +81,68 @@ make_source_files() {
     echo "Creating project files..."
     project_name=${1:t}
     source_file=${1:t:l}
-    
-    write_header "$project_name" "${1}/${source_file}.c"
+
+    # FROM 1.3.0
+    file_ext="c"
+    if [[ $do_cpp -eq 1 ]]; then
+        file_ext="cpp"
+    fi
+
+    write_header "$project_name" "${1}/${source_file}.${file_ext}"
     write_header "$project_name" "${1}/${source_file}.h"
+
+    # FROM 1.3.0
+    # Break into sections for C/C++ usage
+
     {
         echo "#ifndef _${project_name:u}_HEADER_"
         echo "#define _${project_name:u}_HEADER_"
         echo
-        echo '#include <stdbool.h>'
-        echo '#include <stdio.h>'
-        echo '#include <stdlib.h>'
-        echo '#include <string.h>'
-        echo '#include <time.h>'
+    } >> "${1}/${source_file}.h"
+
+    # C++ standard libraries or C standard libraries
+    if [[ $do_cpp -eq 1 ]]; then
+        {
+            echo '#ifdef __cplusplus'
+            echo '    extern "C" {'
+            echo '#endif'
+            echo
+            echo '#include <iostream>'
+            echo '#include <cstdlib>'
+            echo '#include <string> using std::string'
+            echo '#include <vector> using std::vector'
+            echo
+        } >> "${1}/${source_file}.h"
+    else
+                {
+            echo '#include <stdbool.h>'
+            echo '#include <stdio.h>'
+            echo '#include <stdlib.h>'
+            echo '#include <string.h>'
+            echo '#include <time.h>'
+        } >> "${1}/${source_file}.h"
+    fi
+
+    # Standard Pico libraries
+    {
         echo '#include "pico/stdlib.h"'
         echo '#include "pico/binary_info.h"'
         echo '#include "hardware/gpio.h"'
         echo '#include "hardware/i2c.h"'
         echo '#include "hardware/adc.h"'
         echo
+    } >> "${1}/${source_file}.h"
+
+    if [[ $do_cpp -eq 1 ]]; then
+        {
+            echo '#ifdef __cplusplus'
+            echo '}'
+            echo '#endif'
+            echo
+        } >> "${1}/${source_file}.h"
+    fi
+
+    {
         echo "#endif // _${project_name:u}_HEADER_"
     } >> "${1}/${source_file}.h"
 }
@@ -108,8 +154,8 @@ write_header() {
         echo " * ${1} for Raspberry Pi Pico"
         echo " *"
         echo " * @version     1.0.0"
-        echo " * @author      <YOU>"
-        echo " * @copyright   2021, <YOU>"
+        echo " * @author      ${users_name}"
+        echo " * @copyright   $(date +'%Y')"
         echo " * @licence     MIT"
         echo " *"
         echo " */"
@@ -123,12 +169,19 @@ make_cmake_file() {
     echo "Creating CMakeLists.txt..."
     project_name=${1:t}
     source_file=${project_name:l}
+
+    # FROM 1.3.0
+    file_ext="c"
+    if [[ $do_cpp -eq 1 ]]; then
+        file_ext="cpp"
+    fi
+
     {
         echo 'cmake_minimum_required(VERSION 3.13)'
         echo 'include(pico_sdk_import.cmake)'
         echo "project(${project_name} VERSION 1.0.0)"
         echo "add_executable(${project_name}"
-        echo "               ${source_file}.c)"
+        echo "               ${source_file}.${file_ext})"
         echo
         echo "pico_sdk_init()"
         echo
@@ -207,15 +260,44 @@ check_path() {
 # Get the arguments, which should be project path(s)
 projects=()
 do_swd=0
+do_cpp=0
+users_name="<YOU>"
+next_is_arg=0
+last_arg=""
+
 for arg in "$@"; do
     uarg=${arg:u}
-    if [[ "$uarg" == "-D" || "$uarg" == "--DEBUG"  ]]; then
-        do_swd=1
-    elif [[ "$uarg" == "-H" || "$uarg" == "--HELP"  ]]; then
-        show_help
-        exit 0
+    if [[ $next_is_arg -gt 0 ]]; then
+        # The argument should be a value (previous argument was an option)
+        if [[ ${arg:0:1} = "-" ]]; then
+            # Next value is an option: ie. missing value
+            echo "Error -- Missing value for ${last_arg}"
+            exit 1
+        fi
+
+        # Set the appropriate internal value
+        case "$next_is_arg" in
+            1) users_name=$arg ;;
+            *) echo "Error -- Unknown argument" exit 1 ;;
+        esac
+
+        # Reset
+        next_is_arg=0
     else
-        projects+=("$arg")
+        if [[ "$uarg" == "-N" || "$uarg" == "--NAME" ]]; then
+            next_is_arg=1
+        elif [[ "$uarg" == "-C" || "$uarg" == "--CPP" ]]; then
+            do_cpp=1
+        elif [[ "$uarg" == "-D" || "$uarg" == "--DEBUG" ]]; then
+            do_swd=1
+        elif [[ "$uarg" == "-H" || "$uarg" == "--HELP" ]]; then
+            show_help
+            exit 0
+        else
+            projects+=("$arg")
+        fi
+
+        last_arg=$uarg
     fi
 done
 
