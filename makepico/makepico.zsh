@@ -28,7 +28,7 @@ fi
 
 
 show_help() {
-    echo -e "\nMake a Pi Pico Project\n"
+    echo -e "\nInitialise a Pi Pico Project\n"
     echo -e "Usage:\n  makepico [path/name] [-d] [-h]\n"
     echo    "Options:"
     echo    "  -c / --cpp     Set up the project for C++. Default: false"
@@ -78,18 +78,29 @@ make_source_files() {
     # Output lines to the file
     # Args: 1 -- project path
 
-    echo "Creating project files..."
+    # FROM 1.3.0
+    file_ext="c"
+    project_type="C"
+    if [[ $do_cpp -eq 1 ]]; then
+        file_ext="cpp"
+        project_type="C++"
+    fi
+
+    echo "Creating ${project_type} project files..."
     project_name=${1:t}
     source_file=${1:t:l}
 
-    # FROM 1.3.0
-    file_ext="c"
-    if [[ $do_cpp -eq 1 ]]; then
-        file_ext="cpp"
-    fi
-
     write_header "$project_name" "${1}/${source_file}.${file_ext}"
     write_header "$project_name" "${1}/${source_file}.h"
+
+    # FROM 2.0.0
+    # Write main() function
+    {
+        echo
+        echo 'int main() {'
+        echo '    return 0;'
+        echo '}'
+    } >> "${1}/${source_file}.${file_ext}"
 
     # FROM 1.3.0
     # Break into sections for C/C++ usage
@@ -103,18 +114,17 @@ make_source_files() {
     # C++ standard libraries or C standard libraries
     if [[ $do_cpp -eq 1 ]]; then
         {
-            echo '#ifdef __cplusplus'
-            echo '    extern "C" {'
-            echo '#endif'
-            echo
             echo '#include <iostream>'
             echo '#include <cstdlib>'
-            echo '#include <string> using std::string'
-            echo '#include <vector> using std::vector'
+            echo '#include <string>'
+            echo '#include <vector>'
+            echo
+            echo 'using std::string;'
+            echo 'using std::vector;'
             echo
         } >> "${1}/${source_file}.h"
     else
-                {
+        {
             echo '#include <stdbool.h>'
             echo '#include <stdio.h>'
             echo '#include <stdlib.h>'
@@ -135,6 +145,10 @@ make_source_files() {
 
     if [[ $do_cpp -eq 1 ]]; then
         {
+            echo '#ifdef __cplusplus'
+            echo 'extern "C" {'
+            echo '#endif'
+            echo
             echo '#ifdef __cplusplus'
             echo '}'
             echo '#endif'
@@ -207,7 +221,7 @@ make_vscode() {
         echo '    "cmake.environment": {'
         echo "        \"PICO_SDK_PATH\": \"${PICO_SDK_PATH}\""
         echo '    },'
-        echo '    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools\"'
+        echo '    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"'
         echo '}'
     } >> "${1}/.vscode/settings.json"
 
@@ -220,8 +234,8 @@ make_vscode() {
             echo '        {   "name": "Pico Debug",'
             echo '            "device": "RP2040",'
             echo '            "gdbPath": "arm-none-eabi-gdb",'
-            echo '            "cwd": "\${workspaceRoot}",'
-            echo '            "executable": "\${command:cmake.launchTargetPath}",'
+            echo '            "cwd": "${workspaceRoot}",'
+            echo '            "executable": "${command:cmake.launchTargetPath}",'
             echo '            "request": "launch",'
             echo '            "type": "cortex-debug",'
             echo '            "servertype": "openocd",'
@@ -229,7 +243,7 @@ make_vscode() {
             echo '                "/interface/picoprobe.cfg",'
             echo '                "/target/rp2040.cfg"'
             echo '            ],'
-            echo '            "svdFile": "\${env:PICO_SDK_PATH}/src/rp2040/hardware_regs/rp2040.svd",'
+            echo '            "svdFile": "${env:PICO_SDK_PATH}/src/rp2040/hardware_regs/rp2040.svd",'
             echo '            "runToMain": true,'
             echo '            "postRestartCommands": ['
             echo '                "break main",'
@@ -266,7 +280,7 @@ next_is_arg=0
 last_arg=""
 
 for arg in "$@"; do
-    uarg=${arg:u}
+    upper_arg=${arg:u}
     if [[ $next_is_arg -gt 0 ]]; then
         # The argument should be a value (previous argument was an option)
         if [[ ${arg:0:1} = "-" ]]; then
@@ -284,13 +298,13 @@ for arg in "$@"; do
         # Reset
         next_is_arg=0
     else
-        if [[ "$uarg" == "-N" || "$uarg" == "--NAME" ]]; then
+        if   [[ "$upper_arg" == "-N" || "$upper_arg" == "--NAME"  ]]; then
             next_is_arg=1
-        elif [[ "$uarg" == "-C" || "$uarg" == "--CPP" ]]; then
+        elif [[ "$upper_arg" == "-C" || "$upper_arg" == "--CPP"   ]]; then
             do_cpp=1
-        elif [[ "$uarg" == "-D" || "$uarg" == "--DEBUG" ]]; then
+        elif [[ "$upper_arg" == "-D" || "$upper_arg" == "--DEBUG" ]]; then
             do_swd=1
-        elif [[ "$uarg" == "-H" || "$uarg" == "--HELP" ]]; then
+        elif [[ "$upper_arg" == "-H" || "$upper_arg" == "--HELP"  ]]; then
             show_help
             exit 0
         else
