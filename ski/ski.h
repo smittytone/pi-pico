@@ -68,7 +68,7 @@ typedef struct {
     int8_t      delta_x;
     uint8_t     level;
     uint16_t    metres;
-    float       speed;
+    int8_t      speed;
     bool        ghost;
     bool        paused;
 } Game;

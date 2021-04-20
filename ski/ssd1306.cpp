@@ -120,7 +120,6 @@ SSD1306::SSD1306(uint8_t pixel_width, uint8_t pixel_height, bool extra_row = fal
     screen_height = pixel_height;
     buffer_size = ((pixel_width * pixel_height) >> 3);
     i2c_buffer_size = buffer_size + 1;
-    if (has_hidden_row) buffer_size += 128;
 
     // Set the I2C address based on size
     i2c_address = pixel_height > 32 ? SSD1306_ADDRESS_128x64 : SSD1306_ADDRESS_128x32;
@@ -132,6 +131,12 @@ SSD1306::SSD1306(uint8_t pixel_width, uint8_t pixel_height, bool extra_row = fal
 
     // Set up I2C and the display
     setup();
+
+    // Handle the extra_row quirk
+    if (has_hidden_row) {
+        screen_height += 8;
+        buffer_size += 128;
+    }
 }
 
 
@@ -141,9 +146,8 @@ void SSD1306::plot(int8_t x, int8_t y, uint8_t colour) {
     uint16_t byte_index = coords_to_index(x, y);
     uint8_t value = buffer[byte_index];
 
-    if (!has_hidden_row) {
-        if ((x > screen_width - 1) || (y > screen_height - 1)) return;
-    }
+    if ((x > screen_width - 1) || (y > screen_height - 1)) return;
+
     // Get the specific bit representing the pixel
     uint8_t bit = y - ((y >> 3) << 3);
 
@@ -163,10 +167,8 @@ void SSD1306::plot(int8_t x, int8_t y, uint8_t colour) {
 void SSD1306::rect(int8_t x, int8_t y, uint8_t width, uint8_t height, uint8_t colour, bool fill) {
     // Draw a rectangle with top left at (x,y) and of the specified width and height
     // (including the 1px border if 'fill' is false. Colour is 1 or 0
-    if (!has_hidden_row) {
-        if (x + width > screen_width) width = screen_width - x;
-        if (y + height > screen_height) height = screen_height - y;
-    }
+    if (x + width > screen_width) width = screen_width - x;
+    if (y + height > screen_height) height = screen_height - y;
 
     if (colour != 0 && colour != 1) colour = 1;
 
@@ -220,10 +222,10 @@ void SSD1306::line(int8_t x, int8_t y, int8_t tox, int8_t toy, uint8_t colour, u
         for (uint8_t i = start ; i < end ; ++i) {
             if (track_by_x) {
                 uint8_t dy = y + (uint8_t)(m * (i - x)) + j;
-                plot(i, dy, colour);
+                if ((i >= 0 && i < screen_width) && (dy >= 0 && dy < screen_height)) plot(i, dy, colour);
             } else {
                 uint8_t dx = x + (uint8_t)(m * (i - y)) + j;
-                plot(dx, i, colour);
+                if ((i >= 0 && i < screen_height) && (dx >= 0 && dx < screen_width)) plot(dx, i, colour);
             }
         }
     }
@@ -327,20 +329,22 @@ void SSD1306::text(int8_t x, int8_t y, string the_string, bool do_wrap, bool do_
 }
 
 
-void SSD1306::scroll() {
+void SSD1306::nibble_scroll() {
 
-    uint8_t max_y = has_hidden_row ? screen_height : screen_height - 8;
-    for (uint8_t y = 4 ; y < max_y ; y += 4) {
+    uint8_t max_y = screen_height - 4;
+    uint16_t src = 0;
+    uint16_t dst = 0;
+    uint8_t nibble = 0;
+    for (uint8_t y = 4 ; y <= max_y ; y += 4) {
         bool is_upper = (y % 8 != 0);
         for (uint8_t x = 0 ; x < 128 ; ++x) {
-            uint16_t src = coords_to_index(x, y);
-            uint16_t dst = coords_to_index(x, y - 4);
-            uint8_t nibble = buffer[src] & (is_upper ? 0xF0 : 0x0F);
-
+            src = coords_to_index(x, y);
+            dst = coords_to_index(x, y - 4);
+            nibble = buffer[src] & (is_upper ? 0xF0 : 0x0F);
             if (is_upper) {
                 buffer[dst] = (nibble >> 4);
             } else {
-                buffer[dst] += nibble;
+                buffer[dst] += (nibble << 4);
             }
         }
     }
@@ -349,20 +353,24 @@ void SSD1306::scroll() {
 
 void SSD1306::bit_scroll() {
 
-    uint8_t max_y = has_hidden_row ? screen_height : screen_height - 8;
+    uint8_t max_y = screen_height - 8;
+    uint16_t current_byte = 0;
+    uint16_t next_byte = 0;
+    uint8_t v1, v2 = 0;
+
     for (uint8_t y = 0 ; y <= max_y ; y += 8) {
         for (uint8_t x = 0 ; x < 128 ; ++x) {
-            uint16_t current_byte = coords_to_index(x, y);
-            uint8_t v = buffer[current_byte];
-            v = (v >> 1);
+            current_byte = coords_to_index(x, y);
+            v1 = buffer[current_byte];
+            v1 = (v1 >> 1);
 
             if (y < max_y) {
-                uint16_t next_byte = coords_to_index(x, y + 8);
-                uint8_t v2 = buffer[next_byte];
-                v |= ((v2 & 0x01) << 7);
+                next_byte = coords_to_index(x, y + 8);
+                v2 = buffer[next_byte];
+                v1 |= ((v2 & 0x01) << 7);
             }
 
-            buffer[current_byte] = v;
+            buffer[current_byte] = v1;
         }
     }
 }

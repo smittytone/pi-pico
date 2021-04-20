@@ -66,12 +66,13 @@ void game_loop(SSD1306 &display) {
     bool     was_pressed = true;
     bool     game_in_play = true;
     uint32_t debounce_count_press = 0;
+    uint32_t anim_time = 0;
     uint8_t  gap_count, tree_pos, prize_off_screen, x_old, ghost_count = 0;
     char     readout[5];
 
     while (true) {
         if (!game.paused) {
-            display.scroll();
+            display.bit_scroll();
 
             // Draw in the top line with game details
             display.rect(0, 0, 30, 8, 0, true);
@@ -123,7 +124,7 @@ void game_loop(SSD1306 &display) {
             }
 
             // Draw the player
-            display.line(x_old + 1, PLAYER_Y - 1, x_old + 4, PLAYER_Y - 1, 0, 1);
+            //display.line(x_old + 1, PLAYER_Y - 1, x_old + 4, PLAYER_Y - 1, 0, 1);
             display.plot(game.player_x,     PLAYER_Y    , 1);
             display.plot(game.player_x + 4, PLAYER_Y    , 1);
             display.plot(game.player_x + 1, PLAYER_Y + 1, 1);
@@ -131,9 +132,10 @@ void game_loop(SSD1306 &display) {
             display.plot(game.player_x + 2, PLAYER_Y + 2, 1);
 
             // Do we need to draw a way marker?
-            if (game.metres % 1000 == 0) {
+            if ((game.metres != 0) && (game.metres % 1000 == 0)) {
                 ++game.level;
-                game.speed = 60 - (5 * game.level);
+                game.speed = 40 - (5 * game.level);
+                if (game.speed < 0) game.speed = 0;
                 for (uint8_t i = 0 ; i < 127 ; i += 2) {
                     display.plot(i,     64, 1);
                     display.plot(i + 1, 65, 1);
@@ -143,18 +145,18 @@ void game_loop(SSD1306 &display) {
             } else {
                 // Draw up to three tress per level
                 if (gap_count >= 8) {
-                    for (uint8_t i = 0 ; i < irandom(0, 3) ; ++i) {
+                    for (uint8_t i = 0 ; i < 3 ; ++i) {
                         tree_pos = irandom(0, 101);
-                        if (tree_pos > (80 - (game.metres / 10))) {
-                            tree_pos = irandom(0, SCREEN_WIDTH - 8);
-                            draw_tree(tree_pos, display);
+                        if (tree_pos > (80 - (game.level << 1))) {
+                            tree_pos = irandom(0, SCREEN_WIDTH >> 2);
+                            draw_tree(tree_pos << 2, display);
                         }
                     }
 
                     if (!game.ghost && prize_off_screen < 0) {
                         if (tree_pos < 8) {
-                            tree_pos = irandom(0, SCREEN_WIDTH - 8);
-                            draw_prize(tree_pos, display);
+                            tree_pos = irandom(0, SCREEN_WIDTH >> 2);
+                            draw_prize(tree_pos << 2, display);
                         }
                     }
 
@@ -169,7 +171,7 @@ void game_loop(SSD1306 &display) {
                 }
             }
 
-            // Per loop is approx. 200m
+            // Screen draw is approx. 20ms
             display.draw();
             //sleep_ms(game.speed);
 
