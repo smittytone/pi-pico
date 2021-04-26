@@ -80,7 +80,7 @@ class SSD1306 {
     void        plot(int8_t x, int8_t y, uint8_t colour);
     void        rect(int8_t x, int8_t y, uint8_t width, uint8_t height, uint8_t colour, bool fill);
     void        line(int8_t x, int8_t y, int8_t tox, int8_t toy, uint8_t colour, uint8_t thick);
-    void        text(int8_t x, int8_t y, string the_string, bool do_wrap, bool do_double);
+    void        text(int8_t x, int8_t y, std::string the_string, bool do_wrap, bool do_double);
     void        nibble_scroll();
     void        bit_scroll();
     void        clear();

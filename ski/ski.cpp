@@ -9,6 +9,8 @@
  */
 #include "ski.h"
 
+using std::string;
+
 
 /*
  *  Initialisation Functions
@@ -63,9 +65,10 @@ void game_loop(SSD1306 &display) {
 
     Game game = init_game();
 
-    bool     was_pressed = true;
+    uint32_t debounce_count_press[2] = {0, 0};
+    bool     was_pressed[2] = {false, false};
+
     bool     game_in_play = true;
-    uint32_t debounce_count_press = 0;
     uint32_t anim_time = 0;
     uint8_t  gap_count, tree_pos, prize_off_screen, x_old, ghost_count = 0;
     char     readout[5];
@@ -91,21 +94,41 @@ void game_loop(SSD1306 &display) {
             uint32_t now = time_us_32();
             if (gpio_get(PIN_TURN_BUTTON)) {
                 // Button pressed
-                if (debounce_count_press == 0) {
-                    debounce_count_press = now;
-                } else if (now - debounce_count_press > DEBOUNCE_TIME_US) {
-                    debounce_count_press == 0;
-                    was_pressed = true;
+                if (debounce_count_press[0] == 0) {
+                    debounce_count_press[0] = now;
+                } else if (now - debounce_count_press[0] > DEBOUNCE_TIME_US) {
+                    debounce_count_press[0] == 0;
+                    was_pressed[0] = true;
+                }
+            } else if (was_pressed[0]) {
+                // Button released
+                if (debounce_count_press[0] == 0) {
+                    // Set debounce timer
+                    debounce_count_press[0] = now;
+                } else if (now - debounce_count_press[0] > DEBOUNCE_TIME_US) {
+                    // Player switches direction
+                    game.delta_x *= -1;
+                    was_pressed[0] = false;
+                }
+            }
+
+            if (gpio_get(PIN_PAUSE_BUTTON)) {
+                // Button pressed
+                if (debounce_count_press[1] == 0) {
+                    debounce_count_press[1] = now;
+                } else if (now - debounce_count_press[1] > DEBOUNCE_TIME_US) {
+                    debounce_count_press[1] == 0;
+                    was_pressed[1] = true;
                 }
             } else if (was_pressed) {
                 // Button released
-                if (debounce_count_press == 0) {
+                if (debounce_count_press[1] == 0) {
                     // Set debounce timer
-                    debounce_count_press = now;
-                } else if (now - debounce_count_press > DEBOUNCE_TIME_US) {
+                    debounce_count_press[1] = now;
+                } else if (now - debounce_count_press[1] > DEBOUNCE_TIME_US) {
                     // Player switches direction
-                    game.delta_x *= -1;
-                    was_pressed = false;
+                    game.paused = !game.paused;
+                    was_pressed[1] = false;
                 }
             }
 

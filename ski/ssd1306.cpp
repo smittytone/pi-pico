@@ -8,6 +8,7 @@
  *
  */
 #include "ski.h"
+using std::string;
 
 
 /*

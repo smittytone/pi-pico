@@ -17,9 +17,6 @@
 #include <string>
 #include <vector>
 
-using std::string;
-using std::vector;
-
 #include "pico/stdlib.h"
 #include "pico/binary_info.h"
 #include "hardware/gpio.h"
