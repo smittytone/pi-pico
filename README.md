@@ -101,12 +101,16 @@ A sample C project. Requires an HT16K33-based 8x8 LED matrix. I used [this displ
 
 A sample MicroPython project. Requires an HT16K33-based 8x8 LED matrix.
 
-## makepico
+## makepico 2.0.0 ##
 
 Pico project set up script for Z Shell. Requires Pico C SDK pre-installed.
 
 ## Updates ##
 
+- *30 April 2021*
+    - Update *makepico* to support C++ projects:
+        - Add `-c` switch to create a C++ project.
+        - Add a `-n` option so you can add your name for code comments.
 - *6 April 2021*
     - Bump Phantom Slayer to 1.0.2
         - Move some common routines into `utils.h`/`utils.c`.
@@ -139,4 +143,4 @@ Pico project set up script for Z Shell. Requires Pico C SDK pre-installed.
 - *2 February 2021*
     - Initial release.
 
-Released under the MIT Licence. Copyright © 2021, Tony Smith (@smittytone).
+All source code released under the MIT Licence. Copyright © 2021, Tony Smith (@smittytone).
