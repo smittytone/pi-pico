@@ -29,7 +29,7 @@ fi
 
 show_help() {
     echo -e "\nInitialise a Pi Pico Project\n"
-    echo -e "Usage:\n  makepico [path/name] [-d] [-h]\n"
+    echo -e "Usage:\n  makepico [path/name] [-c] [-d] [-n your name] [-h]\n"
     echo    "Options:"
     echo    "  -c / --cpp     Set up the project for C++. Default: false"
     echo    "  -d / --debug   Set up the project for SWD. Default: false"
@@ -96,6 +96,7 @@ make_source_files() {
     # FROM 2.0.0
     # Write main() function
     {
+        echo "#include \"${source_file}.h\""
         echo
         echo 'int main() {'
         echo '    return 0;'
@@ -105,6 +106,7 @@ make_source_files() {
     # FROM 1.3.0
     # Break into sections for C/C++ usage
 
+    # Add header guard
     {
         echo "#ifndef _${project_name:u}_HEADER_"
         echo "#define _${project_name:u}_HEADER_"
@@ -115,12 +117,11 @@ make_source_files() {
     if [[ $do_cpp -eq 1 ]]; then
         {
             echo '#include <iostream>'
-            echo '#include <cstdlib>'
             echo '#include <string>'
             echo '#include <vector>'
-            echo
-            echo 'using std::string;'
-            echo 'using std::vector;'
+            echo '#include <cstdlib>'
+            echo '#include <cstdint>'
+            echo '#include <cstring>'
             echo
         } >> "${1}/${source_file}.h"
     else
@@ -148,6 +149,10 @@ make_source_files() {
             echo '#ifdef __cplusplus'
             echo 'extern "C" {'
             echo '#endif'
+            echo
+            echo '/*'
+            echo ' * Usual header code here'
+            echo ' */'
             echo
             echo '#ifdef __cplusplus'
             echo '}'
@@ -197,7 +202,7 @@ make_cmake_file() {
         echo "add_executable(${project_name}"
         echo "               ${source_file}.${file_ext})"
         echo
-        echo "pico_sdk_init()"
+        echo 'pico_sdk_init()'
         echo
         echo "pico_enable_stdio_usb(${project_name} 1)"
         echo "pico_enable_stdio_uart(${project_name} 1)"
