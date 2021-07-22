@@ -107,6 +107,8 @@ Pico project set up script for Z Shell. Requires Pico C SDK pre-installed.
 
 ## Updates ##
 
+- *23 July 2021*
+    - Spring clean *makepico* and bump to 2.0.0.
 - *30 April 2021*
     - Update *makepico* to support C++ projects:
         - Add `-c` switch to create a C++ project.

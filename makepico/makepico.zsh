@@ -28,7 +28,7 @@ fi
 
 
 show_help() {
-    echo -e "\nInitialise a Pi Pico Project\n"
+    echo -e "\nmakepico 2.0.0\n\nInitialise a Pi Pico Project\n"
     echo -e "Usage:\n  makepico [path/name] [-c] [-d] [-n your name] [-h]\n"
     echo    "Options:"
     echo    "  -c / --cpp     Set up the project for C++. Default: false"
