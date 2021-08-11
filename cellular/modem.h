@@ -23,5 +23,9 @@ bool        start_modem();
 void        init_network(char* apn);
 void        toggle_module_power();
 
+void        split_msg(char* msg, char **ptrs, int32_t want_line);
+char*       get_line(char* msg, int32_t want_line);
+char*       get_sms_number(char* line);
+
 
 #endif // _MODEM_HEADER_

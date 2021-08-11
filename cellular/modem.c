@@ -41,7 +41,7 @@ bool send_at(char* cmd, char* back, uint32_t timeout) {
  */
 uint32_t send_at_response(char* cmd, uint32_t timeout) {
     // Write out the AT command
-    const char* send = strcat(cmd, "\r\n");
+    char* send = strcat(cmd, "\r\n");
     uart_write_blocking(uart0, send, strlen(send));
 
     // Read the response
@@ -148,4 +148,66 @@ void toggle_module_power() {
 
     // Ground the pin
     gpio_put(PIN_MODEM_PWR, true);
+}
+
+
+void split_msg(char* msg, char **ptrs, int32_t want_line) {
+
+    uint32_t count = 0;
+    char* str_ptr = msg;
+    ptrs[count] = msg;
+    count++;
+    char tmp[3];
+
+    for (uint32_t i = 0 ; i < strlen(msg) ; ++i) {
+        strncpy(tmp, str_ptr, 2);
+        if (strstr(tmp, "\r\n") != 0) {
+            ptrs[count] = str_ptr;
+            count++;
+            str_ptr++;
+        }
+
+        str_ptr++;
+    }
+
+    if (count < 20) {
+        for (uint32_t i = count ; i < 20 ; ++i) {
+            ptrs[i] = NULL;
+        }
+    }
+}
+
+
+char* get_line(char* msg, int32_t want_line) {
+    uint32_t line_number = 0;
+    const char token[2] = "\r";
+    char *next_ptr;
+    char *start_ptr = msg;
+
+    // Get first token
+    next_ptr = strtok(msg, token);
+    if (next_ptr) {
+        while (next_ptr) {
+            if (strcmp(next_ptr + 1, "\n") == 0) {
+                // Is this the line we want? If so, return a pointer to it
+                if (line_number == want_line) return start_ptr;
+
+                // Move to start of next line
+                next_ptr++;
+                start_ptr = next_ptr;
+            }
+
+            // Get next token
+            next_ptr = strtok(NULL, token);
+        }
+    }
+
+    return NULL;
+}
+
+
+char* get_sms_number(char* line) {
+    char* p = strstr(line, ",");
+    if (p) return p + 1;
+    return NULL;
 }
