@@ -10,14 +10,28 @@
 #include "cellular.h"
 
 
+/*
+ * GLOBALS
+ */
+char        uart_buffer[UART_BUFFER_SIZE];
+char        *rx_ptr;
+
+
 int main() {
 
     // Set up the hardware
     setup();
 
+    // Set the read-write pointer to the start of the buffer
+    rx_ptr = &uart_buffer[0];
+
     // Fire up the modem
     if (init_modem()) {
+        // Light the LED
+        led_on();
+
         // Start to listen for commands
+        //listen();
     } else {
         // Flash the LED five times, turn it off and exit
         blink_led(5);
@@ -32,8 +46,9 @@ int main() {
     Umbrella setup routine.
  */
 void setup() {
-    setup_uart();
     setup_led();
+    setup_i2c();
+    setup_uart();
     setup_modem_power_pin();
 }
 
@@ -43,11 +58,16 @@ void setup() {
  */
 void setup_uart() {
     // Initialise UART 0
-    uart_init(uart0, 115200);
+    uart_init(MODEM_UART, 115200);
 
     // Set the GPIO pin mux to the UART - 0 is TX, 1 is RX
     gpio_set_function(PIN_UART_TX, GPIO_FUNC_UART);
     gpio_set_function(PIN_UART_RX, GPIO_FUNC_UART);
+
+    // Clear the UART processing buffer
+    for (uint32_t i = 0 ; i < UART_BUFFER_SIZE ; ++i) {
+        uart_buffer[i] = 0;
+    }
 }
 
 
@@ -57,9 +77,16 @@ void setup_uart() {
 void setup_led() {
     gpio_init(PIN_LED);
     gpio_set_dir(PIN_LED, GPIO_OUT);
-    gpio_put(PIN_LED, false);
+    led_off();
 }
 
+void led_on() {
+    gpio_put(PIN_LED, true);
+}
+
+void led_off() {
+    gpio_put(PIN_LED, false);
+}
 
 /**
     Set up the pin the toggles the modem power.
@@ -87,6 +114,40 @@ void blink_led(uint32_t blinks) {
         sleep_ms(250);
     }
 }
+
+
+/*
+ * I2C Functions
+ */
+void setup_i2c() {
+    // Initialize the I2C bus for the display and sensor
+    i2c_init(I2C_PORT, I2C_FREQUENCY);
+    gpio_set_function(SDA_GPIO, GPIO_FUNC_I2C);
+    gpio_set_function(SCL_GPIO, GPIO_FUNC_I2C);
+    gpio_pull_up(SDA_GPIO);
+    gpio_pull_up(SCL_GPIO);
+
+    // TODO
+    // Initialize the display
+    // Initialize the sensor
+}
+
+void i2c_write_byte(uint8_t address, uint8_t byte) {
+    // Convenience function to write a single byte to the bus
+    i2c_write_blocking(I2C_PORT, address, &byte, 1, false);
+}
+
+void i2c_write_block(uint8_t address, uint8_t *data, uint8_t count) {
+    // Convenience function to write a 'count' bytes to the bus
+    i2c_write_blocking(I2C_PORT, address, data, count, false);
+}
+
+void i2c_read_block(uint8_t address, uint8_t *data, uint8_t count) {
+    // Convenience function to read 'count' bytes from the bus
+    i2c_read_blocking(I2C_PORT, address, data, count, false);
+}
+
+
 
 
 // strtol( const char *restrict str, char **restrict str_end, int base );

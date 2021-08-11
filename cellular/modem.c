@@ -10,8 +10,6 @@
 #include "cellular.h"
 
 
-char uart_rx_buffer[256];
-
 /**
     Send an AT command to the modem.
 
@@ -26,7 +24,7 @@ char uart_rx_buffer[256];
  */
 bool send_at(char* cmd, char* back, uint32_t timeout) {
     uint32_t length = send_at_response(cmd, timeout);
-    return (length > 0 && strstr(&uart_rx_buffer[0], back));
+    return (length > 0 && strstr(&uart_buffer[0], back));
 }
 
 
@@ -42,19 +40,20 @@ bool send_at(char* cmd, char* back, uint32_t timeout) {
 uint32_t send_at_response(char* cmd, uint32_t timeout) {
     // Write out the AT command
     char* send = strcat(cmd, "\r\n");
-    uart_write_blocking(uart0, send, strlen(send));
+    uart_write_blocking(MODEM_UART, send, strlen(send));
 
     // Read the response
-    char* rx_ptr = &uart_rx_buffer[0];
+    char* buffer_start = &uart_buffer[0];
+    rx_ptr = buffer_start;
     uint32_t now = time_us_32();
-    while (time_us_32() - now < timeout || rx_ptr - &uart_rx_buffer[0] >= 255) {
-        if (uart_is_readable(uart0) > 0) {
-            uart_read_blocking(uart0, rx_ptr, 1);
+    while (time_us_32() - now < timeout || rx_ptr - buffer_start >= UART_BUFFER_SIZE) {
+        if (uart_is_readable(MODEM_UART) > 0) {
+            uart_read_blocking(MODEM_UART, rx_ptr, 1);
         }
     }
 
     // Return number of bytes read
-    return rx_ptr - &uart_rx_buffer[0];
+    return rx_ptr - buffer_start;
 }
 
 
@@ -63,7 +62,7 @@ uint32_t send_at_response(char* cmd, uint32_t timeout) {
  */
 void clear_buffer() {
     for (uint32_t i = 0 ; i < 256 ; ++i) {
-        uart_rx_buffer[i] = 0;
+        uart_buffer[i] = 0;
     }
 }
 
