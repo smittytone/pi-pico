@@ -13,8 +13,7 @@
 /*
  * GLOBALS
  */
-char        uart_buffer[UART_BUFFER_SIZE];
-char        *rx_ptr;
+
 
 
 int main() {
@@ -22,16 +21,16 @@ int main() {
     // Set up the hardware
     setup();
 
-    // Set the read-write pointer to the start of the buffer
-    rx_ptr = &uart_buffer[0];
+    // Instantiate the modem
+    Sim7080G modem;
 
     // Fire up the modem
-    if (init_modem()) {
+    if (modem.init_modem()) {
         // Light the LED
         led_on();
 
         // Start to listen for commands
-        //listen();
+        // listen();
     } else {
         // Flash the LED five times, turn it off and exit
         blink_led(5);
@@ -65,14 +64,12 @@ void setup_uart() {
     gpio_set_function(PIN_UART_RX, GPIO_FUNC_UART);
 
     // Clear the UART processing buffer
-    for (uint32_t i = 0 ; i < UART_BUFFER_SIZE ; ++i) {
-        uart_buffer[i] = 0;
-    }
+    //clear_buffer();
 }
 
 
-/**
-    Set up the Pico's LED.
+/*
+ * LED Functions
  */
 void setup_led() {
     gpio_init(PIN_LED);
@@ -89,17 +86,6 @@ void led_off() {
 }
 
 /**
-    Set up the pin the toggles the modem power.
-    See `toggle_module_power()` in `modem.c`.
- */
-void setup_modem_power_pin() {
-    gpio_init(PIN_MODEM_PWR);
-    gpio_set_dir(PIN_MODEM_PWR, GPIO_OUT);
-    gpio_put(PIN_MODEM_PWR, false);
-}
-
-
-/**
     Blink the Pico LED a specified number of times, leaving it
     on at the end.
 
@@ -113,6 +99,16 @@ void blink_led(uint32_t blinks) {
         gpio_put(PIN_LED, true);
         sleep_ms(250);
     }
+}
+
+
+/*
+ * Modem PWR_EN Functions
+ */
+void setup_modem_power_pin() {
+    gpio_init(PIN_MODEM_PWR);
+    gpio_set_dir(PIN_MODEM_PWR, GPIO_OUT);
+    gpio_put(PIN_MODEM_PWR, false);
 }
 
 
@@ -146,8 +142,3 @@ void i2c_read_block(uint8_t address, uint8_t *data, uint8_t count) {
     // Convenience function to read 'count' bytes from the bus
     i2c_read_blocking(I2C_PORT, address, data, count, false);
 }
-
-
-
-
-// strtol( const char *restrict str, char **restrict str_end, int base );

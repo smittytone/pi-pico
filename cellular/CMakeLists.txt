@@ -1,10 +1,9 @@
 cmake_minimum_required(VERSION 3.13)
 include(pico_sdk_import.cmake)
 project(cellular VERSION 1.0.0)
-
 add_executable(cellular
-               cellular.c
-               modem.c)
+               cellular.cpp
+               modem.cpp)
 
 pico_sdk_init()
 
@@ -16,4 +15,4 @@ target_link_libraries(cellular
                       pico_stdlib
                       hardware_gpio
                       hardware_i2c
-                      hardware_uart)
+                      hardware_adc)
