@@ -36,7 +36,7 @@ int main() {
         listen();
     } else {
         // Error! Flash the LED five times, turn it off and exit
-        blink_led(5);
+        blink_err_code(ERR_CODE_GEN_FAIL);
         gpio_put(PIN_LED, false);
     }
 
@@ -101,6 +101,33 @@ void blink_led(uint32_t blinks) {
         sleep_ms(250);
         gpio_put(PIN_LED, true);
         sleep_ms(250);
+    }
+}
+
+
+/**
+    Flash a error code sequence on the LED.
+
+    eg. "LBSBS" - Long, Blank, Short, Blank, Short.
+
+    - Parameters:
+        - code: Sequence of L, S or B.
+ */
+void blink_err_code(string code) {
+    for (uint32_t i = 0 ; i < code.length() ; ++i) {
+        switch (code[i]) {
+            case 'L':
+                gpio_put(PIN_LED, true);
+                sleep_ms(250);
+            case 'S':
+                gpio_put(PIN_LED, true);
+                sleep_ms(250);
+                break;
+            default:
+                sleep_ms(250);
+                break;
+        }
+        gpio_put(PIN_LED, false);
     }
 }
 

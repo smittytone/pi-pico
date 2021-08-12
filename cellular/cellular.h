@@ -43,6 +43,9 @@ extern "C" {
 #define SDA_GPIO                2
 #define SCL_GPIO                3
 
+#define ERR_CODE_GEN_FAIL       "LBBLBBLBBLBBL"
+#define ERR_CODE_MODEM_START    "LBS"
+#define ERR_CODE_MODEM_INIT     "LBSBS"
 
 /*
  * PROTOTYPES
@@ -55,6 +58,7 @@ void        setup_modem_power_pin();
 void        blink_led(uint32_t blinks);
 void        led_on();
 void        led_off();
+void        blink_err_code(string code);
 
 void        setup_i2c();
 void        i2c_write_byte(uint8_t address, uint8_t byte);

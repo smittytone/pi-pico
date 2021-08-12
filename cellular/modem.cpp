@@ -37,8 +37,7 @@ bool Sim7080G::init_modem() {
     } else {
         // Signal with two flashes we couldn't
         // start the modem
-        blink_led(2);
-        gpio_put(PIN_LED, false);
+        blink_err_code(ERR_CODE_MODEM_START);
         sleep_ms(1000);
     }
 
