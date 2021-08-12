@@ -65,6 +65,9 @@ void setup_uart() {
     // Set the GPIO pin mux to the UART - 0 is TX, 1 is RX
     gpio_set_function(PIN_UART_TX, GPIO_FUNC_UART);
     gpio_set_function(PIN_UART_RX, GPIO_FUNC_UART);
+
+    // Switch off flow control -- not used
+    uart_set_hw_flow(MODEM_UART, false, false);
 }
 
 

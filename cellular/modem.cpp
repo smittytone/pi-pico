@@ -154,16 +154,17 @@ string Sim7080G::send_at_response(string cmd, uint32_t timeout) {
     // Write out the AT command, converting to
     // a C string for the Pico SDK
     string data_out = cmd + "\r\n";
-    printf("%s", cmd);
+    printf("%s", data_out);
     char c_data_out[data_out.length() + 1];
     strcpy(c_data_out, data_out.c_str());
-    uart_write_blocking(MODEM_UART, (uint8_t *)c_data_out, data_out.length());
+    uart_puts(MODEM_UART, c_data_out);
 
     // Read the buffer
     read_buffer(timeout);
 
     // Return response as string
-    return buffer_to_string();
+    if (rx_ptr > &uart_buffer[0]) return buffer_to_string();
+    return "zzz";
 }
 
 
@@ -180,9 +181,11 @@ void Sim7080G::read_buffer(uint32_t timeout) {
 
     uint32_t now = time_us_32();
 
-    while (time_us_32() - now < timeout || rx_ptr - buffer_start >= UART_BUFFER_SIZE) {
+    while (time_us_32() - now < timeout * 1000 || rx_ptr - buffer_start >= UART_BUFFER_SIZE) {
         if (uart_is_readable(MODEM_UART) > 0) {
-            uart_read_blocking(MODEM_UART, rx_ptr++, 1);
+            *rx_ptr = uart_getc(MODEM_UART);
+            rx_ptr++;
+            //uart_read_blocking(MODEM_UART, rx_ptr++, 1);
         }
     }
 }
@@ -208,6 +211,7 @@ string Sim7080G::buffer_to_string() {
         new_string += s;
     }
 
+    new_string = reinterpret_cast<char *>(uart_buffer);
     return new_string;
 }
 
