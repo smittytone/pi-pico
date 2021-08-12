@@ -9,20 +9,23 @@
  */
 #include "cellular.h"
 
+using std::string;
+using std::vector;
+
 
 /*
  * GLOBALS
  */
-
-
+Sim7080G modem = Sim7080G("super");
+MCP9808 sensor = MCP9808(0x18);
 
 int main() {
 
+    // DEBUG
+    stdio_init_all();
+
     // Set up the hardware
     setup();
-
-    // Instantiate the modem
-    Sim7080G modem;
 
     // Fire up the modem
     if (modem.init_modem()) {
@@ -30,9 +33,9 @@ int main() {
         led_on();
 
         // Start to listen for commands
-        // listen();
+        listen();
     } else {
-        // Flash the LED five times, turn it off and exit
+        // Error! Flash the LED five times, turn it off and exit
         blink_led(5);
         gpio_put(PIN_LED, false);
     }
@@ -62,9 +65,6 @@ void setup_uart() {
     // Set the GPIO pin mux to the UART - 0 is TX, 1 is RX
     gpio_set_function(PIN_UART_TX, GPIO_FUNC_UART);
     gpio_set_function(PIN_UART_RX, GPIO_FUNC_UART);
-
-    // Clear the UART processing buffer
-    //clear_buffer();
 }
 
 
@@ -141,4 +141,73 @@ void i2c_write_block(uint8_t address, uint8_t *data, uint8_t count) {
 void i2c_read_block(uint8_t address, uint8_t *data, uint8_t count) {
     // Convenience function to read 'count' bytes from the bus
     i2c_read_blocking(I2C_PORT, address, data, count, false);
+}
+
+
+/*
+ * MAIN FUNCTIONS
+ */
+void listen() {
+    while (true) {
+        // Check for a response from the modem
+        string response = modem.listen(5000);
+
+        if (response.length() > 0) {
+            vector<string> lines = split_to_lines(response);
+            for (uint32_t i = 0 ; i < lines.size() ; ++i) {
+                string line = lines[i];
+                if (line.find("CMTI") != string::npos) {
+                    // We received an SMS, so get it...
+                    string num = modem.get_sms_number(line);
+                    string msg = modem.send_at_response("AT+CMGR=" + num, 5000);
+
+                    // ...and process it for commands
+                    string cmd = modem.split_msg(msg, 2);
+                    modem.send_at_response("AT+CMGD=" + num + ",4", 5000);
+                    if (cmd.find("LED=") == 0) process_command_led(cmd);
+                    if (cmd.find("TMP") == 0) process_command_tmp();
+
+                    // Delete all SMSs now we're done with them
+                    modem.send_at("AT+CMGD=" + num + ",4", "OK", 2000);
+                }
+            }
+        }
+    }
+}
+
+
+void process_command_led(string msg) {
+    string s_blinks = msg.substr(4);
+    uint32_t i_blinks = std::stoi(s_blinks);
+    blink_led(i_blinks);
+}
+
+
+void process_command_tmp() {
+    string s_temp(std::to_string(sensor.read_temp()));
+    if (modem.send_at("AT+CMGS=\"000\"", ">", 2000)) {
+        // '>' is the prompt sent by the modem to signal that
+        // it's waiting to receive the message text.
+        // 'chr(26)' is the code for ctrl-z, which the modem
+        // uses as an end-of-message marker
+        string r = modem.send_at_response(s_temp + "\x1A", 2000);
+    }
+}
+
+
+vector<string> split_to_lines(string str) {
+    vector<string> result;
+    while (str.size()) {
+        int index = str.find("\r");
+        if (index != string::npos){
+            result.push_back(str.substr(0, index));
+            str = str.substr(index + 2);
+            if (str.size() == 0) result.push_back(str);
+        } else {
+            result.push_back(str);
+            break;
+        }
+    }
+
+    return result;
 }

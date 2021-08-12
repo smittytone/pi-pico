@@ -22,25 +22,27 @@ using std::string;
 class Sim7080G {
 
     public:
-        Sim7080G();
+        Sim7080G(string network_apn);
 
         bool        send_at(string cmd, string back, uint32_t timeout);
         string      send_at_response(string cmd, uint32_t timeout);
+        void        read_buffer(uint32_t timeout);
+        string      listen(uint32_t timeout);
 
         bool        init_modem();
         bool        start_modem();
-        void        init_network(string apn);
+        void        init_network();
         void        toggle_module_power();
-
         void        clear_buffer();
+
         string      buffer_to_string();
         string      split_msg(string msg, uint32_t want_line);
-
-        void        listen();
+        string      get_sms_number(string line);
 
     private:
         uint8_t     uart_buffer[UART_BUFFER_SIZE];
         uint8_t     *rx_ptr;
+        string      apn;
 };
 
 

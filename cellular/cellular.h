@@ -24,8 +24,7 @@
 #include "hardware/uart.h"
 
 #include "modem.h"
-
-using std::string;
+#include "mcp9808.h"
 
 
 #ifdef __cplusplus
@@ -62,6 +61,11 @@ void        i2c_write_byte(uint8_t address, uint8_t byte);
 void        i2c_write_block(uint8_t address, uint8_t *data, uint8_t count);
 void        i2c_read_block(uint8_t address, uint8_t *data, uint8_t count);
 
+void        listen();
+void        process_command_led(string msg);
+void        process_command_tmp();
+
+std::vector<string> split_to_lines(string str);
 
 // extern "C"
 }

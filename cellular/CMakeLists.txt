@@ -1,14 +1,15 @@
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.14)
 include(pico_sdk_import.cmake)
 project(cellular VERSION 1.0.0)
 add_executable(cellular
                cellular.cpp
-               modem.cpp)
+               modem.cpp
+               mcp9808.cpp)
 
 pico_sdk_init()
 
 pico_enable_stdio_usb(cellular 1)
-pico_enable_stdio_uart(cellular 1)
+pico_enable_stdio_uart(cellular 0)
 pico_add_extra_outputs(cellular)
 
 target_link_libraries(cellular
