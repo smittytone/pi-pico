@@ -15,18 +15,15 @@ using std::string;
     Instantiate a new MCP9808 object.
  */
 MCP9808::MCP9808(uint32_t address) {
-    if (address == 0x00 || address > 0xFF) {
-        address = MCP9808_I2CADDR_DEFAULT;
-    }
-
+    if (address == 0x00 || address > 0xFF) address = MCP9808_I2CADDR_DEFAULT;
     i2c_addr = address;
 }
-
 
 /**
     Check the device is connected and operational.
 
-    - Returns: `true` if the sensor is correct, otherwise `false`.
+    - Returns: `true` if we can read values and they are right,
+               otherwise `false`.
  */
 bool MCP9808::begin() {
     uint8_t mid_data[2] = {0,0};
@@ -47,7 +44,6 @@ bool MCP9808::begin() {
     // Returns True if the device is initialized, False otherwise.
     return (mid_value == 0x0054 && did_value == 0x0400);
 }
-
 
 /**
     Check the device is connected and operational.

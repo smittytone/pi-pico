@@ -24,7 +24,6 @@ Sim7080G::Sim7080G(string network_apn) {
     if (apn == "") apn = "super";
 }
 
-
 /**
     Start up the modem.
 
@@ -43,7 +42,6 @@ bool Sim7080G::start_modem() {
 
     return false;
 }
-
 
 /**
     Check the modem is ready by periodically sending an AT command
@@ -73,7 +71,6 @@ bool Sim7080G::init_modem() {
     return false;
 }
 
-
 /**
     Initialise the modem: set up Cat-M1 usage and write the
     APN for Super SIM usage.
@@ -95,7 +92,6 @@ void Sim7080G::init_network() {
     send_at("AT+CGDCONT=1,\"IP\",\"" + apn + "\"", "OK", 2000);
 }
 
-
 /**
     Toggle the modem power line.
  */
@@ -109,7 +105,6 @@ void Sim7080G::toggle_module_power() {
     // Ground the pin
     gpio_put(PIN_MODEM_PWR, false);
 }
-
 
 /**
     Send an AT command to the modem and check the response.
@@ -128,7 +123,6 @@ bool Sim7080G::send_at(string cmd, string back, uint32_t timeout) {
     return (response.length() > 0 && response.find(back) != string::npos);
 }
 
-
 /**
     Send an AT command to the modem.
 
@@ -136,7 +130,7 @@ bool Sim7080G::send_at(string cmd, string back, uint32_t timeout) {
         - cmd:     pointer to the command string.
         - timeout: milliseconds to wait for response data.
 
-    - Returns: The number of bytes received.
+    - Returns: The bytes received as a string, or `ERROR`.
  */
 string Sim7080G::send_at_response(string cmd, uint32_t timeout) {
     // Write out the AT command, converting to
@@ -155,15 +149,15 @@ string Sim7080G::send_at_response(string cmd, uint32_t timeout) {
 
     // Return response as string
     if (rx_ptr > &uart_buffer[0]) {
-        string r = buffer_to_string();
+        string response = buffer_to_string();
         #ifdef DEBUG
-        printf("SEND_AT RESP:\n%s", r.c_str());
+        printf("SEND_AT RESP:\n%s", response.c_str());
         #endif
-        return r;
-        }
-    return "zzz";
-}
+        return response;
+    }
 
+    return "ERROR";
+}
 
 /**
     Read the UART RX for a period of time.
@@ -187,7 +181,6 @@ void Sim7080G::read_buffer(uint32_t timeout) {
     }
 }
 
-
 /**
     Clear the RX buffer with zeroes.
  */
@@ -197,7 +190,6 @@ void Sim7080G::clear_buffer() {
     }
 }
 
-
 /**
     Convert the buffer to a string.
  */
@@ -206,9 +198,16 @@ string Sim7080G::buffer_to_string() {
     return new_string;
 }
 
+/**
+    Listen for period for an incomimg message
 
+    - Parameters:
+        - timeout: The waiting period.
+
+    - Returns: The recieved bytes as a string
+ */
 string Sim7080G::listen(uint32_t timeout) {
-    // Listen for an incomimg message
+    //
     read_buffer(timeout);
 
     // Return response as string

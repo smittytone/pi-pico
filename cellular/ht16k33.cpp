@@ -20,18 +20,28 @@ const uint32_t POS[4] = {0, 2, 6, 8};
 
 
 HT16K33_Segment::HT16K33_Segment(uint32_t address) {
-    if (address == 0x00 || address > 0xFF) {
-        address = HT16K33_ADDRESS;
-    }
-
+    if (address == 0x00 || address > 0xFF) address = HT16K33_ADDRESS;
     i2c_addr = address;
 }
 
 
+/**
+    Convenience function to power on the display
+    and set basic parameters.
+ */
 void HT16K33_Segment::init() {
     power_on(true);
+    set_brightness(2);
+    clear();
+    draw();
 }
 
+/**
+    Power the display on or off.
+
+    - Parameters:
+        - on: `true` to turn the display on, `false` to turn it off.
+ */
 void HT16K33_Segment::power_on(bool on) {
     i2c_write_byte(i2c_addr, on ? HT16K33_GENERIC_SYSTEM_ON : HT16K33_GENERIC_DISPLAY_OFF);
     i2c_write_byte(i2c_addr, on ? HT16K33_GENERIC_DISPLAY_ON : HT16K33_GENERIC_SYSTEM_OFF);
@@ -52,7 +62,7 @@ void HT16K33_Segment::set_brightness(uint32_t brightness) {
     Clear the display buffer and then write it out.
  */
 HT16K33_Segment& HT16K33_Segment::clear() {
-    for (uint32_t i = 0 ; i < 8 ; ++i) buffer[i] = 0;
+    for (uint32_t i = 0 ; i < 16 ; ++i) buffer[i] = 0;
     return *this;
 }
 
@@ -86,7 +96,6 @@ HT16K33_Segment& HT16K33_Segment::set_colon(bool is_set) {
     return *this;
 }
 
-
 /**
     Present a user-defined character glyph at the specified digit.
 
@@ -103,7 +112,6 @@ HT16K33_Segment& HT16K33_Segment::set_glyph(uint32_t glyph, uint32_t digit, bool
     return *this;
 }
 
-
 /**
     Present a decimal number at the specified digit.
 
@@ -117,7 +125,6 @@ HT16K33_Segment& HT16K33_Segment::set_number(uint32_t number, uint32_t digit, bo
     if (number > 9) return *this;
     return set_alpha('0' + number, digit, has_dot);
 }
-
 
 /**
     Present an alphanumeric character glyph at the specified digit.
@@ -139,7 +146,7 @@ HT16K33_Segment& HT16K33_Segment::set_alpha(char chr, uint32_t digit, bool has_d
         char_val = HT16K33_SEGMENT_DEGREE_CHAR;
     } else if (chr >= 'a' && chr <= 'f') {
         char_val = (uint8_t)chr - 87;
-    } else if (chr >= '0' && chr <= '0') {
+    } else if (chr >= '0' && chr <= '9') {
         char_val = (uint8_t)chr - 48;
     }
 

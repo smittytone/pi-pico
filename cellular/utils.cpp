@@ -14,23 +14,31 @@ using std::vector;
 
 namespace Utils {
 
-vector<string> split_to_lines(string str) {
+/**
+    Convert a multi-line string into an array of lines,
+    split at `\r\n`.
+
+    - Parameters:
+        - mstr: The multi-line string
+
+    - Returns: The requested line, otherwise an empty string.
+ */
+vector<string> split_to_lines(string mstr) {
     vector<string> result;
-    while (str.size()) {
-        int index = str.find("\r");
+    while (mstr.size()) {
+        int index = mstr.find("\r");
         if (index != string::npos){
-            result.push_back(str.substr(0, index));
-            str = str.substr(index + 2);
-            if (str.size() == 0) result.push_back(str);
+            result.push_back(mstr.substr(0, index));
+            mstr = mstr.substr(index + 2);
+            if (mstr.size() == 0) result.push_back(mstr);
         } else {
-            result.push_back(str);
+            result.push_back(mstr);
             break;
         }
     }
 
     return result;
 }
-
 
 /**
     Get a specific line from a multi-line string.
@@ -48,7 +56,6 @@ string split_msg(string msg, uint32_t want_line) {
     }
     return "";
 }
-
 
 /**
     Get a number from the end of a CMTI line.
