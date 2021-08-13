@@ -1,5 +1,5 @@
 /*
- * cellular for Raspberry Pi Pico
+ * cellular::modem for Raspberry Pi Pico
  *
  * @version     1.0.0
  * @author      smittytone

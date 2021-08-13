@@ -14,12 +14,12 @@ using std::string;
 /**
     Instantiate a new MCP9808 object.
  */
-MCP9808::MCP9808(uint32_t i2c_address) {
-    if (i2c_address == 0x00 || i2c_address > 0xFF) {
-        i2c_address = MCP9808_I2CADDR_DEFAULT;
+MCP9808::MCP9808(uint32_t address) {
+    if (address == 0x00 || address > 0xFF) {
+        address = MCP9808_I2CADDR_DEFAULT;
     }
 
-    i2c_addr = i2c_address;
+    i2c_addr = address;
 }
 
 

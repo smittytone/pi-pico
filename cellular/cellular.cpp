@@ -18,6 +18,7 @@ using std::vector;
  */
 Sim7080G modem = Sim7080G("super");
 MCP9808 sensor = MCP9808(0x18);
+HT16K33_Segment display = HT16K33_Segment(0x70);
 
 
 int main() {
@@ -162,8 +163,10 @@ void setup_i2c() {
     gpio_pull_up(SDA_GPIO);
     gpio_pull_up(SCL_GPIO);
 
-    // TODO
     // Initialize the display
+    display.power_on(true);
+    display.set_brightness(2);
+    display.clear().draw();
 }
 
 void i2c_write_byte(uint8_t address, uint8_t byte) {
@@ -236,6 +239,23 @@ void process_command_num(string msg) {
     printf("Recieved NUM command: %s\n", number.c_str());
     #endif
 
+    display.clear();
+    uint32_t digit = 3;
+    for (uint32_t i = number.length() - 1; i >= 0 ; --i) {
+        char n = number[i];
+        printf("%i. %c\n", digit, n);
+        display.set_alpha(n, digit, true);
+        digit--;
+        if (digit > 4) break;
+    }
+
+    if (digit >= 0 && digit < 4) {
+        for (uint32_t i = 0; i <= digit ; ++i) {
+            display.set_number(0, i, false);
+        }
+    }
+
+    display.draw();
 }
 
 

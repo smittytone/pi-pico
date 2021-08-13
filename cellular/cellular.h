@@ -28,6 +28,7 @@
 #include "modem.h"
 #include "mcp9808.h"
 #include "utils.h"
+#include "ht16k33.h"
 
 
 #ifdef __cplusplus
