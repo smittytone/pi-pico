@@ -1,10 +1,14 @@
 cmake_minimum_required(VERSION 3.14)
 include(pico_sdk_import.cmake)
 project(cellular VERSION 1.0.0)
+
+add_definitions(-DDEBUG)
+
 add_executable(cellular
                cellular.cpp
                modem.cpp
-               mcp9808.cpp)
+               mcp9808.cpp
+               utils.cpp)
 
 pico_sdk_init()
 

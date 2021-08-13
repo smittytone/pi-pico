@@ -26,12 +26,12 @@ Sim7080G::Sim7080G(string network_apn) {
 
 
 /**
-    Initialise the modem.
+    Start up the modem.
 
     - Returns: `true` if the modem is ready, otherwise `false`.
  */
-bool Sim7080G::init_modem() {
-    if (start_modem()) {
+bool Sim7080G::start_modem() {
+    if (init_modem()) {
         init_network();
         return true;
     } else {
@@ -52,7 +52,7 @@ bool Sim7080G::init_modem() {
 
     - Returns: `true` if the modem is ready, otherwise `false`.
  */
-bool Sim7080G::start_modem() {
+bool Sim7080G::init_modem() {
     bool state = false;
 
     for (uint32_t i = 0 ; i < 15 ; ++i) {
@@ -112,16 +112,6 @@ void Sim7080G::toggle_module_power() {
 
 
 /**
-    Clear the RX buffer with zeroes.
- */
-void Sim7080G::clear_buffer() {
-    for (uint32_t i = 0 ; i < UART_BUFFER_SIZE ; ++i) {
-        uart_buffer[i] = 0;
-    }
-}
-
-
-/**
     Send an AT command to the modem and check the response.
 
     - Parameters:
@@ -135,7 +125,6 @@ void Sim7080G::clear_buffer() {
  */
 bool Sim7080G::send_at(string cmd, string back, uint32_t timeout) {
     string response = send_at_response(cmd, timeout);
-    printf("** %s\n", response);
     return (response.length() > 0 && response.find(back) != string::npos);
 }
 
@@ -152,17 +141,26 @@ bool Sim7080G::send_at(string cmd, string back, uint32_t timeout) {
 string Sim7080G::send_at_response(string cmd, uint32_t timeout) {
     // Write out the AT command, converting to
     // a C string for the Pico SDK
+    #ifdef DEBUG
+    printf("SEND_AT  CMD: %s\n", cmd.c_str());
+    #endif
+
     string data_out = cmd + "\r\n";
-    printf("*** %s\n", data_out);
-    char c_data_out[data_out.length() + 1];
-    strcpy(c_data_out, data_out.c_str());
-    uart_puts(MODEM_UART, c_data_out);
+    //char c_data_out[data_out.length() + 1];
+    //strcpy(c_data_out, data_out.c_str());
+    uart_puts(MODEM_UART, data_out.c_str());
 
     // Read the buffer
     read_buffer(timeout);
 
     // Return response as string
-    if (rx_ptr > &uart_buffer[0]) return buffer_to_string();
+    if (rx_ptr > &uart_buffer[0]) {
+        string r = buffer_to_string();
+        #ifdef DEBUG
+        printf("SEND_AT RESP:\n%s", r.c_str());
+        #endif
+        return r;
+        }
     return "zzz";
 }
 
@@ -184,10 +182,28 @@ void Sim7080G::read_buffer(uint32_t timeout) {
     while ((time_us_32() - now < timeout * 1000) && (rx_ptr - buffer_start < UART_BUFFER_SIZE)) {
         if (uart_is_readable(MODEM_UART) > 0) {
             uart_read_blocking(MODEM_UART, rx_ptr, 1);
-            //*rx_ptr = uart_getc(MODEM_UART);
             rx_ptr++;
         }
     }
+}
+
+
+/**
+    Clear the RX buffer with zeroes.
+ */
+void Sim7080G::clear_buffer() {
+    for (uint32_t i = 0 ; i < UART_BUFFER_SIZE ; ++i) {
+        uart_buffer[i] = 0;
+    }
+}
+
+
+/**
+    Convert the buffer to a string.
+ */
+string Sim7080G::buffer_to_string() {
+    string new_string(uart_buffer, rx_ptr);
+    return new_string;
 }
 
 
@@ -197,51 +213,4 @@ string Sim7080G::listen(uint32_t timeout) {
 
     // Return response as string
     return buffer_to_string();
-}
-
-
-/**
-    Convert the buffer to a string.
- */
-string Sim7080G::buffer_to_string() {
-    string new_string = "";
-
-    for (uint32_t i = 0 ; i < (rx_ptr - &uart_buffer[0]) ; ++i) {
-        string s(std::to_string(uart_buffer[i]));
-        new_string += s;
-    }
-
-    //new_string = reinterpret_cast<char *>(uart_buffer);
-    return new_string;
-}
-
-
-string Sim7080G::split_msg(string msg, uint32_t want_line) {
-    uint32_t count = 0;
-    uint32_t pos = msg.find("\r\n");
-    string line = msg.substr(0, pos);
-    do {
-        if (count == want_line) return line;
-        count++;
-        pos += 2;
-        if (pos + 2 >= msg.length()) break;
-        line = msg.substr(pos, msg.find("\r\n"));
-    } while (line.length() > 0);
-
-    return "";
-}
-
-
-/**
-    Get a number from the end of a CMTI line.
-
-    - Parameters:
-        - line: The target line.
-
-    - Returns: A pointer to the start of the number, or null
- */
-string Sim7080G::get_sms_number(string line) {
-    uint32_t pos = line.find(",");
-    if (pos == string::npos) return "";
-    return line.substr(pos + 1, line.length() - pos);
 }

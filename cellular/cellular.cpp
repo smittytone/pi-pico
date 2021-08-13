@@ -19,20 +19,30 @@ using std::vector;
 Sim7080G modem = Sim7080G("super");
 MCP9808 sensor = MCP9808(0x18);
 
+
 int main() {
 
     // DEBUG
+    #ifdef DEBUG
     stdio_init_all();
+    #endif
 
     // Set up the hardware
     setup();
 
     // Fire up the modem
-    if (modem.init_modem()) {
+    #ifdef DEBUG
+    printf("Starting modem...\n");
+    #endif
+
+    if (modem.start_modem()) {
         // Light the LED
         led_on();
 
         // Start to listen for commands
+        #ifdef DEBUG
+        printf("Listening...\n");
+        #endif
         listen();
     } else {
         // Error! Flash the LED five times, turn it off and exit
@@ -104,7 +114,6 @@ void blink_led(uint32_t blinks) {
     }
 }
 
-
 /**
     Flash a error code sequence on the LED.
 
@@ -155,7 +164,6 @@ void setup_i2c() {
 
     // TODO
     // Initialize the display
-    // Initialize the sensor
 }
 
 void i2c_write_byte(uint8_t address, uint8_t byte) {
@@ -181,20 +189,23 @@ void listen() {
     while (true) {
         // Check for a response from the modem
         string response = modem.listen(5000);
-
-        if (response.length() > 0) {
-            vector<string> lines = split_to_lines(response);
+        if (response != "zzz") {
+            vector<string> lines = Utils::split_to_lines(response);
             for (uint32_t i = 0 ; i < lines.size() ; ++i) {
                 string line = lines[i];
-                if (line.find("CMTI") != string::npos) {
+                if (line.length() == 0) continue;
+                printf("LINE %i: %s\n", i, line.c_str());
+                if (line.find("+CMTI") != string::npos) {
                     // We received an SMS, so get it...
-                    string num = modem.get_sms_number(line);
+                    string num = Utils::get_sms_number(line);
                     string msg = modem.send_at_response("AT+CMGR=" + num, 5000);
+                    printf("MSG: %s", msg.c_str());
 
                     // ...and process it for commands
-                    string cmd = modem.split_msg(msg, 2);
-                    modem.send_at_response("AT+CMGD=" + num + ",4", 5000);
+                    string cmd = Utils::split_msg(msg, 2);
+                    printf("CMD: %s @ %i\n", cmd.c_str(), cmd.find("LED="));
                     if (cmd.find("LED=") == 0) process_command_led(cmd);
+                    if (cmd.find("NUM=") == 0) process_command_num(cmd);
                     if (cmd.find("TMP") == 0) process_command_tmp();
 
                     // Delete all SMSs now we're done with them
@@ -208,13 +219,37 @@ void listen() {
 
 void process_command_led(string msg) {
     string s_blinks = msg.substr(4);
+
+    #ifdef DEBUG
+    printf("Recieved LED command: %s blinks\n", s_blinks.c_str());
+    #endif
+
     uint32_t i_blinks = std::stoi(s_blinks);
     blink_led(i_blinks);
 }
 
 
+void process_command_num(string msg) {
+    string number = msg.substr(4);
+
+    #ifdef DEBUG
+    printf("Recieved NUM command: %s\n", number.c_str());
+    #endif
+
+}
+
+
 void process_command_tmp() {
-    string s_temp(std::to_string(sensor.read_temp()));
+    #ifdef DEBUG
+    printf("Recieved TMP command\n");
+    #endif
+
+    // string s_temp(std::to_string(sensor.read_temp()));
+
+    std::stringstream stream;
+    stream << std::fixed << std::setprecision(2) << sensor.read_temp();
+    string s_temp = stream.str();
+
     if (modem.send_at("AT+CMGS=\"000\"", ">", 2000)) {
         // '>' is the prompt sent by the modem to signal that
         // it's waiting to receive the message text.
@@ -222,22 +257,4 @@ void process_command_tmp() {
         // uses as an end-of-message marker
         string r = modem.send_at_response(s_temp + "\x1A", 2000);
     }
-}
-
-
-vector<string> split_to_lines(string str) {
-    vector<string> result;
-    while (str.size()) {
-        int index = str.find("\r");
-        if (index != string::npos){
-            result.push_back(str.substr(0, index));
-            str = str.substr(index + 2);
-            if (str.size() == 0) result.push_back(str);
-        } else {
-            result.push_back(str);
-            break;
-        }
-    }
-
-    return result;
 }

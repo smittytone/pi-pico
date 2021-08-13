@@ -16,6 +16,8 @@
 #include <cstdlib>
 #include <cstdint>
 #include <cstring>
+#include <sstream>
+#include <iomanip>
 
 #include "pico/stdlib.h"
 #include "pico/binary_info.h"
@@ -25,6 +27,7 @@
 
 #include "modem.h"
 #include "mcp9808.h"
+#include "utils.h"
 
 
 #ifdef __cplusplus
@@ -47,6 +50,7 @@ extern "C" {
 #define ERR_CODE_MODEM_START    "LBS"
 #define ERR_CODE_MODEM_INIT     "LBSBS"
 
+
 /*
  * PROTOTYPES
  */
@@ -67,9 +71,9 @@ void        i2c_read_block(uint8_t address, uint8_t *data, uint8_t count);
 
 void        listen();
 void        process_command_led(string msg);
+void        process_command_num(string msg);
 void        process_command_tmp();
 
-std::vector<string> split_to_lines(string str);
 
 // extern "C"
 }
