@@ -35,16 +35,16 @@
 class HT16K33_Segment {
 
     public:
-        HT16K33_Segment(uint32_t address);
+        HT16K33_Segment(uint32_t address = HT16K33_ADDRESS);
 
         void                init();
-        void                power_on(bool turn_on);
+        void                power_on(bool turn_on = true);
 
-        void                set_brightness(uint32_t brightness);
-        HT16K33_Segment&    set_colon(bool is_set);
-        HT16K33_Segment&    set_glyph(uint32_t glyph, uint32_t digit, bool has_dot);
-        HT16K33_Segment&    set_number(uint32_t number, uint32_t digit, bool has_dot);
-        HT16K33_Segment&    set_alpha(char chr, uint32_t digit, bool has_dot);
+        void                set_brightness(uint32_t brightness = 15);
+        HT16K33_Segment&    set_colon(bool is_set = false);
+        HT16K33_Segment&    set_glyph(uint32_t glyph, uint32_t digit, bool has_dot = false);
+        HT16K33_Segment&    set_number(uint32_t number, uint32_t digit, bool has_dot = false);
+        HT16K33_Segment&    set_alpha(char chr, uint32_t digit, bool has_dot = false);
 
         HT16K33_Segment&    clear();
         void                draw();

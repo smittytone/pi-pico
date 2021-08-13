@@ -13,7 +13,7 @@ using std::string;
 
 
 /**
-    Instantiate a new MCP9808 object.
+    Constructor: instantiate a new MCP9808 object.
  */
 MCP9808::MCP9808(uint32_t address) {
     if (address == 0x00 || address > 0xFF) address = MCP9808_I2CADDR_DEFAULT;
@@ -27,6 +27,7 @@ MCP9808::MCP9808(uint32_t address) {
                otherwise `false`.
  */
 bool MCP9808::begin() {
+    // Prep data storage buffers
     uint8_t mid_data[2] = {0,0};
     uint8_t did_data[2] = {0,0};
 

@@ -26,13 +26,13 @@
 
 
 /**
-    A simple driver for the I2C-connected MCP9808 temperature sensor.
-    This release supports C++
+    A very basic driver for the I2C-connected MCP9808 temperature sensor.
  */
 class MCP9808 {
 
     public:
-        MCP9808(uint32_t i2c_address);
+        // Constructor
+        MCP9808(uint32_t i2c_address = MCP9808_I2CADDR_DEFAULT);
 
         bool        begin();
         double      read_temp();

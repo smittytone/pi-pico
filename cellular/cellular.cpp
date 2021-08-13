@@ -16,9 +16,9 @@ using std::vector;
 /*
  * GLOBALS
  */
-Sim7080G modem = Sim7080G("super");
-MCP9808 sensor = MCP9808(0x18);
-HT16K33_Segment display = HT16K33_Segment(0x70);
+Sim7080G modem = Sim7080G();
+MCP9808 sensor = MCP9808();
+HT16K33_Segment display = HT16K33_Segment();
 
 
 /**
@@ -205,22 +205,24 @@ void listen() {
             for (uint32_t i = 0 ; i < lines.size() ; ++i) {
                 string line = lines[i];
                 if (line.length() == 0) continue;
+
+                #ifdef DEBUG
                 printf("LINE %i: %s\n", i, line.c_str());
+                #endif
+
                 if (line.find("+CMTI") != string::npos) {
                     // We received an SMS, so get it...
                     string num = Utils::get_sms_number(line);
-                    string msg = modem.send_at_response("AT+CMGR=" + num, 5000);
-                    printf("MSG: %s", msg.c_str());
+                    string msg = modem.send_at_response("AT+CMGR=" + num);
 
                     // ...and process it for commands
                     string cmd = Utils::split_msg(msg, 2);
-                    printf("CMD: %s @ %i\n", cmd.c_str(), cmd.find("LED="));
                     if (cmd.find("LED=") == 0) process_command_led(cmd);
                     if (cmd.find("NUM=") == 0) process_command_num(cmd);
                     if (cmd.find("TMP") == 0) process_command_tmp();
 
                     // Delete all SMSs now we're done with them
-                    modem.send_at("AT+CMGD=" + num + ",4", "OK", 2000);
+                    modem.send_at("AT+CMGD=" + num + ",4");
                 }
             }
         }
@@ -278,11 +280,11 @@ void process_command_tmp() {
     stream << std::fixed << std::setprecision(2) << sensor.read_temp();
     string s_temp = stream.str();
 
-    if (modem.send_at("AT+CMGS=\"000\"", ">", 2000)) {
+    if (modem.send_at("AT+CMGS=\"000\"", ">")) {
         // '>' is the prompt sent by the modem to signal that
         // it's waiting to receive the message text.
         // 'chr(26)' is the code for ctrl-z, which the modem
         // uses as an end-of-message marker
-        string r = modem.send_at_response(s_temp + "\x1A", 2000);
+        string r = modem.send_at_response(s_temp + "\x1A");
     }
 }

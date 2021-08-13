@@ -21,7 +21,7 @@ Sim7080G::Sim7080G(string network_apn) {
 
     // Save the APN for later
     apn = network_apn;
-    if (apn == "") apn = "super";
+    if (apn.length() == 0) apn = "super";
 }
 
 /**
@@ -77,19 +77,19 @@ bool Sim7080G::init_modem() {
  */
 void Sim7080G::init_network() {
     // Set error reporting to 2
-    send_at("AT+CMEE=2", "OK", 2000);
+    send_at("AT+CMEE=2");
 
     // Set modem to text mode
-    send_at("AT+CMGF=1", "OK", 2000);
+    send_at("AT+CMGF=1");
 
     // Select LTE-only mode
-    send_at("AT+CNMP=38", "OK", 2000);
+    send_at("AT+CNMP=38");
 
     // Select Cat-M only mode
-    send_at("AT+CMNB=1", "OK", 2000);
+    send_at("AT+CMNB=1");
 
     // Set the APN
-    send_at("AT+CGDCONT=1,\"IP\",\"" + apn + "\"", "OK", 2000);
+    send_at("AT+CGDCONT=1,\"IP\",\"" + apn + "\"");
 }
 
 /**

@@ -47,6 +47,7 @@ void HT16K33_Segment::init() {
 
     - Parameters:
         - on: `true` to turn the display on, `false` to turn it off.
+              Default: `true`.
  */
 void HT16K33_Segment::power_on(bool on) {
     i2c_write_byte(i2c_addr, on ? HT16K33_GENERIC_SYSTEM_ON : HT16K33_GENERIC_DISPLAY_OFF);
@@ -109,6 +110,7 @@ HT16K33_Segment& HT16K33_Segment::set_colon(bool is_set) {
         - glyph:   The glyph value.
         - digit:   The target digit: L-R, 0-4.
         - has_dot: `true` if the decimal point is to be lit, otherwise `false`.
+                   Default: `false`.
  */
 HT16K33_Segment& HT16K33_Segment::set_glyph(uint32_t glyph, uint32_t digit, bool has_dot) {
     if (digit > 4) return *this;
@@ -125,6 +127,7 @@ HT16K33_Segment& HT16K33_Segment::set_glyph(uint32_t glyph, uint32_t digit, bool
         - number:  The number (0-9).
         - digit:   The target digit: L-R, 0-4.
         - has_dot: `true` if the decimal point is to be lit, otherwise `false`.
+                   Default: `false`.
  */
 HT16K33_Segment& HT16K33_Segment::set_number(uint32_t number, uint32_t digit, bool has_dot) {
     if (digit > 4) return *this;
@@ -139,6 +142,7 @@ HT16K33_Segment& HT16K33_Segment::set_number(uint32_t number, uint32_t digit, bo
         - chr:     The character.
         - digit:   The target digit: L-R, 0-4.
         - has_dot: `true` if the decimal point is to be lit, otherwise `false`.
+                   Default: `false`.
  */
 HT16K33_Segment& HT16K33_Segment::set_alpha(char chr, uint32_t digit, bool has_dot) {
     if (digit > 4) return *this;
