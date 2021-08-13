@@ -10,8 +10,6 @@
 #ifndef _MCP9808_HEADER_
 #define _MCP9808_HEADER_
 
-using std::string;
-
 
 // Default I2C address for device
 #define MCP9808_I2CADDR_DEFAULT     0x18

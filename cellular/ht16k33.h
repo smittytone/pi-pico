@@ -11,7 +11,6 @@
 #define _HT16K33_HEADER_
 
 
-
 /*
  * CONSTANTS
  */
@@ -28,7 +27,6 @@
 #define HT16K33_SEGMENT_MINUS_CHAR          0x10
 #define HT16K33_SEGMENT_DEGREE_CHAR         0x11
 #define HT16K33_SEGMENT_SPACE_CHAR          0x00
-
 
 
 /*
@@ -58,7 +56,6 @@ class HT16K33_Segment {
         uint32_t    i2c_addr;
 
 };
-
 
 
 #endif  // _HT16K33_HEADER_

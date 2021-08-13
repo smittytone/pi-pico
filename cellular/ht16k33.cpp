@@ -12,18 +12,24 @@
 using std::string;
 
 
+/*
+ * GLOBALS
+ */
 // The key alphanumeric characters we can show:
 // 0-9, A-F, minus, degree
 const uint8_t  CHARSET[18] = {0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07, 0x7F, 0x6F, 0x5F, 0x7C, 0x58, 0x5E, 0x7B, 0x71, 0x40, 0x63};
+
 // The positions of the segments within the buffer
 const uint32_t POS[4] = {0, 2, 6, 8};
 
 
+/**
+    Basic driver for HT16K33-based display.
+ */
 HT16K33_Segment::HT16K33_Segment(uint32_t address) {
     if (address == 0x00 || address > 0xFF) address = HT16K33_ADDRESS;
     i2c_addr = address;
 }
-
 
 /**
     Convenience function to power on the display

@@ -63,7 +63,7 @@ void        setup_modem_power_pin();
 void        blink_led(uint32_t blinks);
 void        led_on();
 void        led_off();
-void        blink_err_code(string code);
+void        blink_err_code(std::string code);
 
 void        setup_i2c();
 void        i2c_write_byte(uint8_t address, uint8_t byte);
@@ -71,8 +71,8 @@ void        i2c_write_block(uint8_t address, uint8_t *data, uint8_t count);
 void        i2c_read_block(uint8_t address, uint8_t *data, uint8_t count);
 
 void        listen();
-void        process_command_led(string msg);
-void        process_command_num(string msg);
+void        process_command_led(std::string msg);
+void        process_command_num(std::string msg);
 void        process_command_tmp();
 
 

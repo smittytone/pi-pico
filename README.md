@@ -2,11 +2,25 @@
 
 Assorted projects made while playing with the [Raspberry Pi Pico](https://www.raspberrypi.org/documentation/pico/getting-started/).
 
-## Phantom Slayer 1.0.2 ##
+## Cellular IoT Sample
+
+A sample C++ project bringing the Pico and the Waveshare Pico SIM7080G Cat-M1 modem board together.
+
+#### Requirements
+
+* Waveshare’s Pico SIM7080G Cat-M1/NB-IoT — get it [direct from Waveshare]().
+* An HT16K33-based four-digit, seven-segment display; I used [this one]().
+* An MCP9808 thermal sensor breakout board; here’s a [good one]().
+* Wires.
+* One large or two standard-size breadboards.
+
+#### Build
+
+## Phantom Slayer 1.0.2
 
 A retro-style 3D arcade game written in C. For more details, [see this page](https://smittytone.net/pico-phantoms/).
 
-### Requirements ###
+#### Requirements
 
 * An SSD1306-based 128x64 OLED display; I used [this display](https://www.adafruit.com/product/326).
 * A piezo speaker.
@@ -15,13 +29,13 @@ A retro-style 3D arcade game written in C. For more details, [see this page](htt
 * Wires.
 * Two standard breadboards.
 
-### Build ###
+#### Build
 
 <img src="images/phantoms.png" />
 
 * The joystick shown is not the one used, but it gives you the idea. Connect purple to the X pin, white to the Y pin.
 
-### The Code ###
+#### The Code
 
 Build from source code, or copy `phantoms.uf2` to your Pico. Please check the SHA 256:
 
@@ -29,11 +43,11 @@ Build from source code, or copy `phantoms.uf2` to your Pico. Please check the SH
 d9e4e2d28b8a5b983e1551d114cd4ae6d668858b43a9df6c92f946327a96f146
 ```
 
-### The Game ###
+#### The Game
 
 See [this blog post for full details](https://blog.smittytone.net/2021/03/26/3d-arcade-action-courtesy-of-raspberry-pi-pico/).
 
-### Credits ###
+#### Credits
 
 This games is based on a 1982 original created by Ken Kalish of Med Systems for the Tandy Color Computer. The design is Ken’s; the code is mine, and I’ve taken only a few liberties with certain details.
 
@@ -43,7 +57,7 @@ Phantom Slayer uses [TinyMT](https://github.com/MersenneTwister-Lab/TinyMT), cop
 
 A sample C project to build a fun game.
 
-### Requirements ###
+#### Requirements
 
 * An HT16K33-based 8x8 LED matrix; I used [this display](https://www.adafruit.com/product/1049).
 * A piezo speaker.
@@ -54,14 +68,14 @@ A sample C project to build a fun game.
 * Wires.
 * Two standard breadboards.
 
-### Build ###
+#### Build
 
 <img src="images/wumpus.png" />
 
 * Make sure you wire the LEDs correctly: longer leg to the Pico pin, shorter leg to GND.
 * The joystick shown is not the one used, but it gives you the idea. Connect white to the X pin, blue to the Y pin.
 
-### The Code ###
+#### The Code
 
 Build from source code, or copy `wumpus.uf2` to your Pico. Please check the SHA 256:
 
@@ -69,7 +83,7 @@ Build from source code, or copy `wumpus.uf2` to your Pico. Please check the SHA 
 65957c643df25f89ddd3f70f16131c7037e582fa04743c35b7af78b90eb0a0f5
 ```
 
-### The Game ###
+#### The Game
 
 This is a fun little game to hunt the Wumpus. Move through the cave with the joystick.
 
@@ -79,7 +93,7 @@ A twittering sound indicates a nearby bat. If you enter its square, it will carr
 
 A green light indicates the Wumpus is close. Enter its square and it will eat you, but if you’re sure where it is, press the button to fire an arrow to kill it first. To fire the arrow successfully, back off and then move toward the Wumpus in the direction you want to the arrow to fly. If you miss, the beast will catch you!
 
-### Credit ###
+#### Credit
 
 This version was based on an [Arduino version](https://github.com/coreyfaure/HuntTheWumpus-Arduino) created by Corey Faure. This is very much his game, but I have taken a few liberties with a couple of the animations and rewritten the code.
 

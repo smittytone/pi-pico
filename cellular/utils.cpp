@@ -10,6 +10,7 @@
 #include "cellular.h"
 
 using std::vector;
+using std::string;
 
 
 namespace Utils {

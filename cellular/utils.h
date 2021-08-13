@@ -12,9 +12,9 @@
 
 
 namespace Utils {
-    std::vector<string>     split_to_lines(string str);
-    string                  split_msg(string msg, uint32_t want_line);
-    string                  get_sms_number(string line);
+    std::vector<std::string>    split_to_lines(std::string str);
+    std::string                 split_msg(std::string msg, uint32_t want_line);
+    std::string                 get_sms_number(std::string line);
 }
 
 

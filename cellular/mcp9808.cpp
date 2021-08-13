@@ -11,6 +11,7 @@
 
 using std::string;
 
+
 /**
     Instantiate a new MCP9808 object.
  */

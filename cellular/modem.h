@@ -10,8 +10,6 @@
 #ifndef _MODEM_HEADER_
 #define _MODEM_HEADER_
 
-using std::string;
-
 
 #define UART_BUFFER_SIZE        256
 #define PIN_UART_TX             0
@@ -22,25 +20,25 @@ using std::string;
 class Sim7080G {
 
     public:
-        Sim7080G(string network_apn);
+        Sim7080G(std::string network_apn);
 
-        bool        send_at(string cmd, string back, uint32_t timeout);
-        string      send_at_response(string cmd, uint32_t timeout);
+        bool        send_at(std::string cmd, std::string back, uint32_t timeout);
+        std::string send_at_response(std::string cmd, uint32_t timeout);
         void        read_buffer(uint32_t timeout);
         void        clear_buffer();
-        string      buffer_to_string();
+        std::string buffer_to_string();
 
         bool        start_modem();
         bool        init_modem();
         void        init_network();
         void        toggle_module_power();
 
-        string      listen(uint32_t timeout);
+        std::string listen(uint32_t timeout);
 
     private:
         uint8_t     uart_buffer[UART_BUFFER_SIZE];
         uint8_t     *rx_ptr;
-        string      apn;
+        std::string apn;
 };
 
 
