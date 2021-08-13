@@ -7,7 +7,7 @@
 #
 # @author    Tony Smith
 # @copyright 2021, Tony Smith
-# @version   2.0.0
+# @version   2.1.0
 # @license   MIT
 #
 
@@ -28,7 +28,7 @@ fi
 
 
 show_help() {
-    echo -e "\nmakepico 2.0.0\n\nInitialise a Pi Pico Project\n"
+    echo -e "\nmakepico 2.1.0\n\nInitialise a Pi Pico Project\n"
     echo -e "Usage:\n  makepico [path/name] [-c] [-d] [-n your name] [-h]\n"
     echo    "Options:"
     echo    "  -c / --cpp     Set up the project for C++. Default: false"
@@ -90,28 +90,31 @@ make_source_files() {
     project_name=${1:t}
     source_file=${1:t:l}
 
-    write_header "$project_name" "${1}/${source_file}.${file_ext}"
-    write_header "$project_name" "${1}/${source_file}.h"
+    write_header "$project_name" "${1}/main.${file_ext}"
+    write_header "$project_name" "${1}/main.h"
 
     # FROM 2.0.0
     # Write main() function
     {
-        echo "#include \"${source_file}.h\""
+        echo "#include \"main.h\""
         echo
         echo 'int main() {'
+        echo '    // Use for debugging'
+        echo '    stdio_init_all();'
+        echo
         echo '    return 0;'
         echo '}'
-    } >> "${1}/${source_file}.${file_ext}"
+    } >> "${1}/main.${file_ext}"
 
     # FROM 1.3.0
     # Break into sections for C/C++ usage
 
     # Add header guard
     {
-        echo "#ifndef _${project_name:u}_HEADER_"
-        echo "#define _${project_name:u}_HEADER_"
+        echo "#ifndef _${project_name:u}_MAIN_HEADER_"
+        echo "#define _${project_name:u}_MAIN_HEADER_"
         echo
-    } >> "${1}/${source_file}.h"
+    } >> "${1}/main.h"
 
     # C++ standard libraries or C standard libraries
     if [[ $do_cpp -eq 1 ]]; then
@@ -123,7 +126,7 @@ make_source_files() {
             echo '#include <cstdint>'
             echo '#include <cstring>'
             echo
-        } >> "${1}/${source_file}.h"
+        } >> "${1}/main.h"
     else
         {
             echo '#include <stdbool.h>'
@@ -131,7 +134,7 @@ make_source_files() {
             echo '#include <stdlib.h>'
             echo '#include <string.h>'
             echo '#include <time.h>'
-        } >> "${1}/${source_file}.h"
+        } >> "${1}/main.h"
     fi
 
     # Standard Pico libraries
@@ -141,8 +144,9 @@ make_source_files() {
         echo '#include "hardware/gpio.h"'
         echo '#include "hardware/i2c.h"'
         echo '#include "hardware/adc.h"'
+        echo '#include "hardware/uart.h"'
         echo
-    } >> "${1}/${source_file}.h"
+    } >> "${1}/main.h"
 
     if [[ $do_cpp -eq 1 ]]; then
         {
@@ -158,12 +162,12 @@ make_source_files() {
             echo '}'
             echo '#endif'
             echo
-        } >> "${1}/${source_file}.h"
+        } >> "${1}/main.h"
     fi
 
     {
-        echo "#endif // _${project_name:u}_HEADER_"
-    } >> "${1}/${source_file}.h"
+        echo "#endif // _${project_name:u}_MAIN_HEADER_"
+    } >> "${1}/main.h"
 }
 
 write_header() {
@@ -196,11 +200,11 @@ make_cmake_file() {
     fi
 
     {
-        echo 'cmake_minimum_required(VERSION 3.13)'
+        echo 'cmake_minimum_required(VERSION 3.14)'
         echo 'include(pico_sdk_import.cmake)'
         echo "project(${project_name} VERSION 1.0.0)"
         echo "add_executable(${project_name}"
-        echo "               ${source_file}.${file_ext})"
+        echo "               main.${file_ext})"
         echo
         echo 'pico_sdk_init()'
         echo
@@ -212,7 +216,8 @@ make_cmake_file() {
         echo '                      pico_stdlib'
         echo '                      hardware_gpio'
         echo '                      hardware_i2c'
-        echo '                      hardware_adc)'
+        echo '                      hardware_adc'
+        echo '                      hardware_uart)'
     } >> "${1}/CMakeLists.txt"
 }
 

@@ -101,12 +101,16 @@ A sample C project. Requires an HT16K33-based 8x8 LED matrix. I used [this displ
 
 A sample MicroPython project. Requires an HT16K33-based 8x8 LED matrix.
 
-## makepico 2.0.0 ##
+## makepico 2.1.0 ##
 
 Pico project set up script for Z Shell. Requires Pico C SDK pre-installed.
 
 ## Updates ##
 
+- *13 August 2021*
+    - *makepico* now generates `main.c/cpp` and `main.h` not project-specific files.
+    - *makepico*’s `CMakeLists.txt` now uses CMake 3.14.
+    - *makepico*’s `main.c` now calls `stdio_init_all()`.
 - *23 July 2021*
     - Spring clean *makepico* and bump to 2.0.0.
 - *30 April 2021*
