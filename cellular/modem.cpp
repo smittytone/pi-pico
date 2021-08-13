@@ -175,16 +175,17 @@ string Sim7080G::send_at_response(string cmd, uint32_t timeout) {
  */
 void Sim7080G::read_buffer(uint32_t timeout) {
     // Reset the read pointer
+    clear_buffer();
     uint8_t* buffer_start = &uart_buffer[0];
     rx_ptr = buffer_start;
 
     uint32_t now = time_us_32();
 
-    while (time_us_32() - now < timeout * 1000 && rx_ptr - buffer_start < UART_BUFFER_SIZE) {
+    while ((time_us_32() - now < timeout * 1000) && (rx_ptr - buffer_start < UART_BUFFER_SIZE)) {
         if (uart_is_readable(MODEM_UART) > 0) {
-            *rx_ptr = uart_getc(MODEM_UART);
+            uart_read_blocking(MODEM_UART, rx_ptr, 1);
+            //*rx_ptr = uart_getc(MODEM_UART);
             rx_ptr++;
-            //uart_read_blocking(MODEM_UART, rx_ptr++, 1);
         }
     }
 }
@@ -210,7 +211,7 @@ string Sim7080G::buffer_to_string() {
         new_string += s;
     }
 
-    new_string = reinterpret_cast<char *>(uart_buffer);
+    //new_string = reinterpret_cast<char *>(uart_buffer);
     return new_string;
 }
 
