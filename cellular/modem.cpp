@@ -90,6 +90,10 @@ void Sim7080G::init_network() {
 
     // Set the APN
     send_at("AT+CGDCONT=1,\"IP\",\"" + apn + "\"");
+
+    #ifdef DEBUG
+    send_at("AT+COPS?");
+    #endif
 }
 
 /**
