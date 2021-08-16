@@ -1,5 +1,5 @@
 /*
- * cellular for Raspberry Pi Pico
+ * cellular::mcp9808_driver for Raspberry Pi Pico
  *
  * @version     1.0.0
  * @author      smittytone

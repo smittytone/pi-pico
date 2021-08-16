@@ -15,6 +15,7 @@ namespace Utils {
     std::vector<std::string>    split_to_lines(std::string str);
     std::string                 split_msg(std::string msg, uint32_t want_line);
     std::string                 get_sms_number(std::string line);
+    uint32_t                    bcd(uint32_t base);
 }
 
 

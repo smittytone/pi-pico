@@ -1,5 +1,5 @@
 /*
- * cellular::ht16k33 for Raspberry Pi Pico
+ * cellular::ht16k33_driver for Raspberry Pi Pico
  *
  * @version     1.0.0
  * @author      smittytone

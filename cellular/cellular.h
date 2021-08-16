@@ -1,5 +1,5 @@
 /*
- * cellular for Raspberry Pi Pico
+ * cellular::main for Raspberry Pi Pico
  *
  * @version     1.0.0
  * @author      smittytone
@@ -29,6 +29,8 @@
 #include "mcp9808.h"
 #include "utils.h"
 #include "ht16k33.h"
+#include "base64.h"
+#include "ArduinoJson-v6.18.3.h"
 
 
 #ifdef __cplusplus
@@ -71,8 +73,8 @@ void        i2c_write_block(uint8_t address, uint8_t *data, uint8_t count);
 void        i2c_read_block(uint8_t address, uint8_t *data, uint8_t count);
 
 void        listen();
-void        process_command_led(std::string msg);
-void        process_command_num(std::string msg);
+void        process_command_led(uint32_t blinks);
+void        process_command_num(uint32_t number);
 void        process_command_tmp();
 
 

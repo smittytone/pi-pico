@@ -78,4 +78,28 @@ string get_sms_number(string line) {
 }
 
 
+/**
+    Convert a 16-bit int (to cover decimal range 0-9999) to
+    its BCD equivalent.
+
+    - Parameters:
+        - base: The input integer.
+
+    - Returns: The BCD encoding of the input.
+ */
+uint32_t bcd(uint32_t base) {
+    if (base > 9999) base = 9999;
+    for (uint32_t i = 0 ; i < 16 ; ++i) {
+        base = base << 1;
+        if (i == 15) break;
+        if ((base & 0x000F0000) > 0x0004FFFF) base += 0x00030000;
+        if ((base & 0x00F00000) > 0x004FFFFF) base += 0x00300000;
+        if ((base & 0x0F000000) > 0x04FFFFFF) base += 0x03000000;
+        if ((base & 0xF0000000) > 0x4FFFFFFF) base += 0x30000000;
+    }
+
+    return (base >> 16) & 0xFFFF;
+}
+
+
 }   // namespace Utils

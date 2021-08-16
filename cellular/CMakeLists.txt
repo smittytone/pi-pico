@@ -9,7 +9,8 @@ add_executable(cellular
                modem.cpp
                mcp9808.cpp
                ht16k33.cpp
-               utils.cpp)
+               utils.cpp
+               base64.cpp)
 
 pico_sdk_init()
 

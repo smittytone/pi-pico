@@ -1,5 +1,5 @@
 /*
- * cellular for Raspberry Pi Pico
+ * cellular::main for Raspberry Pi Pico
  *
  * @version     1.0.0
  * @author      smittytone
@@ -11,6 +11,7 @@
 
 using std::string;
 using std::vector;
+using std::stringstream;
 
 
 /*
@@ -228,11 +229,24 @@ void listen() {
                     string num = Utils::get_sms_number(line);
                     string msg = modem.send_at_response("AT+CMGR=" + num);
 
-                    // ...and process it for commands
-                    string cmd = Utils::split_msg(msg, 2);
-                    if (cmd.find("LED=") == 0) process_command_led(cmd);
-                    if (cmd.find("NUM=") == 0) process_command_num(cmd);
-                    if (cmd.find("TMP") == 0) process_command_tmp();
+                    // ...and process it for commands but getting the message body...
+                    string data = Utils::split_msg(msg, 2);
+
+                    // ...decoding the base64 to a JSON string...
+                    string json = base64_decode(data);
+
+                    // ...and parsing the JSON
+                    DynamicJsonDocument doc(128);
+                    DeserializationError err = deserializeJson(doc, json.c_str());
+                    if (err == DeserializationError::Ok) {
+                        string cmd = doc["cmd"];
+                        uint32_t value = doc["val"];
+
+                        // Check for commands
+                        if (cmd == "LED" || cmd == "led") process_command_led(value);
+                        if (cmd == "NUM" || cmd == "num") process_command_num(value);
+                        if (cmd == "TMP" || cmd == "tmp") process_command_tmp();
+                    }
 
                     // Delete all SMSs now we're done with them
                     modem.send_at("AT+CMGD=" + num + ",4");
@@ -243,41 +257,28 @@ void listen() {
 }
 
 
-void process_command_led(string msg) {
-    string s_blinks = msg.substr(4);
-
+void process_command_led(uint32_t blinks) {
     #ifdef DEBUG
-    printf("Recieved LED command: %s blinks\n", s_blinks.c_str());
+    printf("Recieved LED command: %i blinks\n", blinks);
     #endif
 
-    uint32_t i_blinks = std::stoi(s_blinks);
-    blink_led(i_blinks);
+    blink_led(blinks);
 }
 
 
-void process_command_num(string msg) {
-    string number = msg.substr(4);
-
+void process_command_num(uint32_t number) {
     #ifdef DEBUG
-    printf("Recieved NUM command: %s\n", number.c_str());
+    printf("Recieved NUM command: %i\n", number);
     #endif
 
+    // Get the BCD data and use it to populate
+    // the display's four digits
+    uint32_t bcd_val = Utils::bcd(number);
     display.clear();
-    uint32_t digit = 3;
-    for (uint32_t i = number.length() - 1; i >= 0 ; --i) {
-        char n = number[i];
-        printf("%i. %i, %c\n", digit, number[i], n);
-        display.set_alpha(n, digit, false);
-        digit--;
-        if (digit > 4) break;
-    }
-
-    if (digit >= 0 && digit < 4) {
-        for (uint32_t i = 0; i <= digit ; ++i) {
-            display.set_number('0', i, false);
-        }
-    }
-
+    display.set_number((bcd_val >> 12) & 0x0F, 0, false);
+    display.set_number((bcd_val >> 8) & 0x0F, 1, false);
+    display.set_number((bcd_val >> 4) & 0x0F, 2, false);
+    display.set_number(bcd_val & 0x0F, 3, false);
     display.draw();
 }
 
@@ -287,17 +288,15 @@ void process_command_tmp() {
     printf("Recieved TMP command\n");
     #endif
 
-    // string s_temp(std::to_string(sensor.read_temp()));
-
-    std::stringstream stream;
+    stringstream stream;
     stream << std::fixed << std::setprecision(2) << sensor.read_temp();
-    string s_temp = stream.str();
+    string temp = stream.str();
 
     if (modem.send_at("AT+CMGS=\"000\"", ">")) {
         // '>' is the prompt sent by the modem to signal that
         // it's waiting to receive the message text.
         // 'chr(26)' is the code for ctrl-z, which the modem
         // uses as an end-of-message marker
-        string r = modem.send_at_response(s_temp + "\x1A");
+        string r = modem.send_at_response(temp + "\x1A");
     }
 }
