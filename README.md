@@ -16,6 +16,15 @@ A sample C++ project bringing the Pico and the Waveshare Pico SIM7080G Cat-M1 mo
 
 #### Build
 
+![Cellular IoT Sample circuit layout](images/cellular.png)
+
+#### Credits
+
+This project uses the following third-party code:
+
+* [ArduinoJson](https://arduinojson.org) © 2014-2021, Benoit Blanchon, MIT licence.
+* [Base64](https://github.com/ReneNyffenegger/cpp-base64) © 2004-2021, René Nyffenegger. ZLib licence.
+
 ## Phantom Slayer 1.0.2
 
 A retro-style 3D arcade game written in C. For more details, [see this page](https://smittytone.net/pico-phantoms/).
@@ -31,7 +40,7 @@ A retro-style 3D arcade game written in C. For more details, [see this page](htt
 
 #### Build
 
-<img src="images/phantoms.png" />
+![Phantom Slayer circuit layout](images/phantoms.png)
 
 * The joystick shown is not the one used, but it gives you the idea. Connect purple to the X pin, white to the Y pin.
 
@@ -70,7 +79,7 @@ A sample C project to build a fun game.
 
 #### Build
 
-<img src="images/wumpus.png" />
+![Hunt the Wumpus circuit layout](images/wumpus.png)
 
 * Make sure you wire the LEDs correctly: longer leg to the Pico pin, shorter leg to GND.
 * The joystick shown is not the one used, but it gives you the idea. Connect white to the X pin, blue to the Y pin.
@@ -103,13 +112,13 @@ Hunt the Wumpus uses [TinyMT](https://github.com/MersenneTwister-Lab/TinyMT), co
 
 A sample C project. Requires an HT16K33-based 4-digit, 7-segment LED and an SGP30 TVOC sensor. I used [this sensor](https://shop.pimoroni.com/products/sgp30-air-quality-sensor-breakout) and [this display](https://www.adafruit.com/product/878):
 
-<img src="images/sensor.png" />
+![Sensor circuit layout](images/sensor.png)
 
 ## i2c ##
 
 A sample C project. Requires an HT16K33-based 8x8 LED matrix. I used [this display](https://www.adafruit.com/product/1049).
 
-<img src="images/i2c.png" />
+![I2C sample circuit layout](images/i2c.png)
 
 ## micropython ##
 
