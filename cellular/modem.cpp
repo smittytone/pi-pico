@@ -10,6 +10,7 @@
 #include "cellular.h"
 
 using std::string;
+using std::vector;
 
 
 /**
@@ -30,8 +31,8 @@ Sim7080G::Sim7080G(string network_apn) {
     - Returns: `true` if the modem is ready, otherwise `false`.
  */
 bool Sim7080G::start_modem() {
-    if (init_modem()) {
-        init_network();
+    if (boot_modem()) {
+        config_modem();
         return true;
     } else {
         // Signal with two flashes we couldn't
@@ -50,7 +51,7 @@ bool Sim7080G::start_modem() {
 
     - Returns: `true` if the modem is ready, otherwise `false`.
  */
-bool Sim7080G::init_modem() {
+bool Sim7080G::boot_modem() {
     bool state = false;
 
     for (uint32_t i = 0 ; i < 15 ; ++i) {
@@ -75,7 +76,7 @@ bool Sim7080G::init_modem() {
     Initialise the modem: set up Cat-M1 usage and write the
     APN for Super SIM usage.
  */
-void Sim7080G::init_network() {
+void Sim7080G::config_modem() {
     // Set error reporting to 2
     send_at("AT+CMEE=2");
 
@@ -90,10 +91,25 @@ void Sim7080G::init_network() {
 
     // Set the APN
     send_at("AT+CGDCONT=1,\"IP\",\"" + apn + "\"");
+}
 
-    #ifdef DEBUG
-    send_at("AT+COPS?");
-    #endif
+
+/**
+    Check network connection.
+ */
+bool Sim7080G::check_network() {
+
+    bool is_connected = false;
+    string response = send_at_response("AT+COPS?");
+    string line = Utils::split_msg(response, 1);
+    if (line.find("+COPS:") != string::npos) {
+        uint32_t pos = line.find(",");
+        // ',' will be missing if the modem is not connected,
+        // ie. there is no operator value in the AT+COPS? response
+        is_connected = (pos != string::npos);
+    }
+
+    return is_connected;
 }
 
 /**

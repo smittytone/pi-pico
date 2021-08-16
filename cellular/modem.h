@@ -29,9 +29,10 @@ class Sim7080G {
         std::string buffer_to_string();
 
         bool        start_modem();
-        bool        init_modem();
-        void        init_network();
+        bool        boot_modem();
+        void        config_modem();
         void        toggle_module_power();
+        bool        check_network();
 
         std::string listen(uint32_t timeout = 5000);
 

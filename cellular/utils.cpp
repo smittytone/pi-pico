@@ -26,12 +26,12 @@ namespace Utils {
  */
 vector<string> split_to_lines(string ml_str) {
     vector<string> result;
-    while (ml_str.size()) {
-        int index = ml_str.find("\r");
+    while (ml_str.length()) {
+        int index = ml_str.find("\r\n");
         if (index != string::npos){
             result.push_back(ml_str.substr(0, index));
             ml_str = ml_str.substr(index + 2);
-            if (ml_str.size() == 0) result.push_back(ml_str);
+            //if (ml_str.size() == 0) result.push_back(ml_str);
         } else {
             result.push_back(ml_str);
             break;

@@ -163,6 +163,19 @@ int main() {
     #endif
 
     if (modem.start_modem()) {
+        // Check the network
+        bool state = true;
+        while (!modem.check_network()) {
+            if (state) {
+                led_on();
+            } else {
+                led_off();
+            }
+
+            state = !state;
+            sleep_ms(250);
+        }
+
         // Light the LED
         led_on();
 
