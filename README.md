@@ -22,7 +22,7 @@ A sample C++ project bringing the Pico and the Waveshare Pico SIM7080G Cat-M1 mo
 
 This project uses the following third-party code:
 
-* [ArduinoJson](https://arduinojson.org) © 2014-2021, Benoit Blanchon, MIT licence.
+* [ArduinoJson](https://github.com/bblanchon/ArduinoJson) © 2014-2021, Benoit Blanchon, MIT licence.
 * [Base64](https://github.com/ReneNyffenegger/cpp-base64) © 2004-2021, René Nyffenegger. ZLib licence.
 
 ## Phantom Slayer 1.0.2
