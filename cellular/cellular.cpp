@@ -113,36 +113,13 @@ void setup_modem_power_pin() {
  */
 void setup_i2c() {
     // Initialize the I2C bus for the display and sensor
-    i2c_init(I2C_PORT, I2C_FREQUENCY);
-    gpio_set_function(SDA_GPIO, GPIO_FUNC_I2C);
-    gpio_set_function(SCL_GPIO, GPIO_FUNC_I2C);
-    gpio_pull_up(SDA_GPIO);
-    gpio_pull_up(SCL_GPIO);
+    I2C::setup();
 
     // Initialize the display
     display.init();
 }
 
-/**
-    Convenience function to write a single byte to the bus
- */
-void i2c_write_byte(uint8_t address, uint8_t byte) {
-    i2c_write_blocking(I2C_PORT, address, &byte, 1, false);
-}
 
-/**
-    Convenience function to write a 'count' bytes to the bus
- */
-void i2c_write_block(uint8_t address, uint8_t *data, uint8_t count) {
-    i2c_write_blocking(I2C_PORT, address, data, count, false);
-}
-
-/**
-    Convenience function to read 'count' bytes from the bus
- */
-void i2c_read_block(uint8_t address, uint8_t *data, uint8_t count) {
-    i2c_read_blocking(I2C_PORT, address, data, count, false);
-}
 
 
 /*

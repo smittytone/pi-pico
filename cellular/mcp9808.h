@@ -11,6 +11,9 @@
 #define _MCP9808_HEADER_
 
 
+/*
+ * PROTOTYPES
+ */
 // Default I2C address for device
 #define MCP9808_I2CADDR_DEFAULT     0x18
 
@@ -22,7 +25,6 @@
 #define MCP9808_REG_AMBIENT_TEMP    0x05
 #define MCP9808_REG_MANUF_ID        0x06
 #define MCP9808_REG_DEVICE_ID       0x07
-
 
 
 /**

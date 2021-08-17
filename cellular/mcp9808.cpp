@@ -32,12 +32,12 @@ bool MCP9808::begin() {
     uint8_t did_data[2] = {0,0};
 
     // Read bytes from the sensor: MID...
-    i2c_write_byte(i2c_addr, MCP9808_REG_MANUF_ID);
-    i2c_read_blocking(I2C_PORT, i2c_addr, mid_data, 2, false);
+    I2C::write_byte(i2c_addr, MCP9808_REG_MANUF_ID);
+    I2C::read_block(i2c_addr, mid_data, 2);
 
     // ...DID
-    i2c_write_byte(i2c_addr, MCP9808_REG_DEVICE_ID);
-    i2c_read_blocking(I2C_PORT, i2c_addr, did_data, 2, false);
+    I2C::write_byte(i2c_addr, MCP9808_REG_DEVICE_ID);
+    I2C::read_block(i2c_addr, did_data, 2);
 
     // Bytes to integers
     uint16_t mid_value = (mid_data[0] << 8) | mid_data[1];
@@ -55,8 +55,8 @@ bool MCP9808::begin() {
 double MCP9808::read_temp() {
     // Read sensor and return its value in degrees celsius.
     uint8_t temp_data[2] = {0,0};
-    i2c_write_byte(i2c_addr, MCP9808_REG_AMBIENT_TEMP);
-    i2c_read_blocking(I2C_PORT, i2c_addr, temp_data, 2, false);
+    I2C::write_byte(i2c_addr, MCP9808_REG_AMBIENT_TEMP);
+    I2C::read_block(i2c_addr, temp_data, 2);
 
     // Scale and convert to signed value.
     uint32_t temp_raw = (temp_data[0] << 8) | temp_data[1];

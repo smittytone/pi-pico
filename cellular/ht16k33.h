@@ -29,8 +29,8 @@
 #define HT16K33_SEGMENT_SPACE_CHAR          0x00
 
 
-/*
- * CLASSES
+/**
+    A basic driver for I2C-connected HT16K33-based four-digit, seven-segment displays.
  */
 class HT16K33_Segment {
 

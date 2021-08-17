@@ -10,6 +10,7 @@ add_executable(cellular
                mcp9808.cpp
                ht16k33.cpp
                utils.cpp
+               i2c_utils.cpp
                base64.cpp)
 
 pico_sdk_init()

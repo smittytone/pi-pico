@@ -50,8 +50,8 @@ void HT16K33_Segment::init() {
               Default: `true`.
  */
 void HT16K33_Segment::power_on(bool on) {
-    i2c_write_byte(i2c_addr, on ? HT16K33_GENERIC_SYSTEM_ON : HT16K33_GENERIC_DISPLAY_OFF);
-    i2c_write_byte(i2c_addr, on ? HT16K33_GENERIC_DISPLAY_ON : HT16K33_GENERIC_SYSTEM_OFF);
+    I2C::write_byte(i2c_addr, on ? HT16K33_GENERIC_SYSTEM_ON : HT16K33_GENERIC_DISPLAY_OFF);
+    I2C::write_byte(i2c_addr, on ? HT16K33_GENERIC_DISPLAY_ON : HT16K33_GENERIC_SYSTEM_OFF);
 }
 
 /**
@@ -62,7 +62,7 @@ void HT16K33_Segment::power_on(bool on) {
  */
 void HT16K33_Segment::set_brightness(uint32_t brightness) {
     if (brightness < 0 || brightness > 15) brightness = 15;
-    i2c_write_byte(i2c_addr, HT16K33_GENERIC_CMD_BRIGHTNESS | brightness);
+    I2C::write_byte(i2c_addr, HT16K33_GENERIC_CMD_BRIGHTNESS | brightness);
 }
 
 /**
@@ -89,7 +89,7 @@ void HT16K33_Segment::draw() {
     }
 
     // Write out the transmit buffer
-    i2c_write_block(i2c_addr, tx_buffer, sizeof(tx_buffer));
+    I2C::write_block(i2c_addr, tx_buffer, sizeof(tx_buffer));
 }
 
 /**

@@ -11,12 +11,18 @@
 #define _MODEM_HEADER_
 
 
+/*
+ * CONSTANTS
+ */
 #define UART_BUFFER_SIZE        256
 #define PIN_UART_TX             0
 #define PIN_UART_RX             1
 #define MODEM_UART              uart0
 
 
+/**
+    A basic driver for the Simcom SIM7080G gobal cellular Cat-M1 modem.
+ */
 class Sim7080G {
 
     public:

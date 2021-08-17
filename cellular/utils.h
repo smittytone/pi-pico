@@ -11,6 +11,9 @@
 #define _UTILS_HEADER_
 
 
+/*
+ * PROTOTYPES
+ */
 namespace Utils {
     std::vector<std::string>    split_to_lines(std::string str);
     std::string                 split_msg(std::string msg, uint32_t want_line);
