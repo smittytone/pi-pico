@@ -120,8 +120,6 @@ void setup_i2c() {
 }
 
 
-
-
 /*
  * MAIN FUNCTIONS
  */
@@ -161,6 +159,7 @@ int main() {
         #ifdef DEBUG
         printf("Listening...\n");
         #endif
+
         listen();
     } else {
         // Error! Flash the LED five times, turn it off and exit
@@ -233,19 +232,17 @@ void listen() {
     }
 }
 
-
 void process_command_led(uint32_t blinks) {
     #ifdef DEBUG
-    printf("Recieved LED command: %i blinks\n", blinks);
+    printf("Received LED command: %i blinks\n", blinks);
     #endif
 
     blink_led(blinks);
 }
 
-
 void process_command_num(uint32_t number) {
     #ifdef DEBUG
-    printf("Recieved NUM command: %i\n", number);
+    printf("Received NUM command: %i\n", number);
     #endif
 
     // Get the BCD data and use it to populate
@@ -259,10 +256,9 @@ void process_command_num(uint32_t number) {
     display.draw();
 }
 
-
 void process_command_tmp() {
     #ifdef DEBUG
-    printf("Recieved TMP command\n");
+    printf("Received TMP command\n");
     #endif
 
     stringstream stream;
