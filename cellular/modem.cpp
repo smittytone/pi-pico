@@ -53,21 +53,28 @@ bool Sim7080G::start_modem() {
  */
 bool Sim7080G::boot_modem() {
     bool state = false;
+    uint32_t count = 0;
+    uint32_t start_time = time_us_32();
 
-    for (uint32_t i = 0 ; i < 15 ; ++i) {
+    do {
         if (send_at("ATE1", "OK", 5000)) {
-            return true;
-        } else {
-            // Toggle the PWR_EN pin once
-            if (!state) {
-                toggle_module_power();
-                state = true;
-            }
+            #ifdef DEBUG
+            printf("Modem ready after %ims\n", (time_us_32() - start_time) / 1000);
+            #endif
 
-            // Wait at least 2.5s
-            sleep_ms(2500);
+            return true;
         }
-    }
+
+        // Toggle the PWR_EN pin once
+        if (!state) {
+            toggle_module_power();
+            state = true;
+        }
+
+        // Wait a bit
+        sleep_ms(5000);
+        count++;
+    } while (count < 20);
 
     return false;
 }
