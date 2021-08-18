@@ -17,7 +17,7 @@ namespace Utils {
 
 /**
     Convert a multi-line string into an array of lines,
-    split at `\r\n` - as issued by the modem.
+    split at the specified separator string, eg. `\r\n`.
 
     - Parameters:
         - ml_str:    The multi-line string
@@ -67,16 +67,23 @@ string split_msg(string ml_str, uint32_t want_line) {
     - Returns: A pointer to the start of the number, or null
  */
 string get_sms_number(string line) {
-    uint32_t pos = line.find(",");
-
-    #ifdef DEBUG
-    printf("GET_SMS_NUMBER: POS %i\n", pos);
-    #endif
-
-    if (pos != string::npos) return line.substr(pos + 1);
-    return "";
+    return get_field_value(line, 1);
 }
 
+/**
+    Get a value from a sequence of comma-separated values.
+
+    - Parameters:
+        - line:         The source line.
+        - field_number: The request value.
+
+    - Returns: The value as a string, otherwise an empty string.
+ */
+string get_field_value(string line, uint32_t field_number) {
+    vector<string> result = split_to_lines(line, ",");
+    if (result.size() > field_number) return result[field_number];
+    return "";
+}
 
 /**
     Convert a 16-bit int (to cover decimal range 0-9999) to
