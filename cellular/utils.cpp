@@ -20,18 +20,18 @@ namespace Utils {
     split at `\r\n` - as issued by the modem.
 
     - Parameters:
-        - ml_str: The multi-line string
+        - ml_str:    The multi-line string
+        - separator: The line-separator string
 
     - Returns: The requested line, otherwise an empty string.
  */
-vector<string> split_to_lines(string ml_str) {
+vector<string> split_to_lines(string ml_str, string separator) {
     vector<string> result;
     while (ml_str.length()) {
-        int index = ml_str.find("\r\n");
+        int index = ml_str.find(separator);
         if (index != string::npos){
             result.push_back(ml_str.substr(0, index));
-            ml_str = ml_str.substr(index + 2);
-            //if (ml_str.size() == 0) result.push_back(ml_str);
+            ml_str = ml_str.substr(index + separator.length());
         } else {
             result.push_back(ml_str);
             break;
