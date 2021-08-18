@@ -57,7 +57,7 @@ bool Sim7080G::boot_modem() {
     uint32_t start_time = time_us_32();
 
     do {
-        if (send_at("ATE1", "OK", 5000)) {
+        if (send_at("ATE1")) {
             #ifdef DEBUG
             printf("Modem ready after %ims\n", (time_us_32() - start_time) / 1000);
             #endif
@@ -72,7 +72,7 @@ bool Sim7080G::boot_modem() {
         }
 
         // Wait a bit
-        sleep_ms(5000);
+        sleep_ms(3000);
         count++;
     } while (count < 20);
 
@@ -107,7 +107,7 @@ void Sim7080G::config_modem() {
 bool Sim7080G::check_network() {
 
     bool is_connected = false;
-    string response = send_at_response("AT+COPS?");
+    string response = send_at_response("AT+COPS?", 2000);
     string line = Utils::split_msg(response, 1);
     if (line.find("+COPS:") != string::npos) {
         uint32_t pos = line.find(",");

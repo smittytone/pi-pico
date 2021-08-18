@@ -28,7 +28,7 @@ class Sim7080G {
     public:
         Sim7080G(std::string network_apn = "super");
 
-        bool        send_at(std::string cmd, std::string back = "OK", uint32_t timeout = 2000);
+        bool        send_at(std::string cmd, std::string back = "OK", uint32_t timeout = 1000);
         std::string send_at_response(std::string cmd, uint32_t timeout = 2000);
         void        read_buffer(uint32_t timeout = 5000);
         void        clear_buffer();
