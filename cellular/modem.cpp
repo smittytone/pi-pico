@@ -166,9 +166,8 @@ string Sim7080G::send_at_response(string cmd, uint32_t timeout) {
     printf("SEND_AT  CMD: %s\n", cmd.c_str());
     #endif
 
+    // Write out the AT command
     string data_out = cmd + "\r\n";
-    //char c_data_out[data_out.length() + 1];
-    //strcpy(c_data_out, data_out.c_str());
     uart_puts(MODEM_UART, data_out.c_str());
 
     // Read the buffer
@@ -226,7 +225,7 @@ string Sim7080G::buffer_to_string() {
 }
 
 /**
-    Listen for period for an incomimg message
+    Listen for period for an incomimg message.
 
     - Parameters:
         - timeout: The waiting period.
@@ -234,9 +233,99 @@ string Sim7080G::buffer_to_string() {
     - Returns: The recieved bytes as a string
  */
 string Sim7080G::listen(uint32_t timeout) {
-    //
+    // Read the buffer
     read_buffer(timeout);
 
     // Return response as string
     return buffer_to_string();
+}
+
+/**
+    Open a data connection.
+ */
+bool Sim7080G::open_data_conn() {
+    // Re-set the APN, the way SimCom says
+    bool success = send_at("AT+CNCFG=0,1,\"super\"");
+    if (!success) return success;
+
+    // Activate the connection
+    success = send_at("AT+CNACT=0,1");
+    return success;
+}
+
+/**
+    Close an open data connection.
+ */
+bool Sim7080G::close_data_conn() {
+    // Deactivate the connection
+    return send_at("AT+CNACT=0,0");
+}
+
+/**
+    Make a GET request to the specified server + path.
+
+    - Parameters:
+        - server: The target server.
+        - path:   The endpoint path.
+
+    - Returns: `true` if the request was successful, otherwise `false`.
+ */
+bool Sim7080G::request_data(string server, string path) {
+
+    bool success = false;
+
+    // Close the connection if it's open -- shouldn't be
+    if (send_at("AT+SHSTATE?", "1")) send_at("AT+SHDISC");
+
+    // Configure the connection
+    send_at("AT+SHCONF=\"URL\",\"" + server + "\"", "OK", 500);
+    send_at("AT+SHCONF=\"BODYLEN\",1024", "OK", 500);
+    send_at("AT+SHCONF=\"HEADERLEN\",350", "OK", 500);
+
+    // Launch it
+    send_at("AT+SHCONN", "OK", 3000);
+
+    // Check if we're connected -- if so, send the request
+    if (send_at("AT+SHSTATE?", "1")) {
+        // Set the header
+        set_req_header();
+
+        // Issue the request...
+        string response = send_at_response("AT+SHREQ=\"" + path + "\",1");
+
+        // ...and process the response
+        vector<string> lines = Utils::split_to_lines(response);
+        for (uint32_t i = 0 ; i < lines.size() ; ++i) {
+            string line = lines[i];
+            if (line.length() == 0) continue;
+            if (line.find("+SHREQ:") != string::npos) {
+                string data_length = Utils::get_field_value(line, SHREQ_DATA_LENGTH_FIELD);
+                response = send_at_response("AT+SHREAD=0," + data_length);
+
+                // Put the response in the class' 'data' property
+                data = Utils::split_msg(response, SHREAD_DATA_LINE);
+                success = true;
+            }
+        }
+
+        // Close the connection
+        send_at("AT+SHDISC");
+    }
+
+    return success;
+}
+
+/**
+    Set a generic request header on the modem.
+ */
+void Sim7080G::set_req_header() {
+    // Clear the header...
+    send_at("AT+SHCHEAD");
+
+    // ...and add new header parameters
+    send_at("AT+SHAHEAD=\"Content-Type\",\"application/x-www-form-urlencoded\"", "OK", 500);
+    send_at("AT+SHAHEAD=\"User-Agent\",\"smittytone-pi-pico/1.0.0\"", "OK", 500);
+    send_at("AT+SHAHEAD=\"Cache-control\",\"no-cache\"", "OK", 500);
+    send_at("AT+SHAHEAD=\"Connection\",\"keep-alive\"", "OK", 500);
+    send_at("AT+SHAHEAD=\"Accept\",\"*/*\"", "OK", 500);
 }

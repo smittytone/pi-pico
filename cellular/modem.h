@@ -19,6 +19,9 @@
 #define PIN_UART_RX             1
 #define MODEM_UART              uart0
 
+#define SHREQ_DATA_LENGTH_FIELD 2
+#define SHREAD_DATA_LINE        4
+
 
 /**
     A basic driver for the Simcom SIM7080G gobal cellular Cat-M1 modem.
@@ -26,8 +29,10 @@
 class Sim7080G {
 
     public:
+        // Constructor
         Sim7080G(std::string network_apn = "super");
 
+        // Methods
         bool        send_at(std::string cmd, std::string back = "OK", uint32_t timeout = 1000);
         std::string send_at_response(std::string cmd, uint32_t timeout = 2000);
         void        read_buffer(uint32_t timeout = 5000);
@@ -42,7 +47,16 @@ class Sim7080G {
 
         std::string listen(uint32_t timeout = 5000);
 
+        bool        open_data_conn();
+        bool        close_data_conn();
+        bool        request_data(std::string server, std::string path);
+
+        void        set_req_header();
+
+        // Properties
+        std::string data;
     private:
+        // Properties
         uint8_t     uart_buffer[UART_BUFFER_SIZE];
         uint8_t     *rx_ptr;
         std::string apn;
