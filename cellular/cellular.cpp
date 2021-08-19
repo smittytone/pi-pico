@@ -85,16 +85,20 @@ void blink_err_code(string code) {
             case 'L':
                 gpio_put(PIN_LED, true);
                 sleep_ms(250);
+                break;
             case 'S':
                 gpio_put(PIN_LED, true);
-                sleep_ms(250);
                 break;
-            default:
-                sleep_ms(250);
-                break;
+            case 'B':
+                gpio_put(PIN_LED, false);
         }
-        gpio_put(PIN_LED, false);
+
+        sleep_ms(250);
     }
+
+    gpio_put(PIN_LED, false);
+    sleep_ms(1000);
+    gpio_put(PIN_LED, true);
 }
 
 
@@ -223,6 +227,7 @@ void listen() {
                         if (cmd == "NUM" || cmd == "num") process_command_num(value);
                         if (cmd == "TMP" || cmd == "tmp") process_command_tmp();
                         if (cmd == "GET" || cmd == "get") process_command_get();
+                        if (cmd == "FLASH" || cmd == "flash") process_command_flash(doc["code"]);
                     }
 
                     // Delete all SMSs now we're done with them
@@ -313,4 +318,12 @@ void process_command_get() {
             #endif
         }
     }
+}
+
+void process_command_flash(string code) {
+    #ifdef DEBUG
+    printf("Received FLASH command: %s blinks\n", code.c_str());
+    #endif
+
+    blink_err_code(code);
 }

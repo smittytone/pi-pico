@@ -64,6 +64,10 @@ Commands available from the device:
 * `led` — flash the Pico LED. Requires a `val` object with the number of flashes as an integer.
 * `num` — write a value on the display. Requires a `val` object with the number (between 0 and 9999) as an integer.
 * `tmp` — Send back a Celsius temperature reading. Requires your Super SIM’s fleet to be configured with an SMS Commands webhook, or equivalent for other brands of SIM. Super SIM device-originated SMS Commands are sent to the number 000, so you will need to alter that value in the code (in `modem.cpp`). It also requires server-side code to process or display the received data.
+* `flash` — flash a code on the LED. Requires a `code` object with a string pattern, eg. `LBSBL` where:
+    * `L` — Long on (500ms)
+    * `S` — Short on (250ms)
+    * `B` - Short off (250ms)
 
 ### Credits
 
