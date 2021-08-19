@@ -222,6 +222,7 @@ void listen() {
                         if (cmd == "LED" || cmd == "led") process_command_led(value);
                         if (cmd == "NUM" || cmd == "num") process_command_num(value);
                         if (cmd == "TMP" || cmd == "tmp") process_command_tmp();
+                        if (cmd == "GET" || cmd == "get") process_command_get();
                     }
 
                     // Delete all SMSs now we're done with them
@@ -261,6 +262,8 @@ void process_command_tmp() {
     printf("Received TMP command\n");
     #endif
 
+    // Convert the temperature value (a float) to a string value
+    // fixed to two decimal places
     stringstream stream;
     stream << std::fixed << std::setprecision(2) << sensor.read_temp();
     string temp = stream.str();
@@ -271,5 +274,43 @@ void process_command_tmp() {
         // 'chr(26)' is the code for ctrl-z, which the modem
         // uses as an end-of-message marker
         string r = modem.send_at_response(temp + "\x1A");
+    }
+}
+
+void process_command_get() {
+    #ifdef DEBUG
+    printf("Received GET command\n");
+    #endif
+
+    // Attempt to open a data connection
+    if (modem.open_data_conn()) {
+        // Issue a get request
+        string server = "http://jsonplaceholder.typicode.com";
+        string endpoint_path = "/todos/1";
+
+        if (modem.request_data(server, endpoint_path)) {
+            // Attempt to decode the received JSON. You may need to adjust
+            // the memory allocation (default: 1024) for large JSON responses
+            DynamicJsonDocument doc(1024);
+            DeserializationError err = deserializeJson(doc, modem.data.c_str());
+
+            if (err == DeserializationError::Ok) {
+                // Make use of the data: extract a value and display it
+                #ifdef DEBUG
+                string title = doc["title"];
+                printf("DATA RETURNED:\n%s\n", title.c_str());
+                #endif
+
+                process_command_num(doc["id"]);
+            } else {
+                #ifdef DEBUG
+                printf("Malformed JSON received: error %s\n%s\n", err.c_str(), modem.data.c_str());
+                #endif
+            }
+        } else {
+            #ifdef DEBUG
+            printf("No JSON received -- raw data:\n%s\n", modem.data.c_str());
+            #endif
+        }
     }
 }

@@ -68,6 +68,7 @@ void        listen();
 void        process_command_led(uint32_t blinks);
 void        process_command_num(uint32_t number);
 void        process_command_tmp();
+void        process_command_get();
 
 
 // extern "C"

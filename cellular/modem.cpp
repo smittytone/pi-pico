@@ -291,7 +291,7 @@ bool Sim7080G::request_data(string server, string path) {
         set_req_header();
 
         // Issue the request...
-        string response = send_at_response("AT+SHREQ=\"" + path + "\",1");
+        string response = send_at_response("AT+SHREQ=\"" + path + "\",1", 5000);
 
         // ...and process the response
         vector<string> lines = Utils::split_to_lines(response);
@@ -300,11 +300,21 @@ bool Sim7080G::request_data(string server, string path) {
             if (line.length() == 0) continue;
             if (line.find("+SHREQ:") != string::npos) {
                 string data_length = Utils::get_field_value(line, SHREQ_DATA_LENGTH_FIELD);
+                if (data_length == "0") break;
+
+                // Get the data
                 response = send_at_response("AT+SHREAD=0," + data_length);
 
                 // Put the response in the class' 'data' property
-                data = Utils::split_msg(response, SHREAD_DATA_LINE);
-                success = true;
+                // The JSON data may be multi-line so store everything after
+                // and including the first '{'
+                int pos = response.find("{");
+                if (pos != string::npos) {
+                    data = response.substr(pos);
+                    success = true;
+                } else {
+                    printf("MISSING JSON???");
+                }
             }
         }
 
