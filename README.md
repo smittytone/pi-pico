@@ -195,7 +195,7 @@ Pico project set up script for Z Shell. Requires Pico C SDK pre-installed.
 
 ## Updates
 
-- *Unreleased*
+- *20 August 2021*
     - Add *Cellular IoT Demo*.
 - *13 August 2021*
     - *makepico* now generates `main.c/cpp` and `main.h` not project-specific files.
