@@ -124,56 +124,6 @@ void setup_i2c() {
 }
 
 
-/*
- * MAIN FUNCTIONS
- */
-int main() {
-
-    // DEBUG
-    #ifdef DEBUG
-    stdio_init_all();
-    #endif
-
-    // Set up the hardware
-    setup();
-
-    // Fire up the modem
-    #ifdef DEBUG
-    printf("Starting modem...\n");
-    #endif
-
-    if (modem.start_modem()) {
-        // Check the network
-        bool state = true;
-        while (!modem.check_network()) {
-            if (state) {
-                led_on();
-            } else {
-                led_off();
-            }
-
-            state = !state;
-            sleep_ms(250);
-        }
-
-        // Light the LED
-        led_on();
-
-        // Start to listen for commands
-        #ifdef DEBUG
-        printf("Listening...\n");
-        #endif
-
-        listen();
-    } else {
-        // Error! Flash the LED five times, turn it off and exit
-        blink_err_code(ERR_CODE_GEN_FAIL);
-        gpio_put(PIN_LED, false);
-    }
-
-    return 0;
-}
-
 /**
     Umbrella setup routine.
  */
@@ -293,7 +243,7 @@ void process_command_get() {
         string server = "http://jsonplaceholder.typicode.com";
         string endpoint_path = "/todos/1";
 
-        if (modem.request_data(server, endpoint_path)) {
+        if (modem.get_data(server, endpoint_path)) {
             // Attempt to decode the received JSON. You may need to adjust
             // the memory allocation (default: 1024) for large JSON responses
             DynamicJsonDocument doc(1024);
@@ -326,4 +276,55 @@ void process_command_flash(string code) {
     #endif
 
     blink_err_code(code);
+}
+
+
+/*
+ * MAIN FUNCTIONS
+ */
+int main() {
+
+    // DEBUG
+    #ifdef DEBUG
+    stdio_init_all();
+    #endif
+
+    // Set up the hardware
+    setup();
+
+    // Fire up the modem
+    #ifdef DEBUG
+    printf("Starting modem...\n");
+    #endif
+
+    if (modem.start_modem()) {
+        // Check the network
+        bool state = true;
+        while (!modem.check_network()) {
+            if (state) {
+                led_on();
+            } else {
+                led_off();
+            }
+
+            state = !state;
+            sleep_ms(250);
+        }
+
+        // Light the LED
+        led_on();
+
+        // Start to listen for commands
+        #ifdef DEBUG
+        printf("Listening...\n");
+        #endif
+
+        listen();
+    } else {
+        // Error! Flash the LED five times, turn it off and exit
+        blink_err_code(ERR_CODE_GEN_FAIL);
+        gpio_put(PIN_LED, false);
+    }
+
+    return 0;
 }

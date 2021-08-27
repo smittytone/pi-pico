@@ -51,9 +51,9 @@ class HT16K33_Segment {
 
 
     private:
-        uint8_t     buffer[16];
-        uint32_t    pos[4];
-        uint32_t    i2c_addr;
+        uint8_t             buffer[16];
+        uint32_t            pos[4];
+        uint32_t            i2c_addr;
 
 };
 

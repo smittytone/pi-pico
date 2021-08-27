@@ -1,7 +1,7 @@
 /*
  * cellular::utils for Raspberry Pi Pico
  *
- * @version     1.0.0
+ * @version     1.0.1
  * @author      smittytone
  * @copyright   2021
  * @licence     MIT
@@ -106,6 +106,12 @@ uint32_t bcd(uint32_t base) {
     }
 
     return (base >> 16) & 0xFFFF;
+}
+
+string uppercase(string base) {
+    string result;
+    std::transform(base.begin(), base.end(), result.begin(), ::toupper);
+    return result;
 }
 
 

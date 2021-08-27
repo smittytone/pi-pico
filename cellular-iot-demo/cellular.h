@@ -18,6 +18,7 @@
 #include <cstring>
 #include <sstream>
 #include <iomanip>
+#include <algorithm>
 
 #include "pico/stdlib.h"
 #include "pico/binary_info.h"
@@ -32,6 +33,9 @@
 #include "ht16k33.h"
 #include "base64.h"
 #include "ArduinoJson-v6.18.3.h"
+
+using std::vector;
+using std::string;
 
 
 #ifdef __cplusplus
@@ -62,17 +66,17 @@ void        setup_modem_power_pin();
 void        led_on();
 void        led_off();
 void        blink_led(uint32_t blinks);
-void        blink_err_code(std::string code);
+void        blink_err_code(string code);
 
 void        listen();
 void        process_command_led(uint32_t blinks);
 void        process_command_num(uint32_t number);
 void        process_command_tmp();
 void        process_command_get();
-void        process_command_flash(std::string code);
+void        process_command_flash(string code);
 
 
-// extern "C"
-}
+
+}   // extern "C"
 
 #endif // _CELLULAR_HEADER_

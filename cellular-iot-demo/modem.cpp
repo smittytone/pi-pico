@@ -26,6 +26,7 @@ Sim7080G::Sim7080G(string network_apn) {
 
     // Initialise properties
     is_header_set = false;
+
 }
 
 /**
@@ -325,9 +326,9 @@ bool Sim7080G::start_session(string server) {
 
     // The above command may take a while to return, so
     // continue to check the UART until we have a response,
-    // or 90s passes (timeout)
+    // or `LONG_TIMEOUT` seconds pass (timeout)
     uint32_t now = time_us_32();
-    while ((time_us_32() - now) < 90000) {
+    while ((time_us_32() - now) < LONG_TIMEOUT) {
         if (resp.find("OK") != string::npos) return true;
         if (resp.find("ERROR") != string::npos) return false;
         resp = listen(1000);
@@ -359,31 +360,26 @@ void Sim7080G::set_request_header() {
         send_at("AT+SHAHEAD=\"Cache-control\",\"no-cache\"", "OK", 500);
         send_at("AT+SHAHEAD=\"Connection\",\"keep-alive\"", "OK", 500);
         send_at("AT+SHAHEAD=\"Accept\",\"*/*\"", "OK", 500);
-
         is_header_set = true;
     }
 }
 
+/**
+    Clear the modem's internal request body record, and set
+    it with the supplied data (as the value of the key `data`).
+
+    - Parameters:
+        - body: The data to post.
+ */
 void Sim7080G::set_request_body(string body) {
     send_at("AT+SHCPARA");
     send_at("AT+SHPARA=\"data\",\"" + body + "\"");
 }
 
-string Sim7080G::get_data(string server, string path) {
-    return issue_request(server, path, "", "GET");
-}
-
-string Sim7080G::send_data(string server, string path, string data) {
-    return issue_request(server, path, data, "POST");
-}
-
-string Sim7080G::issue_request(string server, string path, string body, string verb) {
-    string result = "";
-    return result;
-}
-
 /**
     Make a GET request to the specified server + path.
+
+    The returned data is placed in the instance property `data`.
 
     - Parameters:
         - server: The target server.
@@ -391,10 +387,56 @@ string Sim7080G::issue_request(string server, string path, string body, string v
 
     - Returns: `true` if the request was successful, otherwise `false`.
  */
-bool Sim7080G::request_data(string server, string path) {
+bool Sim7080G::get_data(string server, string path) {
+    return issue_request(server, path, "", "GET");
+}
 
+/**
+    Make a POST request to the specified server + path.
+
+    The returned response is placed in the instance property `data`.
+
+    - Parameters:
+        - server: The target server.
+        - path:   The endpoint path.
+        - data:   The data to be posted.
+
+    - Returns: `true` if the request was successful, otherwise `false`.
+ */
+bool Sim7080G::send_data(string server, string path, string data) {
+    return issue_request(server, path, data, "POST");
+}
+
+/**
+    Make a generic request to the specified server + path.
+
+    The returned response is placed in the instance property `data`.
+
+    - Parameters:
+        - server: The target server.
+        - path:   The endpoint path.
+        - data:   The data to be posted.
+        - verb:   The request verb as a string, eg. `"GET"`.
+
+    - Returns: `true` if the request was successful, otherwise `false`.
+ */
+bool Sim7080G::issue_request(string server, string path, string body, string verb) {
     bool success = false;
 
+    uint32_t verb_value = 1;
+    string verbs[5] = {"GET", "PUT", "POST", "DELETE", "HEAD"};
+    verb = Utils::uppercase(verb);
+    for (uint32_t i = 0 ; i < 5 ; ++i) {
+        if (verb == verbs[i]) {
+            verb_value = i + 1;
+        }
+    }
 
-    return success;
+    if (start_session(server)) {
+
+    } else {
+
+    }
+
+    return false;
 }

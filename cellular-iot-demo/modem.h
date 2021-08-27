@@ -10,17 +10,22 @@
 #ifndef _MODEM_HEADER_
 #define _MODEM_HEADER_
 
+using std::vector;
+using std::string;
+
 
 /*
  * CONSTANTS
  */
-#define UART_BUFFER_SIZE        256
+#define UART_BUFFER_SIZE        1024
 #define PIN_UART_TX             0
 #define PIN_UART_RX             1
 #define MODEM_UART              uart0
 
 #define SHREQ_DATA_LENGTH_FIELD 2
 #define SHREAD_DATA_LINE        4
+
+#define LONG_TIMEOUT            90000
 
 
 /**
@@ -30,50 +35,54 @@ class Sim7080G {
 
     public:
         // Constructor
-        Sim7080G(std::string network_apn = "super");
+        Sim7080G(string network_apn = "super");
 
         // Methods
-        bool        send_at(std::string cmd, std::string back = "OK", uint32_t timeout = 1000);
-        std::string send_at_response(std::string cmd, uint32_t timeout = 2000);
-        void        read_buffer(uint32_t timeout = 5000);
-        std::string buffer_to_string();
-
+        // Modem management
         bool        start_modem();
-        bool        boot_modem();
-        void        config_modem();
         bool        check_network();
 
-        std::string listen(uint32_t timeout = 5000);
+        // AT command management
+        bool        send_at(string cmd, string back = "OK", uint32_t timeout = 1000);
+        string      send_at_response(string cmd, uint32_t timeout = 2000);
+        string      listen(uint32_t timeout = 5000);
+        void        read_buffer(uint32_t timeout = 5000);
+        string      buffer_to_string();
 
+        // Data connection management
         bool        open_data_conn();
         void        close_data_conn();
 
-        bool        start_session(std::string server);
+        // HTTP session management
+        bool        start_session(string server);
         void        end_session();
 
+        // HTTP request management
+        bool        get_data(string server, string path);
+        bool        send_data(string server, string path, string data);
+        bool        issue_request(string server, string path, string body, string verb);
         void        set_request_header();
-        void        set_request_body(std::string body);
-
-        std::string get_data(std::string server, std::string path);
-        std::string send_data(std::string server, std::string path, std::string data);
-        std::string issue_request(std::string server, std::string path, std::string body, std::string verb);
-        bool        request_data(std::string server, std::string path);
-
-
+        void        set_request_body(string body);
 
         // Properties
-        std::string data;
+        // HTTP request response store
+        string data;
     private:
         // Methods
-        void        debug_output(std::string msg);
+        // Modem management
+        bool        boot_modem();
+        void        config_modem();
         void        toggle_module_power();
-        void        clear_buffer();
+
+        // Misc.
+        void            debug_output(string msg);
+        void            clear_buffer();
 
         // Properties
-        uint8_t     uart_buffer[UART_BUFFER_SIZE];
-        uint8_t     *rx_ptr;
-        std::string apn;
-        bool        is_header_set;
+        uint8_t         uart_buffer[UART_BUFFER_SIZE];
+        uint8_t         *rx_ptr;
+        string          apn;
+        bool            is_header_set;
 };
 
 
