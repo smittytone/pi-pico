@@ -4,7 +4,7 @@ Assorted projects made while playing with the [Raspberry Pi Pico](https://www.ra
 
 ## Projects
 
-* [Cellular IoT Demo](#cellular-iot-demo)
+* [Cellular IoT Demo](#cellular-iot-demo-101)
 * [Phantom Slayer](#phantom-slayer-102)
 * [Hunt the Wumpus](#hunt-the-wumpus-102)
 * [Sensor](#sensor)
@@ -16,7 +16,7 @@ Assorted projects made while playing with the [Raspberry Pi Pico](https://www.ra
 
 ---
 
-## Cellular IoT Demo
+## Cellular IoT Demo 1.0.1
 
 A sample C++ project bringing the Pico and the [Waveshare Pico SIM7080G Cat-M1 modem board](https://www.waveshare.com/pico-sim7080g-cat-m-nb-iot.htm) together.
 
@@ -195,6 +195,8 @@ Pico project set up script for Z Shell. Requires Pico C SDK pre-installed.
 
 ## Updates
 
+- *Unreleased*
+    - Complete *Cellular IoT Demo* — add `POST` ops.
 - *20 August 2021*
     - Add *Cellular IoT Demo*.
 - *13 August 2021*
