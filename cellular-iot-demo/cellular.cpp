@@ -83,22 +83,23 @@ void blink_err_code(string code) {
     for (uint32_t i = 0 ; i < code.length() ; ++i) {
         switch (code[i]) {
             case 'L':
-                gpio_put(PIN_LED, true);
+                // On for 500ms
+                led_on();
                 sleep_ms(250);
                 break;
             case 'S':
-                gpio_put(PIN_LED, true);
+                // On for 250ms
+                led_on();
                 break;
             case 'B':
-                gpio_put(PIN_LED, false);
+                // Off for 250ms
+                led_off();
         }
 
         sleep_ms(250);
     }
 
-    gpio_put(PIN_LED, false);
-    sleep_ms(1000);
-    gpio_put(PIN_LED, true);
+    led_off();
 }
 
 
@@ -123,6 +124,10 @@ void setup_i2c() {
     display.init();
 }
 
+
+/*
+ * MAIN FUNCTIONS
+ */
 
 /**
     Umbrella setup routine.
@@ -181,7 +186,7 @@ void listen() {
                         } else if (cmd == "GET") {
                             process_command_get();
                         } else if (cmd == "POST") {
-                            process_command_post(doc["val"]);
+                            process_command_post(doc["data"]);
                         } else if (cmd == "FLASH") {
                             process_command_flash(doc["code"]);
                         } else {
@@ -270,6 +275,15 @@ void process_command_post(string data) {
     process_request(server, endpoint_path, data);
 }
 
+/*
+    Generic HTTP request handler.
+
+    - Parameters:
+        - server: The target server domain prefixed with the protool, eg.
+                  `https://example.com`.
+        - path:   The target endpoint path.
+        - data:   The data to send.
+ */
 void process_request(string server, string path, string data) {
     // Attempt to open a data connection
     bool send_success = false;
@@ -312,11 +326,12 @@ void process_command_flash(string code) {
     #endif
 
     blink_err_code(code);
+    sleep_ms(1000);
+    led_on();
 }
 
-
 /*
- * MAIN FUNCTIONS
+ * The entry point
  */
 int main() {
 
@@ -358,7 +373,7 @@ int main() {
         listen();
     } else {
         // Error! Flash the LED five times, turn it off and exit
-        blink_err_code(ERR_CODE_GEN_FAIL);
+        blink_err_code(ERR_CODE_NO_MODEM);
         gpio_put(PIN_LED, false);
     }
 

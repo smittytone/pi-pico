@@ -49,9 +49,9 @@ extern "C" {
 #define PIN_MODEM_PWR           14
 #define PIN_LED                 25
 
-#define ERR_CODE_GEN_FAIL       "LBBLBBLBBLBBL"
-#define ERR_CODE_MODEM_START    "LBS"
-#define ERR_CODE_MODEM_INIT     "LBSBS"
+#define ERR_CODE_NO_MODEM       "SBSBSBSBS"
+#define ERR_CODE_MODEM_START    "LBSB"
+#define ERR_CODE_MODEM_INIT     "LBSBSB"
 
 
 /*
