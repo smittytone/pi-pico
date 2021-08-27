@@ -25,7 +25,7 @@ using std::string;
 #define SHREQ_DATA_LENGTH_FIELD 2
 #define SHREAD_DATA_LINE        4
 
-#define LONG_TIMEOUT            90000
+#define LONG_URC_TIMEOUT        90000000
 
 
 /**
@@ -43,26 +43,24 @@ class Sim7080G {
         bool        check_network();
 
         // AT command management
-        bool        send_at(string cmd, string back = "OK", uint32_t timeout = 1000);
-        string      send_at_response(string cmd, uint32_t timeout = 2000);
-        string      listen(uint32_t timeout = 5000);
-        void        read_buffer(uint32_t timeout = 5000);
-        string      buffer_to_string();
+        bool            send_at(string cmd, string back = "OK", uint32_t timeout = 500);
+        string          send_at_response(string cmd, uint32_t timeout = 500);
+        string          listen(uint32_t timeout = 5000);
 
         // Data connection management
-        bool        open_data_conn();
-        void        close_data_conn();
+        bool            open_data_conn();
+        void            close_data_conn();
 
         // HTTP session management
-        bool        start_session(string server);
-        void        end_session();
+        bool            start_session(string server);
+        void            end_session();
 
         // HTTP request management
-        bool        get_data(string server, string path);
-        bool        send_data(string server, string path, string data);
-        bool        issue_request(string server, string path, string body, string verb);
-        void        set_request_header();
-        void        set_request_body(string body);
+        bool            get_data(string server, string path);
+        bool            send_data(string server, string path, string data);
+        bool            issue_request(string server, string path, string body, string verb);
+        void            set_request_header();
+        void            set_request_body(string body);
 
         // Properties
         // HTTP request response store
@@ -70,13 +68,15 @@ class Sim7080G {
     private:
         // Methods
         // Modem management
-        bool        boot_modem();
-        void        config_modem();
-        void        toggle_module_power();
+        bool            boot_modem();
+        void            config_modem();
+        void            toggle_module_power();
 
         // Misc.
         void            debug_output(string msg);
+        void            read_buffer(uint32_t timeout = 5000);
         void            clear_buffer();
+        string          buffer_to_string();
 
         // Properties
         uint8_t         uart_buffer[UART_BUFFER_SIZE];

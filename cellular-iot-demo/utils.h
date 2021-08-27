@@ -22,8 +22,8 @@ namespace Utils {
     string          split_msg(string msg, uint32_t want_line);
     string          get_sms_number(string line);
     string          get_field_value(string line, uint32_t field_number);
-    uint32_t        bcd(uint32_t base);
     string          uppercase(string base);
+    uint32_t        bcd(uint32_t base);
 }
 
 

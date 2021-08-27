@@ -108,10 +108,19 @@ uint32_t bcd(uint32_t base) {
     return (base >> 16) & 0xFFFF;
 }
 
+/**
+    Convert a string to uppercase.
+
+    - Parameters:
+        - base: The input string.
+
+    - Returns: An uppercase string.
+ */
 string uppercase(string base) {
-    string result;
-    std::transform(base.begin(), base.end(), result.begin(), ::toupper);
-    return result;
+    //string result;
+    std::transform(base.begin(), base.end(), base.begin(), ::toupper);
+    //printf("%s -> %s\n", base.c_str(), result.c_str());
+    return base;
 }
 
 

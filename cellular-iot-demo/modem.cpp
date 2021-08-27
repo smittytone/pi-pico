@@ -63,7 +63,7 @@ bool Sim7080G::boot_modem() {
     do {
         if (send_at("ATE1")) {
             #ifdef DEBUG
-            printf("Modem ready after %ims\n", (time_us_32() - start_time) / 1000);
+            printf("Modem ready after %i ms\n", (time_us_32() - start_time) / 1000);
             #endif
 
             return true;
@@ -89,35 +89,21 @@ bool Sim7080G::boot_modem() {
  */
 void Sim7080G::config_modem() {
     // Set error reporting to 2
-    send_at("AT+CMEE=2");
-
     // Set modem to text mode
-    send_at("AT+CMGF=1");
+    // Delete left-over SMS
+    send_at("AT+CMEE=2;+CMGF=1;+CMGD=,4");
 
     // Select LTE-only mode
-    send_at("AT+CNMP=38");
-
     // Select Cat-M only mode
-    send_at("AT+CMNB=1");
-
     // Set the APN
-    send_at("AT+CGDCONT=1,\"IP\",\"" + apn + "\"");
+    send_at("AT+CNMP=38;+CMNB=1;+CGDCONT=1,\"IP\",\"" + apn + "\"");
 
     // Set the SSL version
-    send_at("AT+CSSLCFG=\"sslversion\",1,3");
-
     // Set SSL no verify
-    send_at("AT+SHSSL=1,\"\"");
-
-    // Set HTTPS request parameters
-    send_at("AT+SHCONF=\"BODYLEN\",1024");
-    send_at("AT+SHCONF=\"HEADERLEN\",350");
-
-    // Delete left-over SMS
-    send_at("AT+CMGD=,4");
+    send_at("AT+CSSLCFG=\"sslversion\",1,3;+SHSSL=1,\"\";+SHCONF=\"BODYLEN\",1024;+SHCONF=\"HEADERLEN\",350");
 
     #ifdef DEBUG
-    printf("Modem configured for Cat-M and Super SIM");
+    printf("Modem configured for Cat-M and Super SIM\n");
     #endif
 }
 
@@ -130,13 +116,12 @@ bool Sim7080G::check_network() {
     string response = send_at_response("AT+COPS?");
     string line = Utils::split_msg(response, 1);
     if (line.find("+COPS:") != string::npos) {
-        uint32_t pos = line.find(",");
         // ',' will be missing if the modem is not connected,
         // ie. there is no operator value in the AT+COPS? response
-        is_connected = (pos != string::npos);
+        is_connected = (line.find(",") != string::npos);
 
         #ifdef DEBUG
-        if (is_connected) printf("Network information: %s", line.c_str());
+        if (is_connected) printf("Network information: %s\n", line.c_str());
         #endif
     }
 
@@ -213,7 +198,6 @@ void Sim7080G::read_buffer(uint32_t timeout) {
     rx_ptr = buffer_start;
 
     uint32_t now = time_us_32();
-
     while ((time_us_32() - now < timeout * 1000) && (rx_ptr - buffer_start < UART_BUFFER_SIZE)) {
         if (uart_is_readable(MODEM_UART) > 0) {
             uart_read_blocking(MODEM_UART, rx_ptr, 1);
@@ -232,7 +216,7 @@ void Sim7080G::read_buffer(uint32_t timeout) {
 void Sim7080G::debug_output(string msg) {
     vector<string> lines = Utils::split_to_lines(msg);
     for (uint32_t i = 0 ; i < lines.size() ; ++i) {
-        printf(">>> %s", lines[i].c_str());
+        printf(">>> %s\n", lines[i].c_str());
     }
 }
 
@@ -275,10 +259,10 @@ string Sim7080G::listen(uint32_t timeout) {
 bool Sim7080G::open_data_conn() {
     // Activate a data connection using PDP 0,
     // but first check it's not already open
+    bool success = false;
     string response = send_at_response("AT+CNACT?");
     string line = Utils::split_msg(response, 1);
     string status = Utils::get_field_value(line, 1);
-    bool success = false;
 
     if (status == "0") {
         // Inactive data connection so start one up
@@ -290,7 +274,7 @@ bool Sim7080G::open_data_conn() {
     #ifdef DEBUG
     string base = "Data connection ";
     base += (success ? "active" : "inactive");
-    printf("%s", base.c_str());
+    printf("%s\n", base.c_str());
     #endif
 
     return success;
@@ -304,15 +288,22 @@ void Sim7080G::close_data_conn() {
     send_at("AT+CNACT=0,0");
 
     #ifdef DEBUG
-    printf("Data connection inactive");
+    printf("Data connection inactive\n");
     #endif
 }
 
+/**
+    Open an HTTP connection to the specified server.
+
+    - Parameters:
+        - server: The protocol and the server's domain, eg.
+                  `https://example.com`
+ */
 bool Sim7080G::start_session(string server) {
     // Deal with an existing session, if there is one
     if (send_at("AT+SHSTATE?", "1")) {
         #ifdef DEBUG
-        printf("Closing existing HTTP session");
+        printf("Closing existing HTTP session\n");
         #endif
 
         send_at("AT+SHDISC");
@@ -322,27 +313,30 @@ bool Sim7080G::start_session(string server) {
     send_at("AT+SHCONF=\"URL\",\"" + server + "\"");
 
     // ...and open it
-    string resp = send_at_response("AT+SHCONN", 2000);
+    string response = send_at_response("AT+SHCONN");
 
     // The above command may take a while to return, so
     // continue to check the UART until we have a response,
-    // or `LONG_TIMEOUT` seconds pass (timeout)
+    // or `LONG_URC_TIMEOUT` seconds pass (timeout)
     uint32_t now = time_us_32();
-    while ((time_us_32() - now) < LONG_TIMEOUT) {
-        if (resp.find("OK") != string::npos) return true;
-        if (resp.find("ERROR") != string::npos) return false;
-        resp = listen(1000);
+    while ((time_us_32() - now) < LONG_URC_TIMEOUT) {
+        if (response.find("OK") != string::npos) return true;
+        if (response.find("ERROR") != string::npos) return false;
+        response = listen(1000);
     }
 
     return false;
 }
 
+/**
+    Open an HTTP connection to the specified server.
+ */
 void Sim7080G::end_session() {
     // Break the link to the server
     send_at("AT+SHDISC");
 
     #ifdef DEBUG
-    printf("HTTP session closed");
+    printf("HTTP session closed\n");
     #endif
 }
 
@@ -355,11 +349,7 @@ void Sim7080G::set_request_header() {
         send_at("AT+SHCHEAD");
 
         // ...and add new header parameters
-        send_at("AT+SHAHEAD=\"Content-Type\",\"application/x-www-form-urlencoded\"", "OK", 500);
-        send_at("AT+SHAHEAD=\"User-Agent\",\"smittytone-pi-pico/1.0.0\"", "OK", 500);
-        send_at("AT+SHAHEAD=\"Cache-control\",\"no-cache\"", "OK", 500);
-        send_at("AT+SHAHEAD=\"Connection\",\"keep-alive\"", "OK", 500);
-        send_at("AT+SHAHEAD=\"Accept\",\"*/*\"", "OK", 500);
+        send_at("AT+SHAHEAD=\"Content-Type\",\"application/x-www-form-urlencoded\";+SHAHEAD=\"User-Agent\",\"smittytone-pi-pico/1.0.0\";+SHAHEAD=\"Cache-control\",\"no-cache\";+SHAHEAD=\"Connection\",\"keep-alive\";+SHAHEAD=\"Accept\",\"*/*\"");
         is_header_set = true;
     }
 }
@@ -423,20 +413,77 @@ bool Sim7080G::send_data(string server, string path, string data) {
 bool Sim7080G::issue_request(string server, string path, string body, string verb) {
     bool success = false;
 
-    uint32_t verb_value = 1;
-    string verbs[5] = {"GET", "PUT", "POST", "DELETE", "HEAD"};
+    uint32_t code = 1;
+    string verbs[5] = {"GET", "PUT", "POST", "PATCH", "HEAD"};
     verb = Utils::uppercase(verb);
     for (uint32_t i = 0 ; i < 5 ; ++i) {
         if (verb == verbs[i]) {
-            verb_value = i + 1;
+            code = i + 1;
         }
     }
 
-    if (start_session(server)) {
+    if (code < 1 || code > 5) {
+        #ifdef DEBUG
+        printf("ERROR -- Unknown request verb specified\n");
+        #endif
 
-    } else {
-
+        return false;
     }
 
-    return false;
+    if (start_session(server)) {
+        #ifdef DEBUG
+        printf("HTTP session open\n");
+        #endif
+
+        // Issue the request...
+        set_request_header();
+        if (body.length() > 0) set_request_body(body);
+        string response = send_at_response("AT+SHREQ=\"" + path + "\"," + std::to_string(code));
+        uint32_t start = time_us_32();
+        while ((time_us_32() - start) < LONG_URC_TIMEOUT) {
+            if (response.find("+SHREQ:") != string::npos) break;
+            response = listen(1000);
+        }
+
+        // ...and process the response
+        vector<string> lines = Utils::split_to_lines(response);
+        for (uint32_t i = 0 ; i < lines.size() ; ++i) {
+            string line = lines[i];
+            if (line.length() == 0) continue;
+            if (line.find("+SHREQ:") != string::npos) {
+                string status_code = Utils::get_field_value(line, 1);
+                string data_length = Utils::get_field_value(line, 2);
+
+                if (std::stoi(status_code) > 299) {
+                    #ifdef DEBUG
+                    printf("ERROR -- HTTP status code %s\n", status_code.c_str());
+                    #endif
+
+                    break;
+                }
+
+                if (data_length == "0") break;
+
+                // Get the data from the modem
+                response = send_at_response("AT+SHREAD=0," + data_length);
+
+                // The JSON data may be multi-line so store everything in the
+                // response that comes after (and including) the first '{'
+                uint32_t pos = response.find("{");
+                if (pos != string::npos) {
+                    data = response.substr(pos);
+                    success = true;
+                }
+            }
+        }
+
+        // All done, so Close the session
+        end_session();
+    } else {
+        #ifdef DEBUG
+        printf("ERROR -- Could not connect to server %s\n", server.c_str());
+        #endif
+    }
+
+    return success;
 }

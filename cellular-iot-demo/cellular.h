@@ -73,8 +73,10 @@ void        process_command_led(uint32_t blinks);
 void        process_command_num(uint32_t number);
 void        process_command_tmp();
 void        process_command_get();
+void        process_command_post(string data);
 void        process_command_flash(string code);
 
+void        process_request(string server, string path, string data = "");
 
 
 }   // extern "C"

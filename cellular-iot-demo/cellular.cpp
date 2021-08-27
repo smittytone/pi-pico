@@ -169,19 +169,30 @@ void listen() {
                     DynamicJsonDocument doc(128);
                     DeserializationError err = deserializeJson(doc, json.c_str());
                     if (err == DeserializationError::Ok) {
-                        string cmd = doc["cmd"];
-                        uint32_t value = doc["val"];
+                        string cmd = Utils::uppercase(doc["cmd"]);
 
                         // Check for commands
-                        if (cmd == "LED" || cmd == "led") process_command_led(value);
-                        if (cmd == "NUM" || cmd == "num") process_command_num(value);
-                        if (cmd == "TMP" || cmd == "tmp") process_command_tmp();
-                        if (cmd == "GET" || cmd == "get") process_command_get();
-                        if (cmd == "FLASH" || cmd == "flash") process_command_flash(doc["code"]);
+                        if (cmd == "LED") {
+                            process_command_led(doc["val"]);
+                        } else if (cmd == "NUM") {
+                            process_command_num(doc["val"]);
+                        } else if (cmd == "TMP") {
+                            process_command_tmp();
+                        } else if (cmd == "GET") {
+                            process_command_get();
+                        } else if (cmd == "POST") {
+                            process_command_post(doc["val"]);
+                        } else if (cmd == "FLASH") {
+                            process_command_flash(doc["code"]);
+                        } else {
+                            #ifdef DEBUG
+                            printf("ERROR -- Unknown command: %s\n", cmd.c_str());
+                            #endif
+                        }
                     }
 
                     // Delete all SMSs now we're done with them
-                    modem.send_at("AT+CMGD=" + num + ",4");
+                    modem.send_at("AT+CMGD=,4");
                 }
             }
         }
@@ -229,21 +240,47 @@ void process_command_tmp() {
         // 'chr(26)' is the code for ctrl-z, which the modem
         // uses as an end-of-message marker
         string r = modem.send_at_response(temp + "\x1A");
+
+        // NOTE For some reason TBD, this triggers a +CMS ERROR: 500,
+        //      but the text message gets through
     }
 }
 
 void process_command_get() {
     #ifdef DEBUG
-    printf("Received GET command\n");
+    printf("Requesting data...\n");
     #endif
 
-    // Attempt to open a data connection
-    if (modem.open_data_conn()) {
-        // Issue a get request
-        string server = "http://jsonplaceholder.typicode.com";
-        string endpoint_path = "/todos/1";
+    // "http://jsonplaceholder.typicode.com";
+    string server = "https://d073775c3-eb5c-4a0d-94d3-6d39a2b1dd76.free.beeceptor.com";
+    //string endpoint_path = "/todos/1";
+    string endpoint_path = "/api/v1/status";
+    process_request(server, endpoint_path);
+}
 
-        if (modem.get_data(server, endpoint_path)) {
+void process_command_post(string data) {
+    #ifdef DEBUG
+    printf("Sending data...\n");
+    #endif
+
+    // "http://jsonplaceholder.typicode.com";
+    string server = "https://d073775c3-eb5c-4a0d-94d3-6d39a2b1dd76.free.beeceptor.com";
+    //string endpoint_path = "/todos/1";
+    string endpoint_path = "/api/v1/logs";
+    process_request(server, endpoint_path, data);
+}
+
+void process_request(string server, string path, string data) {
+    // Attempt to open a data connection
+    bool send_success = false;
+    if (modem.open_data_conn()) {
+        if (data.length() > 0) {
+            send_success = modem.send_data(server, path, data);
+        } else {
+            send_success = modem.get_data(server, path);
+        }
+
+        if (send_success) {
             // Attempt to decode the received JSON. You may need to adjust
             // the memory allocation (default: 1024) for large JSON responses
             DynamicJsonDocument doc(1024);
@@ -256,17 +293,16 @@ void process_command_get() {
                 printf("DATA RETURNED:\n%s\n", title.c_str());
                 #endif
 
-                process_command_num(doc["id"]);
+                process_command_num(doc["userId"]);
             } else {
                 #ifdef DEBUG
                 printf("Malformed JSON received: error %s\n%s\n", err.c_str(), modem.data.c_str());
                 #endif
             }
-        } else {
-            #ifdef DEBUG
-            printf("No JSON received -- raw data:\n%s\n", modem.data.c_str());
-            #endif
         }
+
+        // Close the open connection
+        modem.close_data_conn();
     }
 }
 

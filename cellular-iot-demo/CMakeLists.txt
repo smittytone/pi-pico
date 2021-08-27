@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.14)
 include(pico_sdk_import.cmake)
-project(cellular VERSION 1.0.0)
+project(cellular VERSION 1.0.1)
 
 add_definitions(-DDEBUG)
 

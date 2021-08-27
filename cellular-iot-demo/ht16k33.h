@@ -1,7 +1,7 @@
 /*
  * cellular::ht16k33_driver for Raspberry Pi Pico
  *
- * @version     1.0.0
+ * @version     1.0.1
  * @author      smittytone
  * @copyright   2021
  * @licence     MIT
@@ -54,7 +54,6 @@ class HT16K33_Segment {
         uint8_t             buffer[16];
         uint32_t            pos[4];
         uint32_t            i2c_addr;
-
 };
 
 
