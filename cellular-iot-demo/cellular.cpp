@@ -256,10 +256,8 @@ void process_command_get() {
     printf("Requesting data...\n");
     #endif
 
-    // "http://jsonplaceholder.typicode.com";
-    string server = "https://d073775c3-eb5c-4a0d-94d3-6d39a2b1dd76.free.beeceptor.com";
-    //string endpoint_path = "/todos/1";
-    string endpoint_path = "/api/v1/status";
+    string server = "http://jsonplaceholder.typicode.com";
+    string endpoint_path = "/todos/1";
     process_request(server, endpoint_path);
 }
 
@@ -268,10 +266,8 @@ void process_command_post(string data) {
     printf("Sending data...\n");
     #endif
 
-    // "http://jsonplaceholder.typicode.com";
-    string server = "https://d073775c3-eb5c-4a0d-94d3-6d39a2b1dd76.free.beeceptor.com";
-    //string endpoint_path = "/todos/1";
-    string endpoint_path = "/api/v1/logs";
+    string server = "http://jsonplaceholder.typicode.com";
+    string endpoint_path = "/todos/1";
     process_request(server, endpoint_path, data);
 }
 
