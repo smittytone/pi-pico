@@ -23,7 +23,7 @@ namespace Utils {
         - ml_str:    The multi-line string
         - separator: The line-separator string
 
-    - Returns: The requested line, otherwise an empty string.
+    - Returns: The lines as a vector.
  */
 vector<string> split_to_lines(string ml_str, string separator) {
     vector<string> result;
