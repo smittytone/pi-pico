@@ -72,7 +72,9 @@ void        process_command_get();
 void        process_command_flash(std::string code);
 
 
-// extern "C"
-}
+#ifdef __cplusplus
+}           // extern "C"
+#endif
 
-#endif // _CELLULAR_HEADER_
+
+#endif      // _CELLULAR_HEADER_
