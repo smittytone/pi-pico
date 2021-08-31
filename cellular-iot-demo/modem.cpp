@@ -88,18 +88,11 @@ bool Sim7080G::boot_modem() {
     APN for Super SIM usage.
  */
 void Sim7080G::config_modem() {
-    // Set error reporting to 2
-    // Set modem to text mode
-    // Delete left-over SMS
-    send_at("AT+CMEE=2;+CMGF=1;+CMGD=,4");
+    // Set error reporting to 2, set modem to text mode, delete left-over SMS,
+    // select LTE-only mode, select Cat-M only mode, set the APN
+    send_at("AT+CMEE=2;+CMGF=1;+CMGD=,4;+CNMP=38;+CMNB=1;+CGDCONT=1,\"IP\",\"" + apn + "\"");
 
-    // Select LTE-only mode
-    // Select Cat-M only mode
-    // Set the APN
-    send_at("AT+CNMP=38;+CMNB=1;+CGDCONT=1,\"IP\",\"" + apn + "\"");
-
-    // Set the SSL version
-    // Set SSL no verify
+    // Set SST version, set SSL no verify, set header config
     send_at("AT+CSSLCFG=\"sslversion\",1,3;+SHSSL=1,\"\";+SHCONF=\"BODYLEN\",1024;+SHCONF=\"HEADERLEN\",350");
 
     #ifdef DEBUG
@@ -362,8 +355,7 @@ void Sim7080G::set_request_header() {
         - body: The data to post.
  */
 void Sim7080G::set_request_body(string body) {
-    send_at("AT+SHCPARA");
-    send_at("AT+SHPARA=\"data\",\"" + body + "\"");
+    send_at("AT+SHCPARA;+SHPARA=\"data\",\"" + body + "\"");
 }
 
 /**
@@ -454,6 +446,7 @@ bool Sim7080G::issue_request(string server, string path, string body, string ver
                 string status_code = Utils::get_field_value(line, 1);
                 string data_length = Utils::get_field_value(line, 2);
 
+                // Break out if we get a bad HTTP status code
                 if (std::stoi(status_code) > 299) {
                     #ifdef DEBUG
                     printf("ERROR -- HTTP status code %s\n", status_code.c_str());
@@ -472,6 +465,8 @@ bool Sim7080G::issue_request(string server, string path, string body, string ver
                 uint32_t pos = response.find("{");
                 if (pos != string::npos) {
                     data = response.substr(pos);
+
+                    // Only set this if we get what looks like JSON
                     success = true;
                 }
             }
