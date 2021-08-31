@@ -1,7 +1,7 @@
 /*
  * cellular::main for Raspberry Pi Pico
  *
- * @version     1.0.0
+ * @version     1.0.1
  * @author      smittytone
  * @copyright   2021
  * @licence     MIT
@@ -64,9 +64,9 @@ void led_off() {
  */
 void blink_led(uint32_t blinks) {
     for (uint32_t i = 0 ; i < blinks ; ++i) {
-        gpio_put(PIN_LED, false);
+        led_off();
         sleep_ms(250);
-        gpio_put(PIN_LED, true);
+        led_on();
         sleep_ms(250);
     }
 }
@@ -104,7 +104,7 @@ void blink_err_code(string code) {
 
 
 /*
- * MODEM PWR_EN FUNCTIONS
+ * GPIO FUNCTIONS
  */
 void setup_modem_power_pin() {
     gpio_init(PIN_MODEM_PWR);
@@ -196,7 +196,7 @@ void listen() {
                         }
                     }
 
-                    // Delete all SMSs now we're done with them
+                    // Delete all SMS now we're done with them
                     modem.send_at("AT+CMGD=,4");
                 }
             }
@@ -206,9 +206,10 @@ void listen() {
 
 void process_command_led(uint32_t blinks) {
     #ifdef DEBUG
-    printf("Received LED command: %i blinks\n", blinks);
+    printf("Received LED command: %i blink(s)\n", blinks);
     #endif
 
+    if (blinks < 1 || blinks > 100) blinks = 1;
     blink_led(blinks);
 }
 
@@ -219,6 +220,7 @@ void process_command_num(uint32_t number) {
 
     // Get the BCD data and use it to populate
     // the display's four digits
+    if (number < 0 || number > 9999) number = 9999;
     uint32_t bcd_val = Utils::bcd(number);
     display.clear();
     display.set_number((bcd_val >> 12) & 0x0F, 0, false);
@@ -249,6 +251,24 @@ void process_command_tmp() {
         // NOTE For some reason TBD, this triggers a +CMS ERROR: 500,
         //      but the text message gets through
     }
+
+    // Display the temperature on the LED
+    uint32_t digit = 0;
+    char previous_char = 0;
+    char current_char = 0;
+    for (uint32_t i = 0 ; (i < temp.length() || digit == 3) ; ++i) {
+        current_char = temp[i];
+        if (current_char == '.' && digit > 0) {
+            display.set_alpha(previous_char, digit - 1, true);
+        } else {
+            display.set_alpha(current_char, digit);
+            previous_char = current_char;
+            digit++;
+        }
+    }
+
+    // Add a final 'c' and update the display
+    display.set_alpha('c', 3).draw();
 }
 
 void process_command_get() {
@@ -300,7 +320,7 @@ void process_request(string server, string path, string data) {
                 // Make use of the data: extract a value and display it
                 #ifdef DEBUG
                 string title = doc["title"];
-                printf("DATA RETURNED:\n%s\n", title.c_str());
+                printf("DATA RETURNED: %s\n", title.c_str());
                 #endif
 
                 process_command_num(doc["userId"]);
@@ -318,7 +338,7 @@ void process_request(string server, string path, string data) {
 
 void process_command_flash(string code) {
     #ifdef DEBUG
-    printf("Received FLASH command: %s blinks\n", code.c_str());
+    printf("Received FLASH command -- sequence: %s\n", code.c_str());
     #endif
 
     blink_err_code(code);
@@ -363,7 +383,7 @@ int main() {
 
         // Start to listen for commands
         #ifdef DEBUG
-        printf("Listening...\n");
+        printf("Listening for commands...\n");
         #endif
 
         listen();

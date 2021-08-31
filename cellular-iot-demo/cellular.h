@@ -1,7 +1,7 @@
 /*
  * cellular::main for Raspberry Pi Pico
  *
- * @version     1.0.0
+ * @version     1.0.1
  * @author      smittytone
  * @copyright   2021
  * @licence     MIT
