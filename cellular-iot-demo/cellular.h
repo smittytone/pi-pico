@@ -75,6 +75,7 @@ void        process_command_tmp();
 void        process_command_get();
 void        process_command_post(string data);
 void        process_command_flash(string code);
+void        process_command_at(string cmd);
 
 void        process_request(string server, string path, string data = "");
 

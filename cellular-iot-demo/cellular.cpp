@@ -189,7 +189,9 @@ void listen() {
                             process_command_post(doc["data"]);
                         } else if (cmd == "FLASH") {
                             process_command_flash(doc["code"]);
-                        } else {
+                        } else if (cmd == "AT") {
+                            process_command_at(doc["code"]);
+                        }else {
                             #ifdef DEBUG
                             printf("ERROR -- Unknown command: %s\n", cmd.c_str());
                             #endif
@@ -269,6 +271,15 @@ void process_command_tmp() {
 
     // Add a final 'c' and update the display
     display.set_alpha('c', 3).draw();
+}
+
+void process_command_at(string cmd) {
+    string response = modem.send_at_response(cmd);
+    #ifdef DEBUG
+    printf("Response:\n");
+    printf(response.c_str());
+    printf("\n");
+    #endif
 }
 
 void process_command_get() {
