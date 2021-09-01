@@ -59,6 +59,18 @@ curl -X POST https://supersim.twilio.com/v1/SmsCommands \
 
 You will need shell variables for your Super SIM’s SID, and your Twilio account SID and authorisation token. Different brands of SIM will have different settings, of course.
 
+Alternatively, just punch those values into the `cmd.sh` script that’s included and call it with two arguments. For example"
+
+```bash
+./cmd.sh num 9876
+```
+
+will send (base64 encoded):
+
+```json
+{"cmd": "num", "val": 9876}
+```
+
 Commands available from the device:
 
 * `led` — flash the Pico LED. Requires a `val` object with the number of flashes as an integer.
