@@ -297,8 +297,8 @@ void process_command_post(string data) {
     printf("Sending data...\n");
     #endif
 
-    const string server = "http://jsonplaceholder.typicode.com";
-    const string endpoint_path = "/todos/1";
+    const string server = "<YOUR_SERVER>";
+    const string endpoint_path = "<YOUR_ENDPOINT>";
     process_request(server, endpoint_path, data);
 }
 

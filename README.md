@@ -207,7 +207,7 @@ Pico project set up script for Z Shell. Requires Pico C SDK pre-installed.
 
 ## Updates
 
-- *Unreleased*
+- *3 September 2021*
     - Complete *Cellular IoT Demo* — add `POST` ops and various improvements.
 - *20 August 2021*
     - Add *Cellular IoT Demo*.
