@@ -1,7 +1,7 @@
 /*
  * cellular::main for Raspberry Pi Pico
  *
- * @version     1.0.0
+ * @version     1.0.1
  * @author      smittytone
  * @copyright   2021
  * @licence     MIT
@@ -64,9 +64,9 @@ void led_off() {
  */
 void blink_led(uint32_t blinks) {
     for (uint32_t i = 0 ; i < blinks ; ++i) {
-        gpio_put(PIN_LED, false);
+        led_off();
         sleep_ms(250);
-        gpio_put(PIN_LED, true);
+        led_on();
         sleep_ms(250);
     }
 }
@@ -83,27 +83,28 @@ void blink_err_code(string code) {
     for (uint32_t i = 0 ; i < code.length() ; ++i) {
         switch (code[i]) {
             case 'L':
-                gpio_put(PIN_LED, true);
+                // On for 500ms
+                led_on();
                 sleep_ms(250);
                 break;
             case 'S':
-                gpio_put(PIN_LED, true);
+                // On for 250ms
+                led_on();
                 break;
             case 'B':
-                gpio_put(PIN_LED, false);
+                // Off for 250ms
+                led_off();
         }
 
         sleep_ms(250);
     }
 
-    gpio_put(PIN_LED, false);
-    sleep_ms(1000);
-    gpio_put(PIN_LED, true);
+    led_off();
 }
 
 
 /*
- * MODEM PWR_EN FUNCTIONS
+ * GPIO FUNCTIONS
  */
 void setup_modem_power_pin() {
     gpio_init(PIN_MODEM_PWR);
@@ -126,6 +127,238 @@ void setup_i2c() {
 
 /*
  * MAIN FUNCTIONS
+ */
+
+/**
+    Umbrella setup routine.
+ */
+void setup() {
+    setup_led();
+    setup_i2c();
+    setup_uart();
+    setup_modem_power_pin();
+}
+
+/**
+    Loop and wait for incoming SMS messages, which are parsed and
+    and commands they contain are processed.
+
+    Could be more sophisticated, but it works!
+ */
+void listen() {
+    while (true) {
+        // Check for a response from the modem
+        string response = modem.listen(5000);
+        if (response != "ERROR") {
+            const vector<string> lines = Utils::split_to_lines(response);
+            for (uint32_t i = 0 ; i < lines.size() ; ++i) {
+                const string line = lines[i];
+                if (line.length() == 0) continue;
+
+                #ifdef DEBUG
+                printf("LINE %i: %s\n", i, line.c_str());
+                #endif
+
+                if (line.find("+CMTI") != string::npos) {
+                    // We received an SMS, so get it...
+                    const string num = Utils::get_sms_number(line);
+                    const string msg = modem.send_at_response("AT+CMGR=" + num);
+
+                    // ...and process it for commands but getting the message body...
+                    const string data = Utils::split_msg(msg, 2);
+
+                    // ...decoding the base64 to a JSON string...
+                    const string json = base64_decode(data);
+
+                    // ...and parsing the JSON
+                    DynamicJsonDocument doc(128);
+                    DeserializationError err = deserializeJson(doc, json.c_str());
+                    if (err == DeserializationError::Ok) {
+                        const string cmd = Utils::uppercase(doc["cmd"]);
+
+                        // Check for commands
+                        if (cmd == "LED") {
+                            process_command_led(doc["val"]);
+                        } else if (cmd == "NUM") {
+                            process_command_num(doc["val"]);
+                        } else if (cmd == "TMP") {
+                            process_command_tmp();
+                        } else if (cmd == "GET") {
+                            process_command_get();
+                        } else if (cmd == "POST") {
+                            process_command_post(doc["data"]);
+                        } else if (cmd == "FLASH") {
+                            process_command_flash(doc["code"]);
+                        } else if (cmd == "AT") {
+                            process_command_at(doc["code"]);
+                        }else {
+                            #ifdef DEBUG
+                            printf("ERROR -- Unknown command: %s\n", cmd.c_str());
+                            #endif
+                        }
+                    }
+
+                    // Delete all SMS now we're done with them
+                    modem.send_at("AT+CMGD=,4");
+                }
+            }
+        }
+    }
+}
+
+void process_command_led(uint32_t blinks) {
+    #ifdef DEBUG
+    printf("Received LED command: %i blink(s)\n", blinks);
+    #endif
+
+    if (blinks < 1 || blinks > 100) blinks = 1;
+    blink_led(blinks);
+}
+
+void process_command_num(uint32_t number) {
+    #ifdef DEBUG
+    printf("Received NUM command: %i\n", number);
+    #endif
+
+    // Get the BCD data and use it to populate
+    // the display's four digits
+    if (number < 0 || number > 9999) number = 9999;
+    const uint32_t bcd_val = Utils::bcd(number);
+    display.clear();
+    display.set_number((bcd_val >> 12) & 0x0F, 0, false);
+    display.set_number((bcd_val >> 8) & 0x0F, 1, false);
+    display.set_number((bcd_val >> 4) & 0x0F, 2, false);
+    display.set_number(bcd_val & 0x0F, 3, false);
+    display.draw();
+}
+
+void process_command_tmp() {
+    #ifdef DEBUG
+    printf("Received TMP command\n");
+    #endif
+
+    // Convert the temperature value (a float) to a string value
+    // fixed to two decimal places
+    stringstream stream;
+    stream << std::fixed << std::setprecision(2) << sensor.read_temp();
+    const string temp = stream.str();
+
+    if (modem.send_at("AT+CMGS=\"000\"", ">")) {
+        // '>' is the prompt sent by the modem to signal that
+        // it's waiting to receive the message text.
+        // 'chr(26)' is the code for ctrl-z, which the modem
+        // uses as an end-of-message marker
+        string r = modem.send_at_response(temp + "\x1A");
+
+        // NOTE For some reason TBD, this triggers a +CMS ERROR: 500,
+        //      but the text message gets through
+    }
+
+    // Display the temperature on the LED
+    uint32_t digit = 0;
+    char previous_char = 0;
+    char current_char = 0;
+    for (uint32_t i = 0 ; (i < temp.length() || digit == 3) ; ++i) {
+        current_char = temp[i];
+        if (current_char == '.' && digit > 0) {
+            display.set_alpha(previous_char, digit - 1, true);
+        } else {
+            display.set_alpha(current_char, digit);
+            previous_char = current_char;
+            digit++;
+        }
+    }
+
+    // Add a final 'c' and update the display
+    display.set_alpha('c', 3).draw();
+}
+
+void process_command_at(string cmd) {
+    const string response = modem.send_at_response(cmd);
+    #ifdef DEBUG
+    printf("Response:\n");
+    printf(response.c_str());
+    printf("\n");
+    #endif
+}
+
+void process_command_get() {
+    #ifdef DEBUG
+    printf("Requesting data...\n");
+    #endif
+
+    const string server = "http://jsonplaceholder.typicode.com";
+    const string endpoint_path = "/todos/1";
+    process_request(server, endpoint_path);
+}
+
+void process_command_post(string data) {
+    #ifdef DEBUG
+    printf("Sending data...\n");
+    #endif
+
+    const string server = "<YOUR_SERVER>";
+    const string endpoint_path = "<YOUR_ENDPOINT>";
+    process_request(server, endpoint_path, data);
+}
+
+/*
+    Generic HTTP request handler.
+
+    - Parameters:
+        - server: The target server domain prefixed with the protool, eg.
+                  `https://example.com`.
+        - path:   The target endpoint path.
+        - data:   The data to send.
+ */
+void process_request(string server, string path, string data) {
+    // Attempt to open a data connection
+    bool send_success = false;
+    if (modem.open_data_conn()) {
+        if (data.length() > 0) {
+            send_success = modem.send_data(server, path, data);
+        } else {
+            send_success = modem.get_data(server, path);
+        }
+
+        if (send_success) {
+            // Attempt to decode the received JSON. You may need to adjust
+            // the memory allocation (default: 1024) for large JSON responses
+            DynamicJsonDocument doc(1024);
+            DeserializationError err = deserializeJson(doc, modem.data.c_str());
+
+            if (err == DeserializationError::Ok) {
+                // Make use of the data: extract a value and display it
+                #ifdef DEBUG
+                const string title = doc["title"];
+                printf("DATA RETURNED: %s\n", title.c_str());
+                #endif
+
+                process_command_num(doc["userId"]);
+            } else {
+                #ifdef DEBUG
+                printf("Malformed JSON received: error %s\n%s\n", err.c_str(), modem.data.c_str());
+                #endif
+            }
+        }
+
+        // Close the open connection
+        modem.close_data_conn();
+    }
+}
+
+void process_command_flash(string code) {
+    #ifdef DEBUG
+    printf("Received FLASH command -- sequence: %s\n", code.c_str());
+    #endif
+
+    blink_err_code(code);
+    sleep_ms(1000);
+    led_on();
+}
+
+/*
+ * The entry point
  */
 int main() {
 
@@ -161,169 +394,15 @@ int main() {
 
         // Start to listen for commands
         #ifdef DEBUG
-        printf("Listening...\n");
+        printf("Listening for commands...\n");
         #endif
 
         listen();
     } else {
         // Error! Flash the LED five times, turn it off and exit
-        blink_err_code(ERR_CODE_GEN_FAIL);
+        blink_err_code(ERR_CODE_NO_MODEM);
         gpio_put(PIN_LED, false);
     }
 
     return 0;
-}
-
-/**
-    Umbrella setup routine.
- */
-void setup() {
-    setup_led();
-    setup_i2c();
-    setup_uart();
-    setup_modem_power_pin();
-}
-
-/**
-    Loop and wait for incoming SMS messages, which are parsed and
-    and commands they contain are processed.
-
-    Could be more sophisticated, but it works!
- */
-void listen() {
-    while (true) {
-        // Check for a response from the modem
-        string response = modem.listen(5000);
-        if (response != "ERROR") {
-            vector<string> lines = Utils::split_to_lines(response);
-            for (uint32_t i = 0 ; i < lines.size() ; ++i) {
-                string line = lines[i];
-                if (line.length() == 0) continue;
-
-                #ifdef DEBUG
-                printf("LINE %i: %s\n", i, line.c_str());
-                #endif
-
-                if (line.find("+CMTI") != string::npos) {
-                    // We received an SMS, so get it...
-                    string num = Utils::get_sms_number(line);
-                    string msg = modem.send_at_response("AT+CMGR=" + num);
-
-                    // ...and process it for commands but getting the message body...
-                    string data = Utils::split_msg(msg, 2);
-
-                    // ...decoding the base64 to a JSON string...
-                    string json = base64_decode(data);
-
-                    // ...and parsing the JSON
-                    DynamicJsonDocument doc(128);
-                    DeserializationError err = deserializeJson(doc, json.c_str());
-                    if (err == DeserializationError::Ok) {
-                        string cmd = doc["cmd"];
-                        uint32_t value = doc["val"];
-
-                        // Check for commands
-                        if (cmd == "LED" || cmd == "led") process_command_led(value);
-                        if (cmd == "NUM" || cmd == "num") process_command_num(value);
-                        if (cmd == "TMP" || cmd == "tmp") process_command_tmp();
-                        if (cmd == "GET" || cmd == "get") process_command_get();
-                        if (cmd == "FLASH" || cmd == "flash") process_command_flash(doc["code"]);
-                    }
-
-                    // Delete all SMSs now we're done with them
-                    modem.send_at("AT+CMGD=" + num + ",4");
-                }
-            }
-        }
-    }
-}
-
-void process_command_led(uint32_t blinks) {
-    #ifdef DEBUG
-    printf("Received LED command: %i blinks\n", blinks);
-    #endif
-
-    blink_led(blinks);
-}
-
-void process_command_num(uint32_t number) {
-    #ifdef DEBUG
-    printf("Received NUM command: %i\n", number);
-    #endif
-
-    // Get the BCD data and use it to populate
-    // the display's four digits
-    uint32_t bcd_val = Utils::bcd(number);
-    display.clear();
-    display.set_number((bcd_val >> 12) & 0x0F, 0, false);
-    display.set_number((bcd_val >> 8) & 0x0F, 1, false);
-    display.set_number((bcd_val >> 4) & 0x0F, 2, false);
-    display.set_number(bcd_val & 0x0F, 3, false);
-    display.draw();
-}
-
-void process_command_tmp() {
-    #ifdef DEBUG
-    printf("Received TMP command\n");
-    #endif
-
-    // Convert the temperature value (a float) to a string value
-    // fixed to two decimal places
-    stringstream stream;
-    stream << std::fixed << std::setprecision(2) << sensor.read_temp();
-    string temp = stream.str();
-
-    if (modem.send_at("AT+CMGS=\"000\"", ">")) {
-        // '>' is the prompt sent by the modem to signal that
-        // it's waiting to receive the message text.
-        // 'chr(26)' is the code for ctrl-z, which the modem
-        // uses as an end-of-message marker
-        string r = modem.send_at_response(temp + "\x1A");
-    }
-}
-
-void process_command_get() {
-    #ifdef DEBUG
-    printf("Received GET command\n");
-    #endif
-
-    // Attempt to open a data connection
-    if (modem.open_data_conn()) {
-        // Issue a get request
-        string server = "http://jsonplaceholder.typicode.com";
-        string endpoint_path = "/todos/1";
-
-        if (modem.request_data(server, endpoint_path)) {
-            // Attempt to decode the received JSON. You may need to adjust
-            // the memory allocation (default: 1024) for large JSON responses
-            DynamicJsonDocument doc(1024);
-            DeserializationError err = deserializeJson(doc, modem.data.c_str());
-
-            if (err == DeserializationError::Ok) {
-                // Make use of the data: extract a value and display it
-                #ifdef DEBUG
-                string title = doc["title"];
-                printf("DATA RETURNED:\n%s\n", title.c_str());
-                #endif
-
-                process_command_num(doc["id"]);
-            } else {
-                #ifdef DEBUG
-                printf("Malformed JSON received: error %s\n%s\n", err.c_str(), modem.data.c_str());
-                #endif
-            }
-        } else {
-            #ifdef DEBUG
-            printf("No JSON received -- raw data:\n%s\n", modem.data.c_str());
-            #endif
-        }
-    }
-}
-
-void process_command_flash(string code) {
-    #ifdef DEBUG
-    printf("Received FLASH command: %s blinks\n", code.c_str());
-    #endif
-
-    blink_err_code(code);
 }

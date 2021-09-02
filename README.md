@@ -4,7 +4,7 @@ Assorted projects made while playing with the [Raspberry Pi Pico](https://www.ra
 
 ## Projects
 
-* [Cellular IoT Demo](#cellular-iot-demo)
+* [Cellular IoT Demo](#cellular-iot-demo-101)
 * [Phantom Slayer](#phantom-slayer-102)
 * [Hunt the Wumpus](#hunt-the-wumpus-102)
 * [Sensor](#sensor)
@@ -16,7 +16,7 @@ Assorted projects made while playing with the [Raspberry Pi Pico](https://www.ra
 
 ---
 
-## Cellular IoT Demo
+## Cellular IoT Demo 1.0.1
 
 A sample C++ project bringing the Pico and the [Waveshare Pico SIM7080G Cat-M1 modem board](https://www.waveshare.com/pico-sim7080g-cat-m-nb-iot.htm) together.
 
@@ -58,6 +58,18 @@ curl -X POST https://supersim.twilio.com/v1/SmsCommands \
 ```
 
 You will need shell variables for your Super SIM’s SID, and your Twilio account SID and authorisation token. Different brands of SIM will have different settings, of course.
+
+Alternatively, just punch those values into the `cmd.sh` script that’s included and call it with two arguments. For example"
+
+```bash
+./cmd.sh num 9876
+```
+
+will send (base64 encoded):
+
+```json
+{"cmd": "num", "val": 9876}
+```
 
 Commands available from the device:
 
@@ -195,6 +207,8 @@ Pico project set up script for Z Shell. Requires Pico C SDK pre-installed.
 
 ## Updates
 
+- *3 September 2021*
+    - Complete *Cellular IoT Demo* — add `POST` ops and various improvements.
 - *20 August 2021*
     - Add *Cellular IoT Demo*.
 - *13 August 2021*

@@ -1,7 +1,7 @@
 /*
  * cellular::utils for Raspberry Pi Pico
  *
- * @version     1.0.0
+ * @version     1.0.1
  * @author      smittytone
  * @copyright   2021
  * @licence     MIT
@@ -23,12 +23,12 @@ namespace Utils {
         - ml_str:    The multi-line string
         - separator: The line-separator string
 
-    - Returns: The requested line, otherwise an empty string.
+    - Returns: The lines as a vector.
  */
 vector<string> split_to_lines(string ml_str, string separator) {
     vector<string> result;
     while (ml_str.length()) {
-        int index = ml_str.find(separator);
+        const int index = ml_str.find(separator);
         if (index != string::npos){
             result.push_back(ml_str.substr(0, index));
             ml_str = ml_str.substr(index + separator.length());
@@ -51,7 +51,7 @@ vector<string> split_to_lines(string ml_str, string separator) {
     - Returns: The requested line, otherwise an empty string.
  */
 string split_msg(string ml_str, uint32_t want_line) {
-    vector<string> lines = split_to_lines(ml_str);
+    const vector<string> lines = split_to_lines(ml_str);
     for (uint32_t i = 0 ; i < lines.size() ; ++i) {
         if (i == want_line) return lines[i];
     }
@@ -80,7 +80,7 @@ string get_sms_number(string line) {
     - Returns: The value as a string, otherwise an empty string.
  */
 string get_field_value(string line, uint32_t field_number) {
-    vector<string> result = split_to_lines(line, ",");
+    const vector<string> result = split_to_lines(line, ",");
     if (result.size() > field_number) return result[field_number];
     return "";
 }
@@ -106,6 +106,21 @@ uint32_t bcd(uint32_t base) {
     }
 
     return (base >> 16) & 0xFFFF;
+}
+
+/**
+    Convert a string to uppercase.
+
+    - Parameters:
+        - base: The input string.
+
+    - Returns: An uppercase string.
+ */
+string uppercase(string base) {
+    //string result;
+    std::transform(base.begin(), base.end(), base.begin(), ::toupper);
+    //printf("%s -> %s\n", base.c_str(), result.c_str());
+    return base;
 }
 
 
