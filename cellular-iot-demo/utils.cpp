@@ -28,7 +28,7 @@ namespace Utils {
 vector<string> split_to_lines(string ml_str, string separator) {
     vector<string> result;
     while (ml_str.length()) {
-        int index = ml_str.find(separator);
+        const int index = ml_str.find(separator);
         if (index != string::npos){
             result.push_back(ml_str.substr(0, index));
             ml_str = ml_str.substr(index + separator.length());
@@ -51,7 +51,7 @@ vector<string> split_to_lines(string ml_str, string separator) {
     - Returns: The requested line, otherwise an empty string.
  */
 string split_msg(string ml_str, uint32_t want_line) {
-    vector<string> lines = split_to_lines(ml_str);
+    const vector<string> lines = split_to_lines(ml_str);
     for (uint32_t i = 0 ; i < lines.size() ; ++i) {
         if (i == want_line) return lines[i];
     }
@@ -80,7 +80,7 @@ string get_sms_number(string line) {
     - Returns: The value as a string, otherwise an empty string.
  */
 string get_field_value(string line, uint32_t field_number) {
-    vector<string> result = split_to_lines(line, ",");
+    const vector<string> result = split_to_lines(line, ",");
     if (result.size() > field_number) return result[field_number];
     return "";
 }

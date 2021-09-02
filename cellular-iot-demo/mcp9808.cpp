@@ -40,8 +40,8 @@ bool MCP9808::begin() {
     I2C::read_block(i2c_addr, did_data, 2);
 
     // Bytes to integers
-    uint16_t mid_value = (mid_data[0] << 8) | mid_data[1];
-    uint16_t did_value = (did_data[0] << 8) | did_data[1];
+    const uint16_t mid_value = (mid_data[0] << 8) | mid_data[1];
+    const uint16_t did_value = (did_data[0] << 8) | did_data[1];
 
     // Returns True if the device is initialized, False otherwise.
     return (mid_value == 0x0054 && did_value == 0x0400);
@@ -59,7 +59,7 @@ double MCP9808::read_temp() {
     I2C::read_block(i2c_addr, temp_data, 2);
 
     // Scale and convert to signed value.
-    uint32_t temp_raw = (temp_data[0] << 8) | temp_data[1];
+    const uint32_t temp_raw = (temp_data[0] << 8) | temp_data[1];
     double temp_cel = (temp_raw & 0x0FFF) / 16.0;
     if (temp_raw & 0x1000) temp_cel -= 256.0;
     return temp_cel;

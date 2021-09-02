@@ -106,8 +106,8 @@ void Sim7080G::config_modem() {
 bool Sim7080G::check_network() {
 
     bool is_connected = false;
-    string response = send_at_response("AT+COPS?");
-    string line = Utils::split_msg(response, 1);
+    const string response = send_at_response("AT+COPS?");
+    const string line = Utils::split_msg(response, 1);
     if (line.find("+COPS:") != string::npos) {
         // ',' will be missing if the modem is not connected,
         // ie. there is no operator value in the AT+COPS? response
@@ -148,7 +148,7 @@ void Sim7080G::toggle_module_power() {
                otherwise `false`.
  */
 bool Sim7080G::send_at(string cmd, string back, uint32_t timeout) {
-    string response = send_at_response(cmd, timeout);
+    const string response = send_at_response(cmd, timeout);
     return (response.length() > 0 && response.find(back) != string::npos);
 }
 
@@ -164,7 +164,7 @@ bool Sim7080G::send_at(string cmd, string back, uint32_t timeout) {
 string Sim7080G::send_at_response(string cmd, uint32_t timeout) {
     // Write out the AT command, converting to
     // a C string for the Pico SDK
-    string data_out = cmd + "\r\n";
+    const string data_out = cmd + "\r\n";
     uart_puts(MODEM_UART, data_out.c_str());
 
     // Read the buffer
@@ -187,8 +187,8 @@ string Sim7080G::send_at_response(string cmd, uint32_t timeout) {
 void Sim7080G::read_buffer(uint32_t timeout) {
     // Reset the read pointer
     clear_buffer();
-    uint8_t* buffer_start = &uart_buffer[0];
-    rx_ptr = buffer_start;
+    const uint8_t* buffer_start = &uart_buffer[0];
+    rx_ptr = (uint8_t*)buffer_start;
 
     uint32_t now = time_us_32();
     while ((time_us_32() - now < timeout * 1000) && (rx_ptr - buffer_start < UART_BUFFER_SIZE)) {
@@ -207,7 +207,7 @@ void Sim7080G::read_buffer(uint32_t timeout) {
     Output IO for debugging
  */
 void Sim7080G::debug_output(string msg) {
-    vector<string> lines = Utils::split_to_lines(msg);
+    const vector<string> lines = Utils::split_to_lines(msg);
     for (uint32_t i = 0 ; i < lines.size() ; ++i) {
         printf(">>> %s\n", lines[i].c_str());
     }
@@ -253,9 +253,9 @@ bool Sim7080G::open_data_conn() {
     // Activate a data connection using PDP 0,
     // but first check it's not already open
     bool success = false;
-    string response = send_at_response("AT+CNACT?");
-    string line = Utils::split_msg(response, 1);
-    string status = Utils::get_field_value(line, 1);
+    const string response = send_at_response("AT+CNACT?");
+    const string line = Utils::split_msg(response, 1);
+    const string status = Utils::get_field_value(line, 1);
 
     if (status == "0") {
         // Inactive data connection so start one up
@@ -406,7 +406,7 @@ bool Sim7080G::issue_request(string server, string path, string body, string ver
     bool success = false;
 
     uint32_t code = 1;
-    string verbs[5] = {"GET", "PUT", "POST", "PATCH", "HEAD"};
+    const string verbs[5] = {"GET", "PUT", "POST", "PATCH", "HEAD"};
     verb = Utils::uppercase(verb);
     for (uint32_t i = 0 ; i < 5 ; ++i) {
         if (verb == verbs[i]) {
@@ -438,13 +438,13 @@ bool Sim7080G::issue_request(string server, string path, string body, string ver
         }
 
         // ...and process the response
-        vector<string> lines = Utils::split_to_lines(response);
+        const vector<string> lines = Utils::split_to_lines(response);
         for (uint32_t i = 0 ; i < lines.size() ; ++i) {
-            string line = lines[i];
+            const string line = lines[i];
             if (line.length() == 0) continue;
             if (line.find("+SHREQ:") != string::npos) {
-                string status_code = Utils::get_field_value(line, 1);
-                string data_length = Utils::get_field_value(line, 2);
+                const string status_code = Utils::get_field_value(line, 1);
+                const string data_length = Utils::get_field_value(line, 2);
 
                 // Break out if we get a bad HTTP status code
                 if (std::stoi(status_code) > 299) {

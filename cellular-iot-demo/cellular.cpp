@@ -150,9 +150,9 @@ void listen() {
         // Check for a response from the modem
         string response = modem.listen(5000);
         if (response != "ERROR") {
-            vector<string> lines = Utils::split_to_lines(response);
+            const vector<string> lines = Utils::split_to_lines(response);
             for (uint32_t i = 0 ; i < lines.size() ; ++i) {
-                string line = lines[i];
+                const string line = lines[i];
                 if (line.length() == 0) continue;
 
                 #ifdef DEBUG
@@ -161,20 +161,20 @@ void listen() {
 
                 if (line.find("+CMTI") != string::npos) {
                     // We received an SMS, so get it...
-                    string num = Utils::get_sms_number(line);
-                    string msg = modem.send_at_response("AT+CMGR=" + num);
+                    const string num = Utils::get_sms_number(line);
+                    const string msg = modem.send_at_response("AT+CMGR=" + num);
 
                     // ...and process it for commands but getting the message body...
-                    string data = Utils::split_msg(msg, 2);
+                    const string data = Utils::split_msg(msg, 2);
 
                     // ...decoding the base64 to a JSON string...
-                    string json = base64_decode(data);
+                    const string json = base64_decode(data);
 
                     // ...and parsing the JSON
                     DynamicJsonDocument doc(128);
                     DeserializationError err = deserializeJson(doc, json.c_str());
                     if (err == DeserializationError::Ok) {
-                        string cmd = Utils::uppercase(doc["cmd"]);
+                        const string cmd = Utils::uppercase(doc["cmd"]);
 
                         // Check for commands
                         if (cmd == "LED") {
@@ -223,7 +223,7 @@ void process_command_num(uint32_t number) {
     // Get the BCD data and use it to populate
     // the display's four digits
     if (number < 0 || number > 9999) number = 9999;
-    uint32_t bcd_val = Utils::bcd(number);
+    const uint32_t bcd_val = Utils::bcd(number);
     display.clear();
     display.set_number((bcd_val >> 12) & 0x0F, 0, false);
     display.set_number((bcd_val >> 8) & 0x0F, 1, false);
@@ -241,7 +241,7 @@ void process_command_tmp() {
     // fixed to two decimal places
     stringstream stream;
     stream << std::fixed << std::setprecision(2) << sensor.read_temp();
-    string temp = stream.str();
+    const string temp = stream.str();
 
     if (modem.send_at("AT+CMGS=\"000\"", ">")) {
         // '>' is the prompt sent by the modem to signal that
@@ -274,7 +274,7 @@ void process_command_tmp() {
 }
 
 void process_command_at(string cmd) {
-    string response = modem.send_at_response(cmd);
+    const string response = modem.send_at_response(cmd);
     #ifdef DEBUG
     printf("Response:\n");
     printf(response.c_str());
@@ -287,8 +287,8 @@ void process_command_get() {
     printf("Requesting data...\n");
     #endif
 
-    string server = "http://jsonplaceholder.typicode.com";
-    string endpoint_path = "/todos/1";
+    const string server = "http://jsonplaceholder.typicode.com";
+    const string endpoint_path = "/todos/1";
     process_request(server, endpoint_path);
 }
 
@@ -297,8 +297,8 @@ void process_command_post(string data) {
     printf("Sending data...\n");
     #endif
 
-    string server = "http://jsonplaceholder.typicode.com";
-    string endpoint_path = "/todos/1";
+    const string server = "http://jsonplaceholder.typicode.com";
+    const string endpoint_path = "/todos/1";
     process_request(server, endpoint_path, data);
 }
 
@@ -330,7 +330,7 @@ void process_request(string server, string path, string data) {
             if (err == DeserializationError::Ok) {
                 // Make use of the data: extract a value and display it
                 #ifdef DEBUG
-                string title = doc["title"];
+                const string title = doc["title"];
                 printf("DATA RETURNED: %s\n", title.c_str());
                 #endif
 
