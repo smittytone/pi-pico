@@ -7,19 +7,36 @@ project(lora
 
 add_definitions(-DDEBUG)
 
-add_executable(lora
+pico_sdk_init()
+
+add_executable(lora_sender
                base64.cpp
-               main.cpp
+               led_utils.cpp
+               main_sender.cpp
                reg_bits.cpp
                rfm9x.cpp
                spi_utils.cpp)
 
-pico_sdk_init()
-pico_enable_stdio_usb(lora 1)
-pico_enable_stdio_uart(lora 0)
-pico_add_extra_outputs(lora)
+pico_enable_stdio_usb(lora_sender 1)
+pico_add_extra_outputs(lora_sender)
 
-target_link_libraries(lora
+target_link_libraries(lora_sender
+                      pico_stdlib
+                      hardware_gpio
+                      hardware_spi)
+
+add_executable(lora_receiver
+               base64.cpp
+               led_utils.cpp
+               main_receiver.cpp
+               reg_bits.cpp
+               rfm9x.cpp
+               spi_utils.cpp)
+
+pico_enable_stdio_usb(lora_receiver 1)
+pico_add_extra_outputs(lora_receiver)
+
+target_link_libraries(lora_receiver
                       pico_stdlib
                       hardware_gpio
                       hardware_spi)

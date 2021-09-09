@@ -27,25 +27,20 @@
 #include "reg_bits.h"
 #include "rfm9x.h"
 #include "base64.h"
+#include "led_utils.h"
 
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+
 /*
  * Usual header code here
  */
 
 #define PIN_RESET               15
-#define PIN_LED                 25
 #define SEND_INTERVAL_MS        30000
-
-
-void            setup_led();
-void            led_on();
-void            led_off();
-void            blink_led(uint32_t blinks);
 
 
 #ifdef __cplusplus

@@ -15,6 +15,7 @@ uint8_t cmd_buffer[4] = {0,0,0,0};
 
 namespace SPI {
 
+
 void setup() {
     spi_init(SPI_PORT, SPI_BAUDRATE);
     gpio_set_function(MISO_RX_GPIO, GPIO_FUNC_SPI);
@@ -26,7 +27,6 @@ void setup() {
     gpio_pull_up(SCLK_GPIO);
     gpio_pull_up(CSS_GPIO);
 }
-
 
 void read_into(uint8_t address, uint8_t* buffer, uint32_t length) {
     // Clear top bit to indicate a read
