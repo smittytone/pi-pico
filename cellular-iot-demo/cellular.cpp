@@ -154,11 +154,6 @@ void listen() {
             for (uint32_t i = 0 ; i < lines.size() ; ++i) {
                 const string line = lines[i];
                 if (line.length() == 0) continue;
-
-                #ifdef DEBUG
-                printf("LINE %i: %s\n", i, line.c_str());
-                #endif
-
                 if (line.find("+CMTI") != string::npos) {
                     // We received an SMS, so get it...
                     const string num = Utils::get_sms_number(line);
@@ -248,7 +243,7 @@ void process_command_tmp() {
         // it's waiting to receive the message text.
         // 'chr(26)' is the code for ctrl-z, which the modem
         // uses as an end-of-message marker
-        string r = modem.send_at_response(temp + "\x1A");
+        string r = modem.send_at_response("\r" + temp + "\x1A");
 
         // NOTE For some reason TBD, this triggers a +CMS ERROR: 500,
         //      but the text message gets through
