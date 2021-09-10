@@ -18,6 +18,7 @@ add_executable(lora_sender
                spi_utils.cpp)
 
 pico_enable_stdio_usb(lora_sender 1)
+pico_enable_stdio_uart(lora_sender 0)
 pico_add_extra_outputs(lora_sender)
 
 target_link_libraries(lora_sender
@@ -34,6 +35,7 @@ add_executable(lora_receiver
                spi_utils.cpp)
 
 pico_enable_stdio_usb(lora_receiver 1)
+pico_enable_stdio_uart(lora_receiver 0)
 pico_add_extra_outputs(lora_receiver)
 
 target_link_libraries(lora_receiver

@@ -13,28 +13,26 @@
 int main() {
     #ifdef DEBUG
     stdio_init_all();
+    sleep_ms(5000);
     #endif
-
-    // Setup SPI
-    SPI::setup();
 
     // Setup the LED
     LED::setup();
+
+    // Setup SPI
+    SPI::setup();
 
     // Initialise the radio
     RFM9x radio = RFM9x(PIN_RESET, 433.0);
 
     // Check if we are good to proceed
     if (radio.state) {
+        #ifdef DEBUG
+        printf("Radio good\n");
+        #endif
+
         // Radio is good to use, apparently
-        radio.enable_crc(true);
-
-        // Set the sender node number
-        radio.node = 0xFA;
-
-        // Set the receiver node number
-        radio.destination = 0xFE;
-
+        LED::on();
         uint32_t counter = 1;
 
         while (true) {
@@ -42,21 +40,32 @@ int main() {
             msg += std::to_string(counter);
 
             #ifdef DEBUG
-            printf(msg.c_str());
+            printf("MESSAGE: %s\n",msg.c_str());
             #endif
 
             msg = base64_encode(msg);
 
             #ifdef DEBUG
-            printf(msg.c_str());
+            printf("ENCODED: %s\n",msg.c_str());
             #endif
 
-            radio.send((uint8_t*)msg.c_str(), msg.length() - 1);
-            counter++;
+            bool success = radio.send((uint8_t*)msg.c_str(), msg.length() - 1);
+
+            if (success) {
+                counter++;
+            } else {
+                printf("ERROR -- Send timeout\n");
+            }
+
             sleep_ms(SEND_INTERVAL_MS);
         }
     } else {
         // ERROR -- blink the LED five times
+        #ifdef DEBUG
+        std::string err = std::to_string(radio.boot_err);
+        printf("Radio bad: %s\n", err.c_str());
+        #endif
+
         LED::blink(5);
         LED::off();
     }

@@ -2,7 +2,7 @@
  * lora::rfm9x for Raspberry Pi Pico
  *
  * Adapted from
- * https://github.com/adafruit/Adafruit_CircuitPython_RFM9x/blob/4490961b28a129d2f6435c73d2bd65d2b042224c/adafruit_rfm9x.py
+ * https://github.com/adafruit/Adafruit_CircuitPython_RFM9x/blob/main/adafruit_rfm9x.py
  *
  * @version     1.0.0
  * @author      smittytone
@@ -93,6 +93,10 @@ using std::string;
 #define TX_MODE                                         3
 #define FS_RX_MODE                                      4
 #define RX_MODE                                         5
+#define RX_SINGLE_MODE                                  6
+#define CAD_MODE                                        7
+
+#define HEADER_LENGTH                                   4
 
 
 class RFM9x {
@@ -103,7 +107,7 @@ class RFM9x {
 
         // Methods
         void            reset();
-        void            idle();
+        void            standby();
         void            sleep();
 
         void            enable_crc(bool state);
@@ -112,8 +116,8 @@ class RFM9x {
         double          get_rssi();
         double          get_snr();
 
-        uint32_t        tx_done();
-        uint32_t        rx_done();
+        bool            tx_done();
+        bool            rx_done();
         uint32_t        crc_error();
 
         bool            send(uint8_t* data, uint32_t length, bool keep_listening = true);
@@ -121,24 +125,25 @@ class RFM9x {
         void            transmit();
 
         // Properties
-        // Properties with initial values
-        bool            high_power = true;
-        bool            state = false;
-        double          last_rssi = 0.0;
-        double          last_snr = 0.0;
-        double          ack_wait = 0.5;
-        double          xmit_timeout = 2.0;
-        uint32_t        ack_retries = 5;
-        double          ack_delay = 0.0;
-        uint64_t        sequence_number = 0;
-        uint8_t         node = RH_BROADCAST_ADDRESS;
-        uint8_t         destination = RH_BROADCAST_ADDRESS;
+        bool            high_power          = true;
+        double          last_rssi           = 0.0;
+        double          last_snr            = 0.0;
+        double          ack_wait            = 0.5;
+        double          xmit_timeout        = 2.0;
+        uint32_t        ack_retries         = 5;
+        double          ack_delay           = 0.0;
+        uint64_t        sequence_number     = 0;
+        uint8_t         node                = RH_BROADCAST_ADDRESS;
+        uint8_t         destination         = RH_BROADCAST_ADDRESS;
         // Contains seq count for reliable datagram mode
-        uint64_t        identifier = 0;
-        // Identifies ack/reetry packet for reliable datagram mode
-        uint8_t         flags = 0;
-        uint32_t        crc_error_count = 0;
-
+        uint64_t        identifier          = 0;
+        // Identifies ack/retry packet for reliable datagram mode
+        uint8_t         flags               = 0;
+        uint32_t        crc_error_count     = 0;
+        // Indicates whether the radio booted successfully
+        bool            state               = false;
+        // Used for debugging
+        uint32_t        boot_err            = 0;
 
 
     private:
@@ -161,11 +166,12 @@ class RFM9x {
         void            set_signal_bw(uint32_t value);
 
         // Properties
-        uint32_t        bw_bins[9] = {7800, 10400, 15600, 20800, 31250, 41700, 62500, 125000, 250000};
-        uint8_t         seen_ids[256];
+        uint32_t        bws[9] = {7800, 10400, 15600, 20800, 31250, 41700, 62500, 125000, 250000};
+        uint8_t         ids[256];
         uint8_t         rst_pin;
 
-        // Proprties that are REG_BIT instances
+        // Proprties that are REG_BIT instances, ie.
+        // stored on the SX127 not by the RFM9x instance
         REG_BITS        op_mode = REG_BITS(RH_RF95_REG_01_OP_MODE, 0, 3);
         REG_BITS        low_freq_mode = REG_BITS(RH_RF95_REG_01_OP_MODE, 3, 1);
         REG_BITS        modulation_type = REG_BITS(RH_RF95_REG_01_OP_MODE, 5, 2);

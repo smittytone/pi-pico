@@ -23,11 +23,11 @@
 #include "hardware/gpio.h"
 #include "hardware/spi.h"
 
+#include "base64.h"
+#include "led_utils.h"
 #include "spi_utils.h"
 #include "reg_bits.h"
 #include "rfm9x.h"
-#include "base64.h"
-#include "led_utils.h"
 
 
 #ifdef __cplusplus

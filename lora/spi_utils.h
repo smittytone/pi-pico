@@ -27,12 +27,13 @@
  */
 namespace SPI {
     void            setup();
+    uint8_t         read_byte(uint8_t address);
     void            read_into(uint8_t address, uint8_t* buffer, uint32_t length);
-    void            write_from(uint8_t address, uint8_t* buffer, uint32_t length);
-    uint8_t         read_u8(uint8_t address);
-    uint32_t        write_u8(uint8_t address, uint8_t byte);
     uint32_t        read(uint8_t* buffer, uint32_t number_of_bytes);
+    void            write_byte(uint8_t address, uint8_t byte);
+    uint32_t        write_from(uint8_t address, uint8_t* buffer, uint32_t length);
     uint32_t        write(uint8_t* buffer, uint32_t number_of_bytes);
+    void            cs_select(bool state = true);
 }
 
 
