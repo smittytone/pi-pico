@@ -49,7 +49,7 @@ int main() {
             printf("ENCODED: %s\n",msg.c_str());
             #endif
 
-            bool success = radio.send((uint8_t*)msg.c_str(), msg.length() - 1);
+            bool success = radio.send((uint8_t*)msg.c_str(), msg.length(), false);
 
             if (success) {
                 counter++;
