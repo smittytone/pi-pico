@@ -28,11 +28,21 @@ A sample C++ project bringing the Pico and the [Waveshare Pico SIM7080G Cat-M1 m
 * Wires.
 * One large, or two standard-size, breadboards.
 
-### Build
+### Hardware
 
 This is the circuit layout:
 
 ![Cellular IoT Sample circuit layout](images/cellular.png)
+
+### Build the Code
+
+* Use Visual Studio Code with the [CMake](https://marketplace.visualstudio.com/items?itemName=twxs.cmake) and [CMakeTools](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools) extensions:
+    1. Click **No active kit** to select your compiler, `GCC 10.3.1 arm-none-eabi`:<br />![Select a kit in VSCode](images/kits.png)
+    1. Click **Build**:<br />![The VSCode Toolbar](images/vscode.png)
+* From the command line:
+    1. `cd <YOUR_GIT_DIRECTORY>/pi-pico/cellular-iot-demo`
+    1. `cmake -S . -B build/`
+    1. `cmake --build build --clean-first`
 
 ### Usage
 
@@ -103,7 +113,7 @@ A retro-style 3D arcade game written in C. For more details, [see this page](htt
 * Wires.
 * Two standard breadboards.
 
-### Build
+### Hardware
 
 ![Phantom Slayer circuit layout](images/phantoms.png)
 
@@ -116,6 +126,16 @@ Build from source code, or copy `phantoms.uf2` to your Pico. Please check the SH
 ```
 d9e4e2d28b8a5b983e1551d114cd4ae6d668858b43a9df6c92f946327a96f146
 ```
+
+### Build the Code
+
+* Use Visual Studio Code with the [CMake](https://marketplace.visualstudio.com/items?itemName=twxs.cmake) and [CMakeTools](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools) extensions:
+    1. Click **No active kit** to select your compiler, `GCC 10.3.1 arm-none-eabi`:<br />![Select a kit in VSCode](images/kits.png)
+    1. Click **Build**:<br />![The VSCode Toolbar](images/vscode.png)
+* From the command line:
+    1. `cd <YOUR_GIT_DIRECTORY>/pi-pico/phantoms`
+    1. `cmake -S . -B build/`
+    1. `cmake --build build --clean-first`
 
 ### The Game
 
@@ -144,7 +164,7 @@ A sample C project to build a fun game.
 * Wires.
 * Two standard breadboards.
 
-### Build
+### Hardware
 
 ![Hunt the Wumpus circuit layout](images/wumpus.png)
 
@@ -158,6 +178,16 @@ Build from source code, or copy `wumpus.uf2` to your Pico. Please check the SHA 
 ```
 65957c643df25f89ddd3f70f16131c7037e582fa04743c35b7af78b90eb0a0f5
 ```
+
+### Build the Code
+
+* Use Visual Studio Code with the [CMake](https://marketplace.visualstudio.com/items?itemName=twxs.cmake) and [CMakeTools](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools) extensions:
+    1. Click **No active kit** to select your compiler, `GCC 10.3.1 arm-none-eabi`:<br />![Select a kit in VSCode](images/kits.png)
+    1. Click **Build**:<br />![The VSCode Toolbar](images/vscode.png)
+* From the command line:
+    1. `cd <YOUR_GIT_DIRECTORY>/pi-pico/wumpus`
+    1. `cmake -S . -B build/`
+    1. `cmake --build build --clean-first`
 
 ### The Game
 
