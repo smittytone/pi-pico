@@ -4,7 +4,7 @@ Assorted projects made while playing with the [Raspberry Pi Pico](https://www.ra
 
 ## Projects
 
-* [Cellular IoT Demo](#cellular-iot-demo-101)
+* [Cellular IoT Demo](#cellular-iot-demo-102)
 * [Phantom Slayer](#phantom-slayer-102)
 * [Hunt the Wumpus](#hunt-the-wumpus-102)
 * [Sensor](#sensor)
@@ -16,7 +16,7 @@ Assorted projects made while playing with the [Raspberry Pi Pico](https://www.ra
 
 ---
 
-## Cellular IoT Demo 1.0.1
+## Cellular IoT Demo 1.0.2
 
 A sample C++ project bringing the Pico and the [Waveshare Pico SIM7080G Cat-M1 modem board](https://www.waveshare.com/pico-sim7080g-cat-m-nb-iot.htm) together.
 
@@ -86,10 +86,12 @@ Commands available from the device:
 * `led` — flash the Pico LED. Requires a `val` object with the number of flashes as an integer.
 * `num` — write a value on the display. Requires a `val` object with the number (between 0 and 9999) as an integer.
 * `tmp` — Send back a Celsius temperature reading. Requires your Super SIM’s fleet to be configured with an SMS Commands webhook, or equivalent for other brands of SIM. Super SIM device-originated SMS Commands are sent to the number 000, so you will need to alter that value in the code (in `modem.cpp`). It also requires server-side code to process or display the received data.
+* `tmpcon` - Continuous temperature readout on the LED, but not data is posted elswhere.
 * `flash` — flash a code on the LED. Requires a `code` object with a string pattern, eg. `LBSBL` where:
     * `L` — Long on (500ms)
     * `S` — Short on (250ms)
     * `B` - Short off (250ms)
+* `rssi` - Continuous RSSI readout on the LED.
 
 ### Credits
 
@@ -237,6 +239,8 @@ Pico project set up script for Z Shell. Requires Pico C SDK pre-installed.
 
 ## Updates
 
+- *xx September 2021*
+    - Add `tmpcon` and `rssi` commands to *Cellular IoT Demo*.
 - *3 September 2021*
     - Complete *Cellular IoT Demo* — add `POST` ops and various improvements.
 - *20 August 2021*

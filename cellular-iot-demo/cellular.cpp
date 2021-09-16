@@ -146,6 +146,8 @@ void setup() {
     Could be more sophisticated, but it works!
  */
 void listen() {
+    bool do_monitor_tmp = false;
+    bool do_monitor_rssi = false;
     while (true) {
         // Check for a response from the modem
         string response = modem.listen(5000);
@@ -177,7 +179,7 @@ void listen() {
                         } else if (cmd == "NUM") {
                             process_command_num(doc["val"]);
                         } else if (cmd == "TMP") {
-                            process_command_tmp();
+                            process_command_tmp(true);
                         } else if (cmd == "GET") {
                             process_command_get();
                         } else if (cmd == "POST") {
@@ -186,7 +188,13 @@ void listen() {
                             process_command_flash(doc["code"]);
                         } else if (cmd == "AT") {
                             process_command_at(doc["code"]);
-                        }else {
+                        } else if (cmd == "TMPCON") {
+                            do_monitor_tmp = !do_monitor_tmp;
+                            if (do_monitor_tmp && do_monitor_rssi) do_monitor_rssi = false;
+                        } else if (cmd == "RSSI") {
+                            do_monitor_rssi = !do_monitor_rssi;
+                            if (do_monitor_rssi && do_monitor_tmp) do_monitor_tmp = false;
+                        } else {
                             #ifdef DEBUG
                             printf("ERROR -- Unknown command: %s\n", cmd.c_str());
                             #endif
@@ -198,6 +206,9 @@ void listen() {
                 }
             }
         }
+
+        if (do_monitor_tmp) process_command_tmp(false);
+        if (do_monitor_rssi) process_command_rssi();
     }
 }
 
@@ -227,26 +238,28 @@ void process_command_num(uint32_t number) {
     display.draw();
 }
 
-void process_command_tmp() {
-    #ifdef DEBUG
-    printf("Received TMP command\n");
-    #endif
-
+void process_command_tmp(bool do_send) {
     // Convert the temperature value (a float) to a string value
     // fixed to two decimal places
     stringstream stream;
     stream << std::fixed << std::setprecision(2) << sensor.read_temp();
     const string temp = stream.str();
 
-    if (modem.send_at("AT+CMGS=\"000\"", ">")) {
-        // '>' is the prompt sent by the modem to signal that
-        // it's waiting to receive the message text.
-        // 'chr(26)' is the code for ctrl-z, which the modem
-        // uses as an end-of-message marker
-        string r = modem.send_at_response("\r" + temp + "\x1A");
+    if (do_send) {
+        #ifdef DEBUG
+        printf("Received TMP command\n");
+        #endif
 
-        // NOTE For some reason TBD, this triggers a +CMS ERROR: 500,
-        //      but the text message gets through
+        if (modem.send_at("AT+CMGS=\"000\"", ">")) {
+            // '>' is the prompt sent by the modem to signal that
+            // it's waiting to receive the message text.
+            // 'chr(26)' is the code for ctrl-z, which the modem
+            // uses as an end-of-message marker
+            string r = modem.send_at_response(temp + "\x1A");
+
+            // NOTE For some reason TBD, this triggers a +CMS ERROR: 500,
+            //      but the text message gets through
+        }
     }
 
     // Display the temperature on the LED
@@ -266,6 +279,45 @@ void process_command_tmp() {
 
     // Add a final 'c' and update the display
     display.set_alpha('c', 3).draw();
+}
+
+void process_command_rssi() {
+    // Get the current RSSI and separate out the RSSI value
+    string response = modem.send_at_response("AT+CSQ");
+    vector<string> parts = Utils::split_to_lines(response, ": ");
+    if (parts.size() > 1) {
+        vector<string> values = Utils::split_to_lines(parts[1], ",");
+        if (values.size() > 1) {
+            // Convert to integer
+            uint32_t rssi = std::stoi(values[0]);
+
+            // Check for the 'unknown RSSI' value -- just show a ?
+            if (rssi == 99) {
+                display.clear().set_alpha('?', 0).set_alpha('?', 1).set_alpha('?', 2).set_alpha('?', 3).draw();
+                return;
+            }
+
+            // Convert the RSSI from an internal value to dBm
+            // NOTE Internal values 0, 1 and 31 are fixed dbm values,
+            //      but 2-29 are scale values
+            switch(rssi) {
+                case 0:
+                    process_command_num(115);
+                    break;
+                case 1:
+                    process_command_num(111);
+                    break;
+                case 31:
+                    process_command_num(56);
+                    break;
+                default:
+                    process_command_num(((28 - rssi) * 2) + 54);
+            }
+
+            // Add a minus sign
+            display.set_glyph(0x40, 0).draw();
+        }
+    }
 }
 
 void process_command_at(string cmd) {
