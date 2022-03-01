@@ -1,7 +1,7 @@
 /*
  * cellular::utils for Raspberry Pi Pico
  *
- * @version     1.0.1
+ * @version     1.0.2
  * @author      smittytone
  * @copyright   2021
  * @licence     MIT

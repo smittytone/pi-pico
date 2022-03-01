@@ -1,7 +1,7 @@
 /*
  * cellular::i2c_utils for Raspberry Pi Pico
  *
- * @version     1.0.1
+ * @version     1.0.2
  * @author      smittytone
  * @copyright   2021
  * @licence     MIT
@@ -13,9 +13,9 @@
 namespace I2C {
 
 /**
-    Setup the I2C block.
-
-    Takes values from #defines set in i2c_utils.h
+ * @brief Set up the I2C block.
+ *
+ * Takes values from #defines set in `i2c_utils.h`
  */
 void setup() {
     i2c_init(I2C_PORT, I2C_FREQUENCY);
@@ -26,21 +26,32 @@ void setup() {
 }
 
 /**
-    Convenience function to write a single byte to the bus
+ * @brief Convenience function to write a single byte to the bus.
+ *
+ * @param address: The I2C address of the device to write to.
+ * @param byte:    The byte to send.
  */
 void write_byte(uint8_t address, uint8_t byte) {
     i2c_write_blocking(I2C_PORT, address, &byte, 1, false);
 }
 
 /**
-    Convenience function to write a 'count' bytes to the bus
+ * @brief Convenience function to write bytes to the bus.
+ *
+ * @param address: The I2C address of the device to write to.
+ * @param data:    Pointer to the bytes to send.
+ * @param count:   The number of bytes to send.
  */
 void write_block(uint8_t address, uint8_t *data, uint8_t count) {
     i2c_write_blocking(I2C_PORT, address, data, count, false);
 }
 
 /**
-    Convenience function to read 'count' bytes from the bus
+ * @brief Convenience function to read bytes from the bus.
+ *
+ * @param address: The I2C address of the device to read from.
+ * @param data:    Pointer to byte storage.
+ * @param count:   The number of bytes to read.
  */
 void read_block(uint8_t address, uint8_t *data, uint8_t count) {
     i2c_read_blocking(I2C_PORT, address, data, count, false);

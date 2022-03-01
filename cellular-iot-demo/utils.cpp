@@ -1,7 +1,7 @@
 /*
  * cellular::utils for Raspberry Pi Pico
  *
- * @version     1.0.1
+ * @version     1.0.2
  * @author      smittytone
  * @copyright   2021
  * @licence     MIT
@@ -16,14 +16,13 @@ using std::string;
 namespace Utils {
 
 /**
-    Convert a multi-line string into an array of lines,
-    split at the specified separator string, eg. `\r\n`.
-
-    - Parameters:
-        - ml_str:    The multi-line string
-        - separator: The line-separator string
-
-    - Returns: The lines as a vector.
+ * @brief Convert a multi-line string into an array of lines,
+ *        split at the specified separator string, eg. `\r\n`.
+ *
+ * @param ml_str:    The multi-line string.
+ * @param separator: The line-separator string.
+ *
+ * @retval The lines as a vector.
  */
 vector<string> split_to_lines(string ml_str, string separator) {
     vector<string> result;
@@ -41,14 +40,14 @@ vector<string> split_to_lines(string ml_str, string separator) {
     return result;
 }
 
+
 /**
-    Get a specific line from a multi-line string.
-
-    - Parameters:
-        - ml_str:    The multi-line string
-        - want_line: The required line (0 indexed).
-
-    - Returns: The requested line, otherwise an empty string.
+ * @brief Get a specific line from a multi-line string.
+ *
+ * @param ml_str:    The multi-line string.
+ * @param want_line: The required line (0 indexed).
+ *
+ * @retval The requested line, otherwise an empty string.
  */
 string split_msg(string ml_str, uint32_t want_line) {
     const vector<string> lines = split_to_lines(ml_str);
@@ -58,26 +57,26 @@ string split_msg(string ml_str, uint32_t want_line) {
     return "";
 }
 
+
 /**
-    Get a number from the end of a +CMTI line from the modem.
-
-    - Parameters:
-        - line: The target line.
-
-    - Returns: A pointer to the start of the number, or null
+ * @brief Get a number from the end of a +CMTI line from the modem.
+ *
+ * @param line: The target line.
+ *
+ * @retval A pointer to the start of the number, or `null`.
  */
 string get_sms_number(string line) {
     return get_field_value(line, 1);
 }
 
+
 /**
-    Get a value from a sequence of comma-separated values.
-
-    - Parameters:
-        - line:         The source line.
-        - field_number: The request value.
-
-    - Returns: The value as a string, otherwise an empty string.
+ * @brief A value from a sequence of comma-separated values.
+ *
+ * @param line:         The source line.
+ * @param field_number: The request value.
+ *
+ * @retval The value as a string, otherwise an empty string.
  */
 string get_field_value(string line, uint32_t field_number) {
     const vector<string> result = split_to_lines(line, ",");
@@ -85,14 +84,14 @@ string get_field_value(string line, uint32_t field_number) {
     return "";
 }
 
+
 /**
-    Convert a 16-bit int (to cover decimal range 0-9999) to
-    its BCD equivalent.
-
-    - Parameters:
-        - base: The input integer.
-
-    - Returns: The BCD encoding of the input.
+ * @brief Convert a 16-bit int (to cover decimal range 0-9999) to
+ *        its BCD equivalent.
+ *
+ * @param base: The input integer.
+ *
+ * @retval The BCD encoding of the input.
  */
 uint32_t bcd(uint32_t base) {
     if (base > 9999) base = 9999;
@@ -108,13 +107,13 @@ uint32_t bcd(uint32_t base) {
     return (base >> 16) & 0xFFFF;
 }
 
+
 /**
-    Convert a string to uppercase.
-
-    - Parameters:
-        - base: The input string.
-
-    - Returns: An uppercase string.
+ * @brief Convert a string to uppercase.
+ *
+ * @param base: The input string.
+ *
+ * @retval An uppercase string.
  */
 string uppercase(string base) {
     //string result;

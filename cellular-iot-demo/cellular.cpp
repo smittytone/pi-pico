@@ -1,7 +1,7 @@
 /*
  * cellular::main for Raspberry Pi Pico
  *
- * @version     1.0.1
+ * @version     1.0.2
  * @author      smittytone
  * @copyright   2021
  * @licence     MIT
@@ -22,8 +22,12 @@ MCP9808 sensor = MCP9808();
 HT16K33_Segment display = HT16K33_Segment();
 
 
+/*
+ * UART FUNCTIONS
+ */
+
 /**
-    UART FUNCTIONS
+ * @brief Initialise a UART bus.
  */
 void setup_uart() {
     // Initialise UART 0
@@ -41,26 +45,46 @@ void setup_uart() {
 /*
  * LED FUNCTIONS
  */
+
+/**
+ * @brief Configure the on-board LED.
+ */
 void setup_led() {
     gpio_init(PIN_LED);
     gpio_set_dir(PIN_LED, GPIO_OUT);
     led_off();
 }
 
-void led_on() {
-    gpio_put(PIN_LED, true);
-}
-
-void led_off() {
-    gpio_put(PIN_LED, false);
-}
 
 /**
-    Blink the Pico LED a specified number of times, leaving it
-    on at the end.
+ * @brief Turn the on-board LED on.
+ */
+void led_on() {
+    led_set();
+}
 
-    - Parameters:
-        - blinks: The number of flashes.
+
+/**
+ * @brief Turn the on-board LED off.
+ */
+void led_off() {
+    led_set(false);
+}
+
+
+/**
+ * @brief Set the on-board LED's state.
+ */
+void led_set(bool state) {
+    gpio_put(PICO_DEFAULT_LED_PIN, state);
+}
+
+
+/**
+ * @brief Blink the Pico LED a specified number of times, leaving it
+ *        on at the end.
+ *
+ * @param blinks: The number of flashes.
  */
 void blink_led(uint32_t blinks) {
     for (uint32_t i = 0 ; i < blinks ; ++i) {
@@ -71,13 +95,12 @@ void blink_led(uint32_t blinks) {
     }
 }
 
+
 /**
-    Flash a error code sequence on the LED.
-
-    eg. "LBSBS" - Long, Blank, Short, Blank, Short.
-
-    - Parameters:
-        - code: Sequence of L, S or B.
+ * @brief Flash a error code sequence on the LED.
+ *        eg. "LBSBS" - Long, Blank, Short, Blank, Short.
+ *
+ * @param code: Sequence of L, S or B.
  */
 void blink_err_code(string code) {
     for (uint32_t i = 0 ; i < code.length() ; ++i) {
@@ -106,6 +129,10 @@ void blink_err_code(string code) {
 /*
  * GPIO FUNCTIONS
  */
+
+/**
+ * @brief Initialise the modem power pin.
+ */
 void setup_modem_power_pin() {
     gpio_init(PIN_MODEM_PWR);
     gpio_set_dir(PIN_MODEM_PWR, GPIO_OUT);
@@ -116,11 +143,15 @@ void setup_modem_power_pin() {
 /*
  * I2C FUNCTIONS
  */
+
+/**
+ * @brief Initialise the modem power pin.
+ */
 void setup_i2c() {
     // Initialize the I2C bus for the display and sensor
     I2C::setup();
 
-    // Initialize the display
+    // Initialize the HT16K33 display
     display.init();
 }
 
@@ -130,7 +161,7 @@ void setup_i2c() {
  */
 
 /**
-    Umbrella setup routine.
+ * @brief Umbrella setup routine.
  */
 void setup() {
     setup_led();
@@ -139,11 +170,12 @@ void setup() {
     setup_modem_power_pin();
 }
 
-/**
-    Loop and wait for incoming SMS messages, which are parsed and
-    and commands they contain are processed.
 
-    Could be more sophisticated, but it works!
+/**
+ * @brief Loop and wait for incoming SMS messages, which are parsed and
+ *        and commands they contain are processed.
+ *
+ *        Could be more sophisticated, but it works!
  */
 void listen() {
     bool do_monitor_tmp = false;
@@ -212,6 +244,12 @@ void listen() {
     }
 }
 
+
+/**
+ * @brief Blink the LED a number of times.
+ *
+ * @param blinks: The number of blinks.
+ */
 void process_command_led(uint32_t blinks) {
     #ifdef DEBUG
     printf("Received LED command: %i blink(s)\n", blinks);
@@ -221,6 +259,12 @@ void process_command_led(uint32_t blinks) {
     blink_led(blinks);
 }
 
+
+/**
+ * @brief Display a number on the LED.
+ *
+ * @param blinks: The number to show.
+ */
 void process_command_num(uint32_t number) {
     #ifdef DEBUG
     printf("Received NUM command: %i\n", number);
@@ -238,7 +282,17 @@ void process_command_num(uint32_t number) {
     display.draw();
 }
 
+
+/**
+ * @brief Display a temperature on the LED.
+ *
+ * @param do_send: Should an HTTP request be issued too.
+ */
 void process_command_tmp(bool do_send) {
+    #ifdef DEBUG
+    printf("Received TMP command\n");
+    #endif
+
     // Convert the temperature value (a float) to a string value
     // fixed to two decimal places
     stringstream stream;
@@ -281,6 +335,10 @@ void process_command_tmp(bool do_send) {
     display.set_alpha('c', 3).draw();
 }
 
+
+/**
+ * @brief Display the modem's RSSI on the LED.
+ */
 void process_command_rssi() {
     // Get the current RSSI and separate out the RSSI value
     string response = modem.send_at_response("AT+CSQ");
@@ -320,6 +378,12 @@ void process_command_rssi() {
     }
 }
 
+
+/**
+ * @brief Pass a supplied AT command string to the modem.
+ *
+ * @param cmd: The command string.
+ */
 void process_command_at(string cmd) {
     const string response = modem.send_at_response(cmd);
     #ifdef DEBUG
@@ -329,6 +393,10 @@ void process_command_at(string cmd) {
     #endif
 }
 
+
+/**
+ * @brief Issue a sample GET request.
+ */
 void process_command_get() {
     #ifdef DEBUG
     printf("Requesting data...\n");
@@ -339,6 +407,12 @@ void process_command_get() {
     process_request(server, endpoint_path);
 }
 
+
+/**
+ * @brief Issue a sample POST request.
+ *
+ * @param data: The POST request's body string.
+ */
 void process_command_post(string data) {
     #ifdef DEBUG
     printf("Sending data...\n");
@@ -349,14 +423,13 @@ void process_command_post(string data) {
     process_request(server, endpoint_path, data);
 }
 
-/*
-    Generic HTTP request handler.
-
-    - Parameters:
-        - server: The target server domain prefixed with the protool, eg.
-                  `https://example.com`.
-        - path:   The target endpoint path.
-        - data:   The data to send.
+/**
+ * @brief Generic HTTP request handler.
+ *
+ * @param server: The target server domain prefixed with the protool, eg.
+ *                `https://example.com`.
+ * @param path:   The target endpoint path.
+ * @param data:   The data to send.
  */
 void process_request(string server, string path, string data) {
     // Attempt to open a data connection
@@ -394,6 +467,12 @@ void process_request(string server, string path, string data) {
     }
 }
 
+
+/**
+ * @brief Blink the LED to a specified pattern.
+ *
+ * @param code: The flash pattern.
+ */
 void process_command_flash(string code) {
     #ifdef DEBUG
     printf("Received FLASH command -- sequence: %s\n", code.c_str());
@@ -405,10 +484,9 @@ void process_command_flash(string code) {
 }
 
 /*
- * The entry point
+ * RUNTIME START
  */
 int main() {
-
     // DEBUG
     #ifdef DEBUG
     stdio_init_all();

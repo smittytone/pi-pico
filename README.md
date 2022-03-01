@@ -239,7 +239,8 @@ Pico project set up script for Z Shell. Requires Pico C SDK pre-installed.
 
 ## Updates
 
-- *xx September 2021*
+- *1 March 2022*
+    - Improve *Cellular IoT Demo* commenting.
     - Add `tmpcon` and `rssi` commands to *Cellular IoT Demo*.
 - *3 September 2021*
     - Complete *Cellular IoT Demo* — add `POST` ops and various improvements.
@@ -287,4 +288,4 @@ Pico project set up script for Z Shell. Requires Pico C SDK pre-installed.
 - *2 February 2021*
     - Initial release.
 
-All source code released under the MIT Licence. Copyright © 2021, Tony Smith (@smittytone).
+All source code released under the MIT Licence. Copyright © 2022, Tony Smith (@smittytone).

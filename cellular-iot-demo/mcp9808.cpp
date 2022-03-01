@@ -1,7 +1,7 @@
 /*
  * cellular::mcp9808_driver for Raspberry Pi Pico
  *
- * @version     1.0.1
+ * @version     1.0.2
  * @author      smittytone
  * @copyright   2021
  * @licence     MIT
@@ -13,18 +13,20 @@ using std::string;
 
 
 /**
-    Constructor: instantiate a new MCP9808 object.
+ * @brief Constructor: instantiate a new MCP9808 object.
+ *
+ * @param address: The I2C address of the device to write to.
  */
 MCP9808::MCP9808(uint32_t address) {
     if (address == 0x00 || address > 0xFF) address = MCP9808_I2CADDR_DEFAULT;
     i2c_addr = address;
 }
 
-/**
-    Check the device is connected and operational.
 
-    - Returns: `true` if we can read values and they are right,
-               otherwise `false`.
+/**
+ * @brief Check the device is connected and operational.
+ *
+ * @retval `true` if we can read values and they are right, otherwise `false`.
  */
 bool MCP9808::begin() {
     // Prep data storage buffers
@@ -47,10 +49,11 @@ bool MCP9808::begin() {
     return (mid_value == 0x0054 && did_value == 0x0400);
 }
 
-/**
-    Check the device is connected and operational.
 
-    - Returns: `true` if the sensor is correct, otherwise `false`.
+/**
+ * @brief Check the device is connected and operational.
+ *
+ * @retval `true` if the sensor is correct, otherwise `false`.
  */
 double MCP9808::read_temp() {
     // Read sensor and return its value in degrees celsius.

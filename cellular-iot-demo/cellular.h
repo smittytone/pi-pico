@@ -1,7 +1,7 @@
 /*
  * cellular::main for Raspberry Pi Pico
  *
- * @version     1.0.1
+ * @version     1.0.2
  * @author      smittytone
  * @copyright   2021
  * @licence     MIT
@@ -65,6 +65,7 @@ void        setup_modem_power_pin();
 
 void        led_on();
 void        led_off();
+void        led_set(bool state = true);
 void        blink_led(uint32_t blinks);
 void        blink_err_code(string code);
 

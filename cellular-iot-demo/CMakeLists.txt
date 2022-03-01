@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.14)
 include(pico_sdk_import.cmake)
 project(cellular
-        VERSION 1.0.1
+        VERSION 1.0.2
         DESCRIPTION "Cellular IoT Demo"
         HOMEPAGE_URL "https://github.com/smittytone/pi-pico")
 
