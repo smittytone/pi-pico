@@ -1,7 +1,7 @@
 /*
  * cellular::modem for Raspberry Pi Pico
  *
- * @version     1.0.1
+ * @version     1.0.2
  * @author      smittytone
  * @copyright   2021
  * @licence     MIT
@@ -14,7 +14,7 @@ using std::vector;
 
 
 /**
-    Construct a SIM7080G modem instance.
+ * @brief Construct a SIM7080G modem instance.
  */
 Sim7080G::Sim7080G(string network_apn) {
     // Clear the input bufffer
@@ -26,13 +26,13 @@ Sim7080G::Sim7080G(string network_apn) {
 
     // Initialise properties
     is_header_set = false;
-
 }
 
-/**
-    Start up the modem.
 
-    - Returns: `true` if the modem is ready, otherwise `false`.
+/**
+ * @briedf Start up the modem.
+ *
+ * @retval `true` if the modem is ready, otherwise `false`.
  */
 bool Sim7080G::start_modem() {
     if (boot_modem()) {
@@ -48,12 +48,13 @@ bool Sim7080G::start_modem() {
     return false;
 }
 
-/**
-    Check the modem is ready by periodically sending an AT command
-    until we receive a valid response. Power on the modem on the
-    first failure.
 
-    - Returns: `true` if the modem is ready, otherwise `false`.
+/**
+ * @brief Check the modem is ready by periodically sending an AT command
+ *        until we receive a valid response. Power on the modem on the
+ *        first failure.
+ *
+ * @retval `true` if the modem is ready, otherwise `false`.
  */
 bool Sim7080G::boot_modem() {
     bool state = false;
@@ -83,9 +84,10 @@ bool Sim7080G::boot_modem() {
     return false;
 }
 
+
 /**
-    Initialise the modem: set up Cat-M1 usage and write the
-    APN for Super SIM usage.
+ * @brief Initialise the modem: set up Cat-M1 usage and write the
+ *        APN for Super SIM usage.
  */
 void Sim7080G::config_modem() {
     // Set error reporting to 2, set modem to text mode, delete left-over SMS,
@@ -100,8 +102,9 @@ void Sim7080G::config_modem() {
     #endif
 }
 
+
 /**
-    Check network connection.
+ * @brief Check network connection.
  */
 bool Sim7080G::check_network() {
 
@@ -121,8 +124,9 @@ bool Sim7080G::check_network() {
     return is_connected;
 }
 
+
 /**
-    Toggle the modem power line.
+ * @brief Toggle the modem power line.
  */
 void Sim7080G::toggle_module_power() {
     // Power the pin
@@ -135,31 +139,31 @@ void Sim7080G::toggle_module_power() {
     gpio_put(PIN_MODEM_PWR, false);
 }
 
+
 /**
-    Send an AT command to the modem and check the response.
-
-    - Parameters:
-        - cmd:     pointer to the command string.
-        - back:    pointer to a substring expected in the
-                   response.
-        - timeout: milliseconds to wait for response data.
-
-    - Returns: `true` if the expected substring was in the response,
-               otherwise `false`.
+ * @brief Send an AT command to the modem and check the response.
+ *
+ * @param cmd:     Pointer to the command string.
+ * @param back:    Pointer to a substring expected in the
+ *                 response.
+ * @param timeout: Milliseconds to wait for response data.
+ *
+ * @retval `true` if the expected substring was in the response,
+ *          otherwise `false`.
  */
 bool Sim7080G::send_at(string cmd, string back, uint32_t timeout) {
     const string response = send_at_response(cmd, timeout);
     return (response.length() > 0 && response.find(back) != string::npos);
 }
 
+
 /**
-    Send an AT command to the modem.
-
-    - Parameters:
-        - cmd:     pointer to the command string.
-        - timeout: milliseconds to wait for response data.
-
-    - Returns: The bytes received as a string, or `ERROR`.
+ * @brief Send an AT command to the modem.
+ *
+ * @param cmd:     pointer to the command string.
+ * @param timeout: milliseconds to wait for response data.
+ *
+ * @retval The bytes received as a string, or `ERROR`.
  */
 string Sim7080G::send_at_response(string cmd, uint32_t timeout) {
     // Write out the AT command, converting to
@@ -178,11 +182,11 @@ string Sim7080G::send_at_response(string cmd, uint32_t timeout) {
     return "ERROR";
 }
 
-/**
-    Read the UART RX for a period of time.
 
-    - Parameters:
-        - timeout: milliseconds to wait for response data.
+/**
+ * @brief Read the UART RX for a period of time.
+ *
+ * @param timeout: milliseconds to wait for response data.
  */
 void Sim7080G::read_buffer(uint32_t timeout) {
     // Reset the read pointer
@@ -203,8 +207,9 @@ void Sim7080G::read_buffer(uint32_t timeout) {
     #endif
 }
 
+
 /**
-    Output IO for debugging
+ * @brief Output IO for debugging.
  */
 void Sim7080G::debug_output(string msg) {
     const vector<string> lines = Utils::split_to_lines(msg);
@@ -213,8 +218,9 @@ void Sim7080G::debug_output(string msg) {
     }
 }
 
+
 /**
-    Clear the RX buffer with zeroes.
+ * @brief Clear the RX buffer with zeroes.
  */
 void Sim7080G::clear_buffer() {
     for (uint32_t i = 0 ; i < UART_BUFFER_SIZE ; ++i) {
@@ -222,21 +228,24 @@ void Sim7080G::clear_buffer() {
     }
 }
 
+
 /**
-    Convert the buffer to a string.
+ * @brief Convert the buffer to a string.
+ *
+ * @retval The generated string.
  */
 string Sim7080G::buffer_to_string() {
     string new_string(uart_buffer, rx_ptr);
     return new_string;
 }
 
+
 /**
-    Listen for period for an incomimg message.
-
-    - Parameters:
-        - timeout: The waiting period.
-
-    - Returns: The recieved bytes as a string
+ * @brief Listen for period for an incomimg message.
+ *
+ * @param timeout: The waiting period.
+ *
+ * @retval The recieved bytes as a string.
  */
 string Sim7080G::listen(uint32_t timeout) {
     // Read the buffer
@@ -246,8 +255,12 @@ string Sim7080G::listen(uint32_t timeout) {
     return buffer_to_string();
 }
 
+
 /**
-    Open a data connection.
+ * @brief Open a data connection.
+ *
+ * @retval `true` if the connection was opened,
+ *         otherwise `false`.
  */
 bool Sim7080G::open_data_conn() {
     // Activate a data connection using PDP 0,
@@ -273,8 +286,9 @@ bool Sim7080G::open_data_conn() {
     return success;
 }
 
+
 /**
-    Close an open data connection.
+ * @brief Close an open data connection.
  */
 void Sim7080G::close_data_conn() {
     // Deactivate the connection
@@ -286,11 +300,13 @@ void Sim7080G::close_data_conn() {
 }
 
 /**
-    Open an HTTP connection to the specified server.
-
-    - Parameters:
-        - server: The protocol and the server's domain, eg.
-                  `https://example.com`
+ * @brief Open an HTTP connection to the specified server.
+ *
+ * @param server: The protocol and the server's domain, eg.
+ *                `https://example.com`
+ *
+ * * @retval `true` if the connection was opened,
+ *           otherwise `false`.
  */
 bool Sim7080G::start_session(string server) {
     // Deal with an existing session, if there is one
@@ -321,8 +337,9 @@ bool Sim7080G::start_session(string server) {
     return false;
 }
 
+
 /**
-    Open an HTTP connection to the specified server.
+ * @brief Open an HTTP connection to the specified server.
  */
 void Sim7080G::end_session() {
     // Break the link to the server
@@ -333,8 +350,9 @@ void Sim7080G::end_session() {
     #endif
 }
 
+
 /**
-    Set a generic request header on the modem.
+ * @brief Set a generic request header on the modem.
  */
 void Sim7080G::set_request_header() {
     if (!is_header_set) {
@@ -347,60 +365,57 @@ void Sim7080G::set_request_header() {
     }
 }
 
-/**
-    Clear the modem's internal request body record, and set
-    it with the supplied data (as the value of the key `data`).
 
-    - Parameters:
-        - body: The data to post.
+/**
+ * @brief Clear the modem's internal request body record, and set
+ *        it with the supplied data (as the value of the key `data`).
+ *
+ * @param body: The data to post.
  */
 void Sim7080G::set_request_body(string body) {
     send_at("AT+SHCPARA;+SHPARA=\"data\",\"" + body + "\"");
 }
 
+
 /**
-    Make a GET request to the specified server + path.
-
-    The returned data is placed in the instance property `data`.
-
-    - Parameters:
-        - server: The target server.
-        - path:   The endpoint path.
-
-    - Returns: `true` if the request was successful, otherwise `false`.
+ * @brief Make a GET request to the specified server + path.
+ *        The returned data is placed in the instance property `data`.
+ *
+ * @param server: The target server.
+ * @param path:   The endpoint path.
+ *
+ * @retval `true` if the request was successful, otherwise `false`.
  */
 bool Sim7080G::get_data(string server, string path) {
     return issue_request(server, path, "", "GET");
 }
 
+
 /**
-    Make a POST request to the specified server + path.
-
-    The returned response is placed in the instance property `data`.
-
-    - Parameters:
-        - server: The target server.
-        - path:   The endpoint path.
-        - data:   The data to be posted.
-
-    - Returns: `true` if the request was successful, otherwise `false`.
+ * @brief Make a POST request to the specified server + path.
+ *        The returned response is placed in the instance property `data`.
+ *
+ * @param server: The target server.
+ * @param path:   The endpoint path.
+ * @param data:   The data to be posted.
+ *
+ * @retval `true` if the request was successful, otherwise `false`.
  */
 bool Sim7080G::send_data(string server, string path, string data) {
     return issue_request(server, path, data, "POST");
 }
 
+
 /**
-    Make a generic request to the specified server + path.
-
-    The returned response is placed in the instance property `data`.
-
-    - Parameters:
-        - server: The target server.
-        - path:   The endpoint path.
-        - data:   The data to be posted.
-        - verb:   The request verb as a string, eg. `"GET"`.
-
-    - Returns: `true` if the request was successful, otherwise `false`.
+ * @brief Make a generic request to the specified server + path.
+ * The returned response is placed in the instance property `data`.
+ *
+ * @param server: The target server.
+ * @param path:   The endpoint path.
+ * @param data:   The data to be posted.
+ * @param verb:   The request verb as a string, eg. `"GET"`.
+ *
+ * @retval `true` if the request was successful, otherwise `false`.
  */
 bool Sim7080G::issue_request(string server, string path, string body, string verb) {
     bool success = false;

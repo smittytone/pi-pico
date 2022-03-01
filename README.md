@@ -16,7 +16,7 @@ Assorted projects made while playing with the [Raspberry Pi Pico](https://www.ra
 
 ---
 
-## Cellular IoT Demo 1.0.1
+## Cellular IoT Demo 1.0.2
 
 A sample C++ project bringing the Pico and the [Waveshare Pico SIM7080G Cat-M1 modem board](https://www.waveshare.com/pico-sim7080g-cat-m-nb-iot.htm) together.
 
@@ -237,6 +237,8 @@ Pico project set up script for Z Shell. Requires Pico C SDK pre-installed.
 
 ## Updates
 
+- *1 March 2022*
+    - Improve *Cellular IoT Demo* commenting.
 - *3 September 2021*
     - Complete *Cellular IoT Demo* — add `POST` ops and various improvements.
 - *20 August 2021*
@@ -283,4 +285,4 @@ Pico project set up script for Z Shell. Requires Pico C SDK pre-installed.
 - *2 February 2021*
     - Initial release.
 
-All source code released under the MIT Licence. Copyright © 2021, Tony Smith (@smittytone).
+All source code released under the MIT Licence. Copyright © 2022, Tony Smith (@smittytone).
