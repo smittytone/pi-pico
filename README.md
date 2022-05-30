@@ -14,6 +14,26 @@ Assorted projects made while playing with the [Raspberry Pi Pico](https://www.ra
 
 **Note** [Makepico](#makepico-210) is a script for creating ready-to-use Pico projects. The other items are Pico demos and games.
 
+### Tooling
+
+This repo requires `cmake` and the ARM cross-compiler. Please install these as appropriate for your platform. Details for macOS users [can be found in this blog post](https://blog.smittytone.net/2021/02/02/program-raspberry-pi-pico-c-mac/).
+
+It also requires the Pico SDK. From tag 2.0.0 of the repo, the SDK is included as a submodule. To load the code, navigate to the repo directory on your machine and run:
+
+```shell
+git submodule update --init --recursive
+```
+
+To update the SDK in future, run:
+
+```shell
+git submodule update --remote --recursive
+```
+
+Set your environment's `PICO_SDK_PATH` variable to point to this `pico-sdk` directory.
+
+**Note** If you have a global copy of the Pico SDK, you don't need to initialize the submodule here.
+
 ---
 
 ## Cellular IoT Demo 1.0.2
@@ -239,6 +259,8 @@ Pico project set up script for Z Shell. Requires Pico C SDK pre-installed.
 
 ## Updates
 
+- *Unreleased*
+    - Add the Pico SDK as an optional submodule.
 - *1 March 2022*
     - Improve *Cellular IoT Demo* commenting.
     - Add `tmpcon` and `rssi` commands to *Cellular IoT Demo*.
