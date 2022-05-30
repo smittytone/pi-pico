@@ -14,11 +14,15 @@ Assorted projects made while playing with the [Raspberry Pi Pico](https://www.ra
 
 **Note** [Makepico](#makepico-210) is a script for creating ready-to-use Pico projects. The other items are Pico demos and games.
 
-### Tooling
+## Tooling
 
-This repo requires `cmake` and the ARM cross-compiler. Please install these as appropriate for your platform. Details for macOS users [can be found in this blog post](https://blog.smittytone.net/2021/02/02/program-raspberry-pi-pico-c-mac/).
+#### Build Tools
 
-It also requires the Pico SDK. From tag 2.0.0 of the repo, the SDK is included as a submodule. To load the code, navigate to the repo directory on your machine and run:
+This repo requires `cmake` and the ARM cross-compiler. Please install these as appropriate for your platform. [Details for macOS users can be found in this blog post](https://blog.smittytone.net/2021/02/02/program-raspberry-pi-pico-c-mac/).
+
+#### The Pico SDK
+
+This repo also requires the Pico SDK. From tag 2.0.0 of the repo, the SDK is included as a submodule. To load the code, navigate to the repo directory on your machine and run:
 
 ```shell
 git submodule update --init --recursive
@@ -32,7 +36,7 @@ git submodule update --remote --recursive
 
 Set your environment's `PICO_SDK_PATH` variable to point to this `pico-sdk` directory.
 
-**Note** If you have a global copy of the Pico SDK, you don't need to initialize the submodule here.
+**Note** If you already have a global copy of the Pico SDK, you don't need to initialize the submodule here.
 
 ---
 
