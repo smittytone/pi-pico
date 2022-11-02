@@ -1,7 +1,7 @@
 /*
  * Phantom Slayer
  *
- * @version     1.0.2
+ * @version     1.0.3
  * @author      smittytone
  * @copyright   2021, Tony Smith
  * @licence     MIT
@@ -9,6 +9,12 @@
  */
 #include "main.h"
 
+
+extern Phantom phantoms[3];
+extern uint8_t player_x;
+extern uint8_t player_y;
+extern uint8_t player_direction;
+extern Game game;
 
 /*
  * Basic Level Data

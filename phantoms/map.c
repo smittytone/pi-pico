@@ -1,13 +1,20 @@
 /*
  * Phantom Slayer
  *
- * @version     1.0.2
+ * @version     1.0.3
  * @author      smittytone
  * @copyright   2021, Tony Smith
  * @licence     MIT
  *
  */
 #include "main.h"
+
+
+extern Game game;
+extern Phantom phantoms[3];
+extern uint8_t player_x;
+extern uint8_t player_y;
+extern uint8_t player_direction;
 
 
 /*
@@ -139,6 +146,8 @@ char base_map_117[20] = "\xFF\xEE\xFF\xFF\xEE\xEE\xFF\xFF\xFF\xEE\xFF\xFF\xFF\xE
 char base_map_118[20] = "\xFF\xEE\xEE\xFF\xEE\xEE\xFF\xEE\xEE\xEE\xFF\xEE\xFF\xEE\xEE\xFF\xEE\xEE\xEE\xFF";
 char base_map_119[20] = "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF";
 
+// The current map data
+char *current_map[20];
 
 /*
  * Map Functions

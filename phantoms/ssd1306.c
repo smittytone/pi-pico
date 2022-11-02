@@ -10,6 +10,19 @@
 #include "main.h"
 
 
+extern uint8_t oled_height;
+extern uint8_t oled_width;
+extern uint8_t oled_i2c_addr;
+extern bool    oled_inverted;
+extern uint16_t oled_buffer_size;
+extern uint16_t i2c_tx_buffer_size;
+extern uint8_t *draw_buffer;
+extern uint8_t oled_buffer[1024];
+extern uint8_t temp_buffer[1024];
+extern uint8_t side_buffer[1024];
+extern uint8_t i2c_tx_buffer[1025];
+
+
 /*
  * Ascii Text Character Set
  */

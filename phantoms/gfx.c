@@ -1,7 +1,7 @@
 /*
  * Phantom Slayer
  *
- * @version     1.0.2
+ * @version     1.0.3
  * @author      smittytone
  * @copyright   2021, Tony Smith
  * @licence     MIT
@@ -9,6 +9,23 @@
  */
 #include "main.h"
 
+
+extern Rect rects[7];
+extern Game game;
+extern uint8_t oled_height;
+extern uint8_t oled_width;
+extern uint8_t oled_i2c_addr;
+extern bool oled_inverted;
+extern uint8_t oled_buffer[1024];
+extern uint8_t temp_buffer[1024];
+extern uint8_t side_buffer[1024];
+extern uint8_t i2c_tx_buffer[1025];
+extern uint16_t oled_buffer_size;
+extern uint16_t i2c_tx_buffer_size;
+extern uint8_t player_x;
+extern uint8_t player_y;
+extern uint8_t player_direction;
+extern uint8_t *draw_buffer;
 
 /*
  *  Wall perspective triangles

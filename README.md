@@ -239,6 +239,8 @@ Pico project set up script for Z Shell. Requires Pico C SDK pre-installed.
 
 ## Updates
 
+- *2 November 2022*
+    - Bring some programs up to date.
 - *1 March 2022*
     - Improve *Cellular IoT Demo* commenting.
     - Add `tmpcon` and `rssi` commands to *Cellular IoT Demo*.
