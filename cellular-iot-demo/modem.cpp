@@ -95,7 +95,7 @@ void Sim7080G::config_modem() {
     send_at("AT+CMEE=2;+CMGF=1;+CMGD=,4;+CNMP=38;+CMNB=1;+CGDCONT=1,\"IP\",\"" + apn + "\"");
 
     // Set SST version, set SSL no verify, set header config
-    send_at("AT+CSSLCFG=\"sslversion\",1,3;+SHSSL=1,\"\";+SHCONF=\"BODYLEN\",1024;+SHCONF=\"HEADERLEN\",350");
+    send_at("AT+CSSLCFG=\"ignorertctime\",1,1;+CSSLCFG=\"sslversion\",1,3;+SHSSL=1,\"\"");
 
     #ifdef DEBUG
     printf("Modem configured for Cat-M and Super SIM\n");
@@ -319,7 +319,7 @@ bool Sim7080G::start_session(string server) {
     }
 
     // Configure a session with the server...
-    send_at("AT+SHCONF=\"URL\",\"" + server + "\"");
+    send_at("AT+CSSLCFG=\"sni\",1,\"" + server + "\";+SHCONF=\"BODYLEN\",1024;+SHCONF=\"HEADERLEN\",350;+SHCONF=\"URL\",\"" + server + "\"");
 
     // ...and open it
     string response = send_at_response("AT+SHCONN");
