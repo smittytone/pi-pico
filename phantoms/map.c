@@ -1,13 +1,27 @@
 /*
  * Phantom Slayer
  *
- * @version     1.0.2
+ * @version     1.0.3
  * @author      smittytone
- * @copyright   2021, Tony Smith
+ * @copyright   2024, Tony Smith
  * @licence     MIT
  *
  */
 #include "main.h"
+
+
+/*
+ * GLOBALS
+ */
+// The current map data
+char *current_map[20];
+
+
+extern Game game;
+extern Phantom phantoms[3];
+extern uint8_t player_x;
+extern uint8_t player_y;
+extern uint8_t player_direction;
 
 
 /*

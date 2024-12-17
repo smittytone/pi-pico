@@ -159,43 +159,5 @@ void    show_scores();
 #define PHANTOM_WEST                                    8
 
 
-/*
- *  GLOBALS
- */
-uint8_t     oled_height;
-uint8_t     oled_width;
-uint8_t     oled_i2c_addr;
-bool        oled_inverted;
-
-// Graphics buffer
-uint8_t     oled_buffer[1024];
-uint8_t     temp_buffer[1024];
-uint8_t     side_buffer[1024];
-uint8_t     i2c_tx_buffer[1025];
-uint16_t    oled_buffer_size;
-uint16_t    i2c_tx_buffer_size;
-
-uint8_t     *draw_buffer;
-
-// Player
-uint8_t     player_x;
-uint8_t     player_y;
-uint8_t     player_direction;
-
-// Graphics structures
-Rect        rects[7];
-
-// Game data
-Phantom     phantoms[3];
-Game        game;
-
-uint32_t    last_draw;
-uint32_t    last_phantom_move;
-bool        chase_mode;
-bool        map_mode;
-uint16_t    high_score;
-
-tinymt32_t  tinymt_store;
-
 // _PHANTOMS_MAIN_HEADER_
 #endif

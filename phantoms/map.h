@@ -1,9 +1,9 @@
 /*
  * Phantom Slayer
  *
- * @version     1.0.2
+ * @version     1.0.3
  * @author      smittytone
- * @copyright   2021, Tony Smith
+ * @copyright   2024, Tony Smith
  * @licence     MIT
  *
  */
@@ -19,13 +19,6 @@ void    show_map(uint8_t y_delta, bool show_entities);
 bool    set_square_contents(uint8_t x, uint8_t y, uint8_t value);
 uint8_t get_square_contents(uint8_t x, uint8_t y);
 uint8_t get_view_distance(int8_t x, int8_t y, uint8_t direction);
-
-
-/*
- * GLOBALS
- */
-// The current map data
-char *current_map[20];
 
 
 /*
