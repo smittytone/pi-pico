@@ -3,7 +3,7 @@
  *
  * @version     1.0.3
  * @author      smittytone
- * @copyright   2021, Tony Smith
+ * @copyright   2024, Tony Smith
  * @licence     MIT
  *
  */
@@ -48,7 +48,6 @@ uint16_t    high_score;
 
 tinymt32_t  tinymt_store;
 
-extern char *current_map[20];
 
 /*
  *  Initialisation Functions

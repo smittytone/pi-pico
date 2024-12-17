@@ -14,6 +14,30 @@ Assorted projects made while playing with the [Raspberry Pi Pico](https://www.ra
 
 **Note** [Makepico](#makepico-210) is a script for creating ready-to-use Pico projects. The other items are Pico demos and games.
 
+## Tooling
+
+#### Build Tools
+
+This repo requires `cmake` and the ARM cross-compiler. Please install these as appropriate for your platform. [Details for macOS users can be found in this blog post](https://blog.smittytone.net/2021/02/02/program-raspberry-pi-pico-c-mac/).
+
+#### The Pico SDK
+
+This repo also requires the Pico SDK. From tag 2.0.0 of the repo, the SDK is included as a submodule. To load the code, navigate to the repo directory on your machine and run:
+
+```shell
+git submodule update --init --recursive
+```
+
+To update the SDK in future, run:
+
+```shell
+git submodule update --remote --recursive
+```
+
+Set your environment's `PICO_SDK_PATH` variable to point to this `pico-sdk` directory.
+
+**Note** If you already have a global copy of the Pico SDK, you don't need to initialize the submodule here.
+
 ---
 
 ## Cellular IoT Demo 1.0.2
@@ -102,7 +126,7 @@ This project uses the following third-party code:
 
 ---
 
-## Phantom Slayer 1.0.2
+## Phantom Slayer 1.0.3
 
 A retro-style 3D arcade game written in C. For more details, [see this page](https://smittytone.net/pico-phantoms/).
 
@@ -236,58 +260,5 @@ A sample MicroPython project. Requires an HT16K33-based 8x8 LED matrix.
 Pico project set up script for Z Shell. Requires Pico C SDK pre-installed.
 
 ---
-
-## Updates
-
-- *2 November 2022*
-    - Bring some programs up to date.
-- *1 March 2022*
-    - Improve *Cellular IoT Demo* commenting.
-    - Add `tmpcon` and `rssi` commands to *Cellular IoT Demo*.
-- *3 September 2021*
-    - Complete *Cellular IoT Demo* — add `POST` ops and various improvements.
-- *20 August 2021*
-    - Add *Cellular IoT Demo*.
-- *13 August 2021*
-    - *makepico* now generates `main.c/cpp` and `main.h` not project-specific files.
-    - *makepico*’s `CMakeLists.txt` now uses CMake 3.14.
-    - *makepico*’s `main.c` now calls `stdio_init_all()`.
-- *23 July 2021*
-    - Spring clean *makepico* and bump to 2.0.0.
-- *30 April 2021*
-    - Update *makepico* to support C++ projects:
-        - Add `-c` switch to create a C++ project.
-        - Add a `-n` option so you can add your name for code comments.
-- *6 April 2021*
-    - Bump Phantom Slayer to 1.0.2
-        - Move some common routines into `utils.h`/`utils.c`.
-        - Update *inkey()* to return the key pressed.
-        - Add another map.
-- *31 March 2021*
-    - Bump Phantom Slayer to 1.0.1
-        - Graphics tweaks.
-        - Improve Phantom movement logic.
-        - Fix laser post-fire delay.
-    - Bump Hunt the Wumpus to 1.0.2
-        - Use TinyMT for random number generation.
-    - Bump makepico to 1.2.0.
-- *26 March 2021*
-    - Add Phantom Slayer 1.0.0
-- *25 February 2021*
-    - Bump Wumpus to 1.0.1
-        - Tweak sprites.
-        - Improve trophy presentation.
-        - Improve in-game code flow.
-- *20 February 2021*
-    - Add *wumpus* example.
-    - Update *makepico* script:
-        - Add VSCode config creation.
-        - Add `-d`/`--debug` switch to add VSCode SWD debugging support.
-- *5 February 2021*
-    - Add *sensor* example.
-- *4 February 2021*
-    - Add debugger-friendly VSCode `launch.json`.
-- *2 February 2021*
-    - Initial release.
 
 All source code released under the MIT Licence. Copyright © 2022, Tony Smith (@smittytone).

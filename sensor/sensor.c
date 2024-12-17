@@ -165,10 +165,12 @@ bool sgp30_get_measurement(uint8_t *reading_buffer) {
     return true;
 }
 
-void sgp30_set_data(uint8_t *buffer, const char *data, uint8_t start) {
+void sgp30_set_data(uint8_t *abuffer, const char *data, uint8_t start) {
     // Write the data from the command constant string into the buffer
-    for (uint8_t i = start ; i < sizeof(data) ; ++i) {
-        buffer[i] = data[i];
+    if (start < sizeof(data) && start < 2) {
+        for (uint8_t i = start ; i < sizeof(data) ; ++i) {
+            abuffer[i] = (uint8_t)data[i];
+        }
     }
 }
 
