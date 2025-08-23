@@ -33,8 +33,8 @@ uint8_t buffer[17];
 /*
  * SGP30 Commands
  */
-const char SGP30_INIT_AIR_QUALITY[2] = "\x20\x03";
-const char SGP30_MEASURE_AIR_QUALITY[2] = "\x20\x08";
+const char SGP30_INIT_AIR_QUALITY[4] = "\x20\x03";
+const char SGP30_MEASURE_AIR_QUALITY[4] = "\x20\x08";
 const int SGP30_ADDRESS = 0x58;
 
 
@@ -122,7 +122,7 @@ void ht16k33_draw() {
  */
 void sgp30_init() {
     // Send the initialization command
-    uint8_t buffer[2];
+    uint8_t buffer[4];
     sgp30_set_data(buffer, SGP30_INIT_AIR_QUALITY, 0);
     i2c_write_block(SGP30_ADDRESS, buffer, sizeof(buffer));
 }
@@ -130,7 +130,7 @@ void sgp30_init() {
 bool sgp30_get_measurement(uint8_t *reading_buffer) {
     // Get a single measurement
     uint8_t read_buffer[6];
-    uint8_t cmd_buffer[2];
+    uint8_t cmd_buffer[4];
 
     // Request a reading
     sgp30_set_data(cmd_buffer, SGP30_MEASURE_AIR_QUALITY, 0);
@@ -142,7 +142,7 @@ bool sgp30_get_measurement(uint8_t *reading_buffer) {
 
     // Check the values
     // NOTE Buggy - hence we don't return false
-    uint8_t crc = read_buffer[2];
+    uint8_t crc = read_buffer[4];
     uint16_t co2 = (read_buffer[0] << 8) | read_buffer[1];
     if (crc != sgp30_get_crc(co2)) {
         // Error!
@@ -159,7 +159,7 @@ bool sgp30_get_measurement(uint8_t *reading_buffer) {
     reading_buffer[1] = read_buffer[1];
 
     // TVOC
-    reading_buffer[2] = read_buffer[3];
+    reading_buffer[4] = read_buffer[3];
     reading_buffer[3] = read_buffer[4];
 
     return true;
