@@ -261,4 +261,4 @@ Pico project set up script for Z Shell. Requires Pico C SDK pre-installed.
 
 ---
 
-All source code released under the MIT Licence. Copyright © 2022, Tony Smith (@smittytone).
+All source code released under the MIT Licence. Copyright © 2021-25, Tony Smith (@smittytone).
